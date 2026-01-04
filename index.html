@@ -1,0 +1,1518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="theme-color" content="#0b1020"/>
+  <title>Bias Forecasting Sandbox (Cloud Services • DoD/ICEAA-flavored)</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root{
+      --bg:#0b1020;
+      --panel:#111a33;
+      --panel2:#0f1730;
+      --text:#e8ecff;
+      --muted:#aab4e6;
+      --accent:#7aa2ff;
+      --good:#39d98a;
+      --warn:#ffcc66;
+      --bad:#ff6b6b;
+      --line:rgba(255,255,255,0.08);
+      --shadow: 0 10px 30px rgba(0,0,0,0.35);
+      --radius: 16px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: radial-gradient(1200px 800px at 15% 15%, #182656 0%, var(--bg) 55%);
+      color:var(--text);
+    }
+    header{
+      padding:18px 22px;
+      border-bottom:1px solid var(--line);
+      backdrop-filter: blur(10px);
+      position:sticky; top:0; z-index:10;
+      background: rgba(11,16,32,0.75);
+    }
+    header .title{
+      display:flex; gap:12px; align-items:center; flex-wrap:wrap;
+    }
+    .badge{
+      font-size:12px; padding:4px 10px; border:1px solid var(--line);
+      border-radius:999px; color:var(--muted); background: rgba(255,255,255,0.04);
+    }
+    .container{
+      max-width: 1350px;
+      margin: 0 auto;
+      padding: 18px 18px 26px;
+    }
+    .grid{
+      display:grid;
+      grid-template-columns: 440px 1fr;
+      gap:16px;
+    }
+    @media (max-width: 1100px){
+      .grid{grid-template-columns:1fr}
+    }
+
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+    .card .card-h{
+      padding:14px 14px 10px;
+      border-bottom:1px solid var(--line);
+      display:flex; align-items:center; justify-content:space-between;
+      gap:12px;
+    }
+    .card .card-h h2{
+      margin:0; font-size:14px; letter-spacing:0.4px; text-transform:uppercase; color:var(--muted);
+    }
+    .card .card-b{padding:14px}
+    .tabs{
+      display:flex; gap:8px; flex-wrap:wrap;
+    }
+    .tab{
+      border:1px solid var(--line);
+      background: rgba(255,255,255,0.03);
+      color: var(--muted);
+      padding:8px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      cursor:pointer;
+      user-select:none;
+    }
+    .tab.active{
+      border-color: rgba(122,162,255,0.55);
+      color: var(--text);
+      background: rgba(122,162,255,0.15);
+    }
+
+    .row{display:flex; gap:12px; flex-wrap:wrap}
+    .kpis{display:grid; grid-template-columns:repeat(4, 1fr); gap:12px}
+    @media (max-width: 1100px){ .kpis{grid-template-columns:repeat(2,1fr)} }
+    @media (max-width: 520px){ .kpis{grid-template-columns:1fr} }
+
+    .kpi{
+      padding:12px;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--line);
+      min-height: 86px;
+    }
+    .kpi .label{font-size:12px; color:var(--muted)}
+    .kpi .value{font-size:20px; margin-top:6px; font-weight:650}
+    .kpi .sub{font-size:12px; color:var(--muted); margin-top:6px}
+
+    .chips{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;}
+    .chip{
+      padding:6px 10px; border-radius: 999px; font-size:12px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,0.03);
+      color: var(--muted);
+    }
+    .chip.good{border-color: rgba(57,217,138,0.4); background: rgba(57,217,138,0.12); color: var(--text)}
+    .chip.warn{border-color: rgba(255,204,102,0.4); background: rgba(255,204,102,0.12); color: var(--text)}
+    .chip.bad{border-color: rgba(255,107,107,0.4); background: rgba(255,107,107,0.12); color: var(--text)}
+
+    .field{
+      margin-bottom:12px;
+      padding:12px;
+      border:1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(255,255,255,0.02);
+    }
+    .field label{
+      display:flex; justify-content:space-between; gap:10px;
+      font-size:12px; color:var(--muted);
+      margin-bottom:8px;
+    }
+    .field input[type="range"]{width:100%}
+    .field select, .field input[type="number"], .field input[type="text"], .field textarea{
+      width:100%;
+      padding:10px;
+      border-radius: 12px;
+      border:1px solid var(--line);
+      background: rgba(15,23,48,0.7);
+      color: var(--text);
+      outline:none;
+    }
+    .mini{
+      display:flex; gap:10px; align-items:center; justify-content:space-between;
+      flex-wrap:wrap;
+    }
+    .pill{
+      font-size:12px;
+      padding:4px 8px;
+      border-radius: 999px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,0.03);
+      color: var(--muted);
+    }
+    .btn{
+      cursor:pointer;
+      border:1px solid var(--line);
+      background: rgba(122,162,255,0.14);
+      color: var(--text);
+      padding:10px 12px;
+      border-radius: 12px;
+      font-weight:600;
+      font-size: 13px;
+    }
+    .btn.secondary{
+      background: rgba(255,255,255,0.03);
+      color: var(--muted);
+    }
+    .btn:active{transform: translateY(1px)}
+    .note{
+      font-size:12px; color: var(--muted); line-height:1.45;
+    }
+    .divider{height:1px; background: var(--line); margin:12px 0}
+
+    canvas{max-height:320px}
+    .two{
+      display:grid; grid-template-columns: 1fr 1fr; gap:12px;
+    }
+    @media (max-width: 1100px){ .two{grid-template-columns:1fr} }
+
+    .table{
+      width:100%;
+      border-collapse: collapse;
+      font-size:12px;
+      color: var(--muted);
+    }
+    .table th, .table td{
+      border-bottom: 1px solid var(--line);
+      padding: 8px 6px;
+      text-align:left;
+    }
+    .table th{color: var(--text); font-weight:650}
+
+    .footer{
+      margin-top: 14px;
+      font-size: 11px;
+      color: rgba(232,236,255,0.55);
+      line-height: 1.45;
+    }
+  
+    /* Mobile-first polish (keeps same layout, improves usability) */
+    #domainTabs{
+      overflow-x:auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+      padding-bottom: 6px;
+    }
+    #domainTabs::-webkit-scrollbar{ height: 6px; }
+    #domainTabs::-webkit-scrollbar-thumb{ background: rgba(255,255,255,0.12); border-radius: 999px; }
+    input[type="range"]{ height: 28px; }
+    input[type="checkbox"]{ width:16px; height:16px; }
+    select, input[type="text"], input[type="number"], textarea{
+      min-height: 42px;
+    }
+    /* Make wide tables scroll instead of squishing */
+    .table-wrap{ overflow-x:auto; -webkit-overflow-scrolling: touch; }
+    .table{ min-width: 540px; }
+    /* Prevent long chip text from breaking layout */
+    .chips{ align-items:center; }
+    .chip{ max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  </style>
+</head>
+<body>
+<header>
+  <div class="title">
+    <div style="font-weight:800; font-size:16px;">Bias Forecasting Sandbox</div>
+    <span class="badge">Cloud Services (CSP-agnostic)</span>
+    <span class="badge">DoD/ICEAA vocabulary (CARD • BOE • IGCE • CSDR)</span>
+    <span class="badge">Assumption Domains: Data • Method • Rates • Risk</span>
+    <span class="badge">Educational model (rules-based)</span>
+  </div>
+</header>
+
+<div class="container">
+  <div class="grid">
+    <!-- LEFT: Controls -->
+    <div class="card">
+      <div class="card-h">
+        <h2>Assumptions</h2>
+        <div class="tabs" id="domainTabs">
+          <div class="tab active" data-tab="data">Data Pedigree</div>
+          <div class="tab" data-tab="method">Method Choices</div>
+          <div class="tab" data-tab="rates">Economic & Rates</div>
+          <div class="tab" data-tab="risk">Schedule & Risk</div>
+        </div>
+      </div>
+      <div class="card-b">
+
+        <div class="field">
+          <label>
+            <span>Estimate Type</span>
+            <span class="pill">Cloud BOE sandbox</span>
+          </label>
+          <select id="estimateType" disabled>
+            <option selected>Cloud Services (IaaS/PaaS mix)</option>
+          </select>
+          <div class="note" style="margin-top:8px;">
+            This tool is intentionally focused on <b>assumption-driven bias</b>. The cloud cost sketch is a placeholder so you can demo how
+            common CARD/BOE decisions can push a result without changing scope.
+          </div>
+        </div>
+
+        <!-- DOMAIN PANELS -->
+        <div id="panel-data">
+          <div class="field">
+            <label><span>Data source type (traceable?)</span><span class="pill" id="val_sourceType"></span></label>
+            <select id="sourceType">
+              <option value="csdr">CSDR / government cost reports (auditable)</option>
+              <option value="internal" selected>Internal program actuals (traceable)</option>
+              <option value="vendor">Vendor proposal / pricing (biased incentives)</option>
+              <option value="analogy">Analogy set (hand-selected)</option>
+              <option value="market">Market benchmarks (3rd-party / public)</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label><span>Data traceability level (CARD defensibility)</span><span class="pill" id="val_traceLevel"></span></label>
+            <select id="traceLevel">
+              <option value="audited" selected>Auditable (source + date + method + mapping)</option>
+              <option value="partial">Partial (some documentation / gaps)</option>
+              <option value="anecdotal">Anecdotal (slides/emails/tribal knowledge)</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label><span>WBS / scope alignment quality</span><span class="pill" id="val_wbsAlign"></span></label>
+            <input id="wbsAlign" type="range" min="0" max="100" step="1" value="70"/>
+            <div class="note" style="margin-top:8px;">Low alignment (apples-to-oranges) increases measurement bias and “false precision.”</div>
+          </div>
+
+          <div class="field">
+            <label><span>Normalization / escalation basis</span><span class="pill" id="val_norm"></span></label>
+            <select id="norm">
+              <option value="fy" selected>Normalized to a common FY$ base year</option>
+              <option value="mixed">Mixed years / partial normalization</option>
+              <option value="unknown">Unknown / not documented</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label><span>Sample size (data points)</span><span class="pill" id="val_sampleSize"></span></label>
+            <input id="sampleSize" type="range" min="5" max="500" step="5" value="60"/>
+          </div>
+
+          <div class="field">
+            <label><span>Similarity to target environment</span><span class="pill" id="val_similarity"></span></label>
+            <input id="similarity" type="range" min="0" max="100" step="1" value="65"/>
+          </div>
+
+          <div class="field">
+            <label><span>Time relevance</span><span class="pill" id="val_timeRelevance"></span></label>
+            <input id="timeRelevance" type="range" min="0" max="100" step="1" value="55"/>
+            <div class="note" style="margin-top:8px;">Cloud pricing and consumption drift. Stale data can create hidden bias even with “good math.”</div>
+          </div>
+
+          <div class="field">
+            <label><span>Missing data handling</span><span class="pill" id="val_missing"></span></label>
+            <select id="missing">
+              <option value="omit">Omit missing records (risk of selection bias)</option>
+              <option value="mean" selected>Mean/median imputation (measurement risk)</option>
+              <option value="model">Model-based imputation (best if documented)</option>
+              <option value="fill0">Fill with zeros/defaults (high measurement risk)</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label><span>Outlier treatment</span><span class="pill" id="val_outliers"></span></label>
+            <select id="outliers">
+              <option value="keep" selected>Keep all (show range)</option>
+              <option value="winsor">Winsorize / cap extremes</option>
+              <option value="remove">Remove outliers (risk of cherry-pick)</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label><span>Survivorship filter</span><span class="pill" id="val_survivorship"></span></label>
+            <select id="survivorship">
+              <option value="include" selected>Include troubled/overrun/cancelled cases</option>
+              <option value="exclude">Exclude “messy” cases</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="panel-method" style="display:none;">
+          <div class="field">
+            <label><span>Method blend: Analogy (%)</span><span class="pill" id="val_analogyPct"></span></label>
+            <input id="analogyPct" type="range" min="0" max="100" step="5" value="35"/>
+          </div>
+          <div class="field">
+            <label><span>Method blend: Parametric (%)</span><span class="pill" id="val_parametricPct"></span></label>
+            <input id="parametricPct" type="range" min="0" max="100" step="5" value="35"/>
+          </div>
+          <div class="field">
+            <label><span>Method blend: Engineering build-up (%)</span><span class="pill" id="val_buildupPct"></span></label>
+            <input id="buildupPct" type="range" min="0" max="100" step="5" value="30"/>
+            <div class="note" style="margin-top:8px;">Auto-normalized to 100%. Blend affects bias profile, not just cost.</div>
+          </div>
+
+          <div class="field">
+            <label><span>BOE maturity (DoD/ICEAA style)</span><span class="pill" id="val_boe"></span></label>
+            <select id="boe">
+              <option value="draft">Draft BOE (assumptions implied)</option>
+              <option value="reviewed" selected>Reviewed BOE (assumptions explicit)</option>
+              <option value="standard">Standard format (CARD-linked, traceable)</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label><span>Cross-checks performed (anti-bias controls)</span><span class="pill" id="val_checks"></span></label>
+            <div class="mini" style="margin-top:6px;">
+              <label class="pill"><input id="chk_indep" type="checkbox" style="margin-right:6px;"> Independent estimate / peer review</label>
+              <label class="pill"><input id="chk_param" type="checkbox" style="margin-right:6px;"> Parametric cross-check</label>
+              <label class="pill"><input id="chk_analogy" type="checkbox" style="margin-right:6px;"> Analogy cross-check</label>
+            </div>
+            <div class="note" style="margin-top:10px;">Cross-checks don’t eliminate bias, but they surface it (and improve defensibility).</div>
+          </div>
+
+          <div class="field">
+            <label><span>Automation / learning over time</span><span class="pill" id="val_learning"></span></label>
+            <select id="learning">
+              <option value="none">None assumed</option>
+              <option value="modest" selected>Modest efficiency gain</option>
+              <option value="aggressive">Aggressive efficiency gain</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label><span>Reuse / standardization assumption (%)</span><span class="pill" id="val_reuse"></span></label>
+            <input id="reuse" type="range" min="0" max="90" step="5" value="35"/>
+          </div>
+
+          <div class="field">
+            <label><span>Reserved/commitment posture</span><span class="pill" id="val_commitment"></span></label>
+            <select id="commitment">
+              <option value="od" selected>Mostly on-demand (flexible)</option>
+              <option value="mix">Mixed (some commitments)</option>
+              <option value="heavy">Heavy commitments (RIs/Savings Plans)</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="panel-rates" style="display:none;">
+          <div class="field">
+            <label><span>Compute usage (vCPU-hours / month)</span><span class="pill" id="val_vcpu"></span></label>
+            <input id="vcpu" type="range" min="10000" max="600000" step="5000" value="120000"/>
+          </div>
+          <div class="field">
+            <label><span>Storage (GB-month / month)</span><span class="pill" id="val_storage"></span></label>
+            <input id="storage" type="range" min="5000" max="400000" step="5000" value="65000"/>
+          </div>
+          <div class="field">
+            <label><span>Data egress (GB / month)</span><span class="pill" id="val_egress"></span></label>
+            <input id="egress" type="range" min="1000" max="200000" step="1000" value="14000"/>
+          </div>
+          <div class="field">
+            <label><span>Requests (million / month)</span><span class="pill" id="val_requests"></span></label>
+            <input id="requests" type="range" min="10" max="5000" step="10" value="700"/>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="field">
+            <label><span>Contract type (context)</span><span class="pill" id="val_contract"></span></label>
+            <select id="contract">
+              <option value="ffp">FFP / fixed-price</option>
+              <option value="cpff" selected>CPFF / cost-plus</option>
+              <option value="t&m">T&amp;M / level of effort</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label><span>Fee/profit assumption (%)</span><span class="pill" id="val_fee"></span></label>
+            <input id="fee" type="range" min="0" max="20" step="0.5" value="7.0"/>
+            <div class="note" style="margin-top:8px;">Used for context only (not authoritative). Helps frame “should-cost vs will-cost.”</div>
+          </div>
+
+          <div class="field">
+            <label><span>Escalation / index approach</span><span class="pill" id="val_escalation"></span></label>
+            <select id="escalation">
+              <option value="flat" selected>Flat (no escalation)</option>
+              <option value="cpi">CPI (general)</option>
+              <option value="eci">ECI (labor)</option>
+              <option value="sector">Sector/tech index</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label><span>Rate stance (relative to baseline)</span><span class="pill" id="val_rateStance"></span></label>
+            <input id="rateStance" type="range" min="-25" max="25" step="1" value="0"/>
+            <div class="note" style="margin-top:8px;">Left = discounted/negotiated; right = conservative/high-tier. Either can be “biased” if unjustified.</div>
+          </div>
+
+          <div class="field">
+            <label><span>Cloud price trend assumption</span><span class="pill" id="val_priceTrend"></span></label>
+            <select id="priceTrend">
+              <option value="flat" selected>Flat (no change)</option>
+              <option value="deflate">Deflation / price drops assumed</option>
+              <option value="inflate">Inflation / price increases assumed</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label><span>Indirects / overhead handling</span><span class="pill" id="val_indirects"></span></label>
+            <select id="indirects">
+              <option value="approved" selected>Approved rates / audited basis</option>
+              <option value="target">Target / negotiated objective</option>
+              <option value="plug">Plug factor (rough %)</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label><span>Plug indirect % (if applicable)</span><span class="pill" id="val_plugPct"></span></label>
+            <input id="plugPct" type="range" min="0" max="60" step="1" value="18"/>
+          </div>
+        </div>
+
+        <div id="panel-risk" style="display:none;">
+          <div class="field">
+            <label><span>Schedule realism</span><span class="pill" id="val_sched"></span></label>
+            <input id="sched" type="range" min="0" max="100" step="1" value="55"/>
+            <div class="note" style="margin-top:8px;">Left = optimistic/compressed. Right = realistic/buffered.</div>
+          </div>
+
+          <div class="field">
+            <label><span>Confidence level (S-curve percentile)</span><span class="pill" id="val_percentile"></span></label>
+            <select id="percentile">
+              <option value="p50">P50</option>
+              <option value="p70" selected>P70</option>
+              <option value="p80">P80</option>
+              <option value="p90">P90</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label><span>Correlation between risk drivers</span><span class="pill" id="val_corr"></span></label>
+            <select id="corr">
+              <option value="none">None</option>
+              <option value="mod" selected>Moderate</option>
+              <option value="high">High</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label><span>Uncertainty stance</span><span class="pill" id="val_uncert"></span></label>
+            <input id="uncert" type="range" min="0" max="100" step="1" value="55"/>
+            <div class="note" style="margin-top:8px;">Left = narrow ranges (“tight confidence”), right = wide ranges (“humble uncertainty”).</div>
+          </div>
+
+          <div class="field">
+            <label><span>Risk register linkage (defensibility)</span><span class="pill" id="val_riskReg"></span></label>
+            <select id="riskReg">
+              <option value="linked" selected>Linked to risk register / watch list</option>
+              <option value="partial">Partial linkage (some risks captured)</option>
+              <option value="none">None (implicit risk only)</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label><span>Decision context (bias amplifiers)</span><span class="pill" id="val_context"></span></label>
+            <div class="mini" style="margin-top:6px;">
+              <label class="pill"><input id="mustFit" type="checkbox" style="margin-right:6px;"> Must fit budget cap / wedge</label>
+              <label class="pill"><input id="anchor" type="checkbox" style="margin-right:6px;"> Anchor present (prior estimate)</label>
+            </div>
+            <div style="margin-top:10px;">
+              <label style="display:flex; justify-content:space-between; margin-bottom:6px; color:var(--muted); font-size:12px;">
+                <span>Competitive pressure</span><span class="pill" id="val_comp"></span>
+              </label>
+              <input id="comp" type="range" min="0" max="100" step="1" value="35"/>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="row">
+          <button class="btn" id="saveScenario">Save scenario</button>
+          <button class="btn secondary" id="copySummary">Copy CARD-style summary</button>
+          <button class="btn secondary" id="reset">Reset to default</button>
+        </div>
+
+        <div style="margin-top:12px;">
+          <div class="note">Saved scenarios are stored in your browser (localStorage). Share the HTML file to share the tool; scenario saves are per-user.</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- RIGHT: Outputs -->
+    <div>
+      <div class="card">
+        <div class="card-h">
+          <h2>Outputs</h2>
+          <div class="mini">
+            <span class="pill">Bias profile updates instantly</span>
+          </div>
+        </div>
+        <div class="card-b">
+          <div class="kpis">
+            <div class="kpi">
+              <div class="label">Point estimate (annual)</div>
+              <div class="value" id="kpi_estimate">$0</div>
+              <div class="sub" id="kpi_estimateSub">Usage-based sketch</div>
+            </div>
+            <div class="kpi">
+              <div class="label">Bias Risk Score</div>
+              <div class="value" id="kpi_biasScore">0</div>
+              <div class="sub" id="kpi_biasBand">—</div>
+            </div>
+            <div class="kpi">
+              <div class="label">Estimate defensibility (traceability)</div>
+              <div class="value" id="kpi_trace">0</div>
+              <div class="sub" id="kpi_traceBand">—</div>
+            </div>
+            <div class="kpi">
+              <div class="label">Bias-adjusted range</div>
+              <div class="value" id="kpi_range">$0</div>
+              <div class="sub" id="kpi_rangeSub">Heuristic range</div>
+            </div>
+          </div>
+
+          <div class="chips" id="chipsRow">
+            <span class="chip" id="chip_card">CARD readiness: —</span>
+            <span class="chip" id="chip_topbias">Top bias: —</span>
+            <span class="chip" id="chip_direction">Direction: —</span>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="two">
+            <div class="card" style="box-shadow:none;">
+              <div class="card-h" style="border-bottom:1px solid var(--line);">
+                <h2>Bias radar</h2>
+                <div class="pill" id="topBiasPill">Top bias: —</div>
+              </div>
+              <div class="card-b">
+                <canvas id="radar"></canvas>
+                <div class="footer">Radar axes are likelihood/severity (0–100). This is a rules-based “warning system,” not a claim of truth.</div>
+              </div>
+            </div>
+
+            <div class="card" style="box-shadow:none;">
+              <div class="card-h" style="border-bottom:1px solid var(--line);">
+                <h2>Drivers</h2>
+                <div class="pill">What’s pushing the score</div>
+              </div>
+              <div class="card-b">
+                <canvas id="drivers"></canvas>
+                <div class="footer">Bars reflect the model’s attribution of your current assumption settings.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="two">
+            <div class="card" style="box-shadow:none;">
+              <div class="card-h" style="border-bottom:1px solid var(--line);">
+                <h2>Mitigation suggestions</h2>
+                <div class="pill">DoD/ICEAA language</div>
+              </div>
+              <div class="card-b">
+                <ul class="table" style="list-style:none; padding-left:0; margin:0;" id="mitigations"></ul>
+              </div>
+            </div>
+
+            <div class="card" style="box-shadow:none;">
+              <div class="card-h" style="border-bottom:1px solid var(--line);">
+                <h2>Scenario compare</h2>
+                <div class="mini">
+                  <select id="scenarioSelect" style="min-width:180px;"></select>
+                  <button class="btn secondary" id="loadScenario">Load</button>
+                  <button class="btn secondary" id="deleteScenario">Delete</button>
+                </div>
+              </div>
+              <div class="card-b">
+                <div class="table-wrap"><table class="table" id="scenarioTable">
+                  <thead>
+                    <tr><th>Name</th><th>Estimate</th><th>Bias Score</th><th>Traceability</th><th>Top Bias</th></tr>
+                  </thead>
+                  <tbody></tbody>
+                </table></div>
+                <div class="footer">Tip: Save “P50 optimistic” vs “P70 optimistic” and “P70 defensible” to demo how bias can move without changing scope.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="footer">
+            <b>Presenter note:</b> Use this as a “live CARD review” exercise. Turn on must-fit + anchor + P50 and watch how the tool flags anchoring/confirmation/overconfidence,
+            even if your cost math is unchanged.
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ----------------------------
+  // State & defaults
+  // ----------------------------
+  const defaults = {
+    sourceType: "internal",
+    traceLevel: "audited",
+    wbsAlign: 70,
+    norm: "fy",
+    sampleSize: 60,
+    similarity: 65,
+    timeRelevance: 55,
+    missing: "mean",
+    outliers: "keep",
+    survivorship: "include",
+
+    analogyPct: 35,
+    parametricPct: 35,
+    buildupPct: 30,
+    boe: "reviewed",
+    chk_indep: false,
+    chk_param: true,
+    chk_analogy: false,
+    learning: "modest",
+    reuse: 35,
+    commitment: "od",
+
+    vcpu: 120000,
+    storage: 65000,
+    egress: 14000,
+    requests: 700,
+    contract: "cpff",
+    fee: 7.0,
+    escalation: "flat",
+    rateStance: 0,
+    priceTrend: "flat",
+    indirects: "approved",
+    plugPct: 18,
+
+    sched: 55,
+    percentile: "p70",
+    corr: "mod",
+    uncert: 55,
+    riskReg: "linked",
+    mustFit: false,
+    anchor: false,
+    comp: 35
+  };
+
+  let state = structuredClone(defaults);
+
+  // Bias types (keep stable labels for your talk)
+  const biasTypes = [
+    "Anchoring",
+    "Optimism",
+    "Selection",
+    "Survivorship",
+    "Measurement",
+    "Confirmation",
+    "Overconfidence"
+  ];
+
+  // Baseline unit rates (educational placeholders; not vendor pricing)
+  const baselineRates = {
+    vcpu_per_hr: 0.04,
+    storage_per_gbmo: 0.023,
+    egress_per_gb: 0.09,
+    req_per_million: 0.20
+  };
+
+  // ----------------------------
+  // Helpers
+  // ----------------------------
+  const fmtMoney = (n) => {
+    const abs = Math.abs(n);
+    const sign = n < 0 ? "-" : "";
+    if (abs >= 1e9) return `${sign}$${(abs/1e9).toFixed(2)}B`;
+    if (abs >= 1e6) return `${sign}$${(abs/1e6).toFixed(2)}M`;
+    if (abs >= 1e3) return `${sign}$${(abs/1e3).toFixed(1)}K`;
+    return `${sign}$${abs.toFixed(0)}`;
+  };
+  const clamp = (x, lo, hi) => Math.max(lo, Math.min(hi, x));
+  function setPill(id, text){ document.getElementById(id).textContent = text; }
+
+  function normalizeBlend(){
+    // normalize the 3 sliders to 100 while preserving proportions
+    let a = state.analogyPct, p = state.parametricPct, b = state.buildupPct;
+    let sum = a+p+b;
+    if(sum === 0){ a=34; p=33; b=33; sum=100; }
+    state.analogyPct = Math.round(a/sum*100/5)*5;
+    state.parametricPct = Math.round(p/sum*100/5)*5;
+    state.buildupPct = Math.max(0, 100 - state.analogyPct - state.parametricPct);
+  }
+
+  function computeEstimateAnnual(){
+    // monthly base usage cost
+    const stance = 1 + (state.rateStance/100);
+    let v = state.vcpu * baselineRates.vcpu_per_hr * stance;
+    let s = state.storage * baselineRates.storage_per_gbmo * stance;
+    let e = state.egress * baselineRates.egress_per_gb * stance;
+    let r = state.requests * baselineRates.req_per_million * stance;
+
+    // commitment posture influences effective price (heuristic)
+    let commitFactor = 1.0;
+    if(state.commitment === "mix") commitFactor = 0.93;
+    if(state.commitment === "heavy") commitFactor = 0.88;
+
+    // price trend: simplistic annual adjustment (average over year)
+    let trendFactor = 1.0;
+    if(state.priceTrend === "deflate") trendFactor = 0.96;
+    if(state.priceTrend === "inflate") trendFactor = 1.05;
+
+    let monthly = (v+s+e+r) * commitFactor * trendFactor;
+
+    // learning/automation: apply to ops-like components (proxy: requests + compute)
+    let learningFactor = 1.0;
+    if(state.learning === "modest") learningFactor = 0.98;
+    if(state.learning === "aggressive") learningFactor = 0.94;
+    monthly = monthly - ((v + r) * (1 - learningFactor));
+
+    // reuse: tends to reduce change/engineering & configuration effort; proxy tiny effect
+    monthly *= (1 - (state.reuse/100) * 0.03);
+
+    // indirects / overhead
+    let overhead = 1.0;
+    if(state.indirects === "approved") overhead = 1.12;
+    if(state.indirects === "target") overhead = 1.08;
+    if(state.indirects === "plug") overhead = 1 + (state.plugPct/100);
+
+    // fee/profit (context only; small effect so it doesn't dominate)
+    let fee = 1 + (state.fee/100) * 0.15;
+
+    const annual = monthly * 12 * overhead * fee;
+    return annual;
+  }
+
+  function computeTraceability(){
+    // 0–100 defensibility score (CARD/BOE-oriented, heuristic)
+    const smallSample = clamp((120 - state.sampleSize)/120, 0, 1);
+    const stale = clamp((60 - state.timeRelevance)/60, 0, 1);
+    const wbs = state.wbsAlign/100;
+
+    let score = 100;
+
+    // traceability level
+    if(state.traceLevel === "partial") score -= 15;
+    if(state.traceLevel === "anecdotal") score -= 30;
+
+    // normalization
+    if(state.norm === "mixed") score -= 10;
+    if(state.norm === "unknown") score -= 20;
+
+    // wbs alignment
+    score -= 30 * (1 - wbs);
+
+    // sample size & staleness
+    score -= 10 * smallSample;
+    score -= 10 * stale;
+
+    // missing/outliers decisions
+    if(state.missing === "fill0") score -= 12;
+    if(state.missing === "omit") score -= 6;
+    if(state.outliers === "remove") score -= 6;
+
+    // indirects plug
+    if(state.indirects === "plug") score -= 18;
+
+    // BOE maturity
+    if(state.boe === "draft") score -= 15;
+    if(state.boe === "reviewed") score -= 6;
+
+    // cross-checks add back points (up to +12)
+    let bonus = 0;
+    if(state.chk_indep) bonus += 6;
+    if(state.chk_param) bonus += 4;
+    if(state.chk_analogy) bonus += 4;
+    score += Math.min(12, bonus);
+
+    // risk register linkage
+    if(state.riskReg === "partial") score -= 6;
+    if(state.riskReg === "none") score -= 14;
+
+    return Math.round(clamp(score, 0, 100));
+  }
+
+  function computeCardReadiness(traceability){
+    // 0–100; heavier emphasis on documentation + risk articulation
+    let score = 0;
+    score += traceability * 0.62;
+
+    // explicit risk posture (P-level) and uncertainty stance
+    const pMap = {p50: 0.55, p70: 0.75, p80: 0.83, p90: 0.9};
+    score += (pMap[state.percentile] * 20);
+
+    // uncertainty (humble) helps readability/defensibility
+    score += (state.uncert/100) * 10;
+
+    // “bias amplifiers” reduce readiness
+    const comp = state.comp/100;
+    if(state.mustFit) score -= 8;
+    if(state.anchor) score -= 6;
+    score -= comp * 6;
+
+    // escalation/index choice: "flat" is risky if schedule extends; keep small weight
+    if(state.escalation === "flat") score -= 2;
+    if(state.escalation !== "flat") score += 1;
+
+    return Math.round(clamp(score, 0, 100));
+  }
+
+  function computeBias(){
+    // bias scores 0-100
+    let scores = {};
+    biasTypes.forEach(b => scores[b] = 0);
+
+    // --- Context tendencies
+    const comp = state.comp/100;
+    const mustFit = state.mustFit ? 1 : 0;
+    const anchor = state.anchor ? 1 : 0;
+
+    // --- Data pedigree drivers
+    const smallSample = clamp((120 - state.sampleSize)/120, 0, 1); // stronger when <120
+    const highSimilarity = state.similarity/100;
+    const stale = clamp((60 - state.timeRelevance)/60, 0, 1); // stronger when <60
+    const wbs = state.wbsAlign/100;
+
+    // source type
+    const source = state.sourceType;
+    if(source === "analogy"){ scores["Selection"] += 24; scores["Anchoring"] += 10; }
+    if(source === "vendor"){ scores["Confirmation"] += 16; scores["Selection"] += 10; }
+    if(source === "market"){ scores["Measurement"] += 12; }
+    if(source === "csdr"){ scores["Measurement"] += 4; }
+    if(source === "internal"){ scores["Overconfidence"] += 4; }
+
+    // traceability level affects overconfidence/measurement (less documentation => more hidden assumptions)
+    if(state.traceLevel === "partial"){ scores["Measurement"] += 8; scores["Overconfidence"] += 6; }
+    if(state.traceLevel === "anecdotal"){ scores["Measurement"] += 16; scores["Overconfidence"] += 12; scores["Confirmation"] += 6; }
+
+    // normalization + WBS alignment issues show up as measurement bias
+    if(state.norm === "mixed") scores["Measurement"] += 8;
+    if(state.norm === "unknown") scores["Measurement"] += 14;
+    scores["Measurement"] += 18 * (1 - wbs);
+
+    // sample size + similarity interplay
+    scores["Selection"] += 35 * smallSample * (0.6 + 0.7*highSimilarity);
+    scores["Overconfidence"] += 22 * smallSample * (0.4 + 0.6*(1 - state.uncert/100));
+    scores["Measurement"] += 10 * stale;
+
+    // survivorship filter
+    if(state.survivorship === "exclude"){ scores["Survivorship"] += 35; scores["Confirmation"] += 8; }
+
+    // missing data
+    if(state.missing === "omit"){ scores["Selection"] += 12; }
+    if(state.missing === "fill0"){ scores["Measurement"] += 18; }
+    if(state.missing === "mean"){ scores["Measurement"] += 8; }
+    if(state.missing === "model"){ scores["Measurement"] += 4; }
+
+    // outliers
+    if(state.outliers === "remove"){ scores["Selection"] += 10; scores["Confirmation"] += 6; }
+    if(state.outliers === "winsor"){ scores["Measurement"] += 6; }
+    if(state.outliers === "keep"){ scores["Overconfidence"] += 4; }
+
+    // --- Method choices drivers
+    normalizeBlend();
+    const a = state.analogyPct/100, p = state.parametricPct/100, b = state.buildupPct/100;
+
+    scores["Anchoring"] += 18*a + 6*p;
+    scores["Selection"] += 16*a + 4*p;
+    scores["Measurement"] += 10*b + 6*p;
+    scores["Overconfidence"] += 8*p * (1 - state.uncert/100);
+
+    // BOE maturity improves overconfidence/confirmation (more explicit assumptions)
+    if(state.boe === "draft"){ scores["Overconfidence"] += 10; scores["Confirmation"] += 8; }
+    if(state.boe === "standard"){ scores["Overconfidence"] -= 6; scores["Confirmation"] -= 4; }
+
+    // Cross-checks reduce confirmation/overconfidence slightly (can't go below 0 after clamp)
+    const checks = (state.chk_indep?1:0) + (state.chk_param?1:0) + (state.chk_analogy?1:0);
+    scores["Confirmation"] -= 4 * checks;
+    scores["Overconfidence"] -= 3 * checks;
+
+    // learning and reuse (optimism/confirmation)
+    if(state.learning === "aggressive"){ scores["Optimism"] += 22; scores["Confirmation"] += 10; }
+    if(state.learning === "modest"){ scores["Optimism"] += 10; }
+    scores["Optimism"] += (state.reuse/100) * 14;
+
+    // commitments (RIs): optimistic if assuming sustained utilization
+    if(state.commitment === "heavy"){ scores["Optimism"] += 10; scores["Overconfidence"] += 6; }
+
+    // --- Rates & economic drivers
+    const stance = state.rateStance;
+    if(stance < -10){ scores["Confirmation"] += 12; scores["Anchoring"] += 6; }
+    if(stance > 10){ scores["Measurement"] += 8; }
+
+    if(state.priceTrend === "deflate"){ scores["Optimism"] += 14; scores["Confirmation"] += 6; }
+    if(state.priceTrend === "inflate"){ scores["Measurement"] += 6; }
+
+    if(state.indirects === "plug"){ scores["Measurement"] += 26; scores["Overconfidence"] += 6; }
+    if(state.indirects === "target"){ scores["Confirmation"] += 10; }
+
+    // escalation: flat can create optimism if schedule extends; keep small influence
+    if(state.escalation === "flat"){ scores["Optimism"] += 4 * (1 - state.sched/100); }
+
+    // --- Schedule & risk posture
+    const sched = state.sched/100; // 0 optimistic, 1 realistic
+    scores["Optimism"] += 25 * (1 - sched);
+
+    if(state.percentile === "p50"){ scores["Overconfidence"] += 14; scores["Optimism"] += 10; }
+    if(state.percentile === "p70"){ scores["Overconfidence"] += 6; }
+    if(state.percentile === "p80"){ scores["Measurement"] += 4; }
+    if(state.percentile === "p90"){ scores["Measurement"] += 8; }
+
+    if(state.corr === "none"){ scores["Overconfidence"] += 12; }
+    if(state.corr === "high"){ scores["Measurement"] += 6; }
+
+    // uncertainty stance
+    scores["Overconfidence"] += 22 * (1 - state.uncert/100);
+
+    // risk register linkage: none can hide risks (overconfidence)
+    if(state.riskReg === "none"){ scores["Overconfidence"] += 10; }
+    if(state.riskReg === "partial"){ scores["Overconfidence"] += 4; }
+
+    // --- Decision context (human levers)
+    scores["Anchoring"] += 30 * anchor;
+    scores["Confirmation"] += 18 * mustFit + 18 * comp;
+    scores["Optimism"] += 10 * mustFit + 10 * comp;
+
+    // clamp & round (also clamp any negatives after the small reductions)
+    biasTypes.forEach(k => scores[k] = Math.round(clamp(scores[k], 0, 100)));
+
+    // overall score: weighted (emphasize common harmful bias in estimating)
+    const weights = {
+      "Anchoring": 1.1,
+      "Optimism": 1.2,
+      "Selection": 1.15,
+      "Survivorship": 1.0,
+      "Measurement": 1.05,
+      "Confirmation": 1.1,
+      "Overconfidence": 1.15
+    };
+    let wsum = 0, total = 0;
+    biasTypes.forEach(k => { total += scores[k]*weights[k]; wsum += weights[k]; });
+    const overall = Math.round(total/wsum);
+
+    // Direction heuristic (under/over) for comms
+    const downPressure =
+      (state.mustFit ? 0.35 : 0) +
+      (state.anchor ? 0.15 : 0) +
+      (comp * 0.35) +
+      (state.percentile === "p50" ? 0.18 : 0) +
+      (state.rateStance < 0 ? Math.min(0.2, Math.abs(state.rateStance)/100) : 0) +
+      ((1 - sched) * 0.25) +
+      (state.priceTrend === "deflate" ? 0.12 : 0);
+
+    const upPressure =
+      (state.percentile === "p90" ? 0.22 : 0) +
+      (state.rateStance > 0 ? Math.min(0.18, state.rateStance/100) : 0) +
+      (sched * 0.08) +
+      (state.priceTrend === "inflate" ? 0.10 : 0);
+
+    let direction = "Ambiguous";
+    if(downPressure - upPressure > 0.18) direction = "Likely low (underestimate risk)";
+    if(upPressure - downPressure > 0.18) direction = "Likely high (overestimate risk)";
+
+    // Bias-adjusted range: map score to +/- percentage (max ~25%)
+    const biasPct = clamp(overall / 400, 0, 0.25);
+    let low = 1 - biasPct, high = 1 + biasPct;
+    if(direction.startsWith("Likely low")){
+      low = 1 - biasPct*1.3;
+      high = 1 + biasPct*0.7;
+    } else if(direction.startsWith("Likely high")){
+      low = 1 - biasPct*0.7;
+      high = 1 + biasPct*1.3;
+    }
+    low = clamp(low, 0.6, 1.0);
+    high = clamp(high, 1.0, 1.6);
+
+    // Drivers (attribution bars) – pick 6 strongest contributing "themes"
+    const drivers = [];
+    drivers.push(["Small sample size", Math.round(30*smallSample)]);
+    drivers.push(["WBS/scope mismatch", Math.round(26*(1-wbs))]);
+    drivers.push(["Schedule optimism", Math.round(28*(1-sched))]);
+    drivers.push(["Narrow uncertainty ranges", Math.round(26*(1 - state.uncert/100))]);
+    drivers.push(["Decision pressure (cap/competition/anchor)", Math.round(28*(comp + (mustFit?0.35:0) + (anchor?0.2:0)))]);
+    if(state.indirects === "plug") drivers.push(["Indirects as plug factor", 22]);
+    if(state.traceLevel !== "audited") drivers.push(["Low traceability / undocumented assumptions", state.traceLevel==="partial"?16:24]);
+    if(state.survivorship === "exclude") drivers.push(["Filtered “messy” cases", 18]);
+    if(state.percentile === "p50") drivers.push(["P50 posture", 16]);
+
+    drivers.sort((a,b)=>b[1]-a[1]);
+    const topDrivers = drivers.slice(0,6);
+
+    // Top bias
+    const sortedBias = biasTypes.map(k => [k, scores[k]]).sort((a,b)=>b[1]-a[1]);
+    const topBias = sortedBias[0][0];
+
+    // Mitigations (DoD/ICEAA language)
+    const mitigations = [];
+    const add = (title, detail) => mitigations.push({title, detail});
+
+    if(scores["Anchoring"] >= 55){
+      add("Anchoring control", "Run a no-anchor pass (blind to prior) and document deltas in the CARD assumptions section.");
+    }
+    if(scores["Optimism"] >= 55){
+      add("Schedule realism", "Calibrate with historical throughput/slip; avoid compressing schedule + holding cost flat without evidence.");
+    }
+    if(scores["Selection"] >= 55 || scores["Survivorship"] >= 55){
+      add("Analog pool integrity", "Expand analogies; include overruns/cancellations; stratify by key drivers (security, utilization, mission criticality).");
+    }
+    if(scores["Measurement"] >= 55){
+      add("Definition & mapping", "Standardize units (vCPU-hr, GB-mo, egress), normalize to common FY$, and verify WBS alignment.");
+    }
+    if(scores["Confirmation"] >= 55){
+      add("Should-cost vs will-cost", "Keep objective (should) and most-likely (will) visible; predefine what evidence would change the estimate.");
+    }
+    if(scores["Overconfidence"] >= 55){
+      add("Confidence posture", "Use P70/P80 for budget decisions when downside risk matters; widen ranges when sample size is low.");
+    }
+    if(state.boe === "draft"){
+      add("BOE maturity", "Move assumptions from implicit to explicit; add sources/dates/rationale; link to CARD and risk register.");
+    }
+    if(state.riskReg !== "linked"){
+      add("Risk register linkage", "Connect key drivers to a risk register/watch list and ensure risk handling is visible in the narrative.");
+    }
+    if(mitigations.length < 6){
+      add("Independent check", "Add a peer review / independent estimate step to surface bias and improve defensibility.");
+      add("Traceability upgrade", "Tag assumptions with source + date + confidence level; treat undocumented assumptions as risk drivers.");
+    }
+    const mitigationsFinal = mitigations.slice(0,8);
+
+    return { scores, overall, direction, low, high, topBias, topDrivers, mitigationsFinal };
+  }
+
+  // ----------------------------
+  // Charts
+  // ----------------------------
+  let radarChart, driversChart;
+
+  function initCharts(){
+    const radarCtx = document.getElementById("radar");
+    radarChart = new Chart(radarCtx, {
+      type: "radar",
+      data: {
+        labels: biasTypes,
+        datasets: [{
+          label: "Bias likelihood/severity",
+          data: biasTypes.map(_=>0),
+          fill: true
+        }]
+      },
+      options: {
+        responsive: true,
+        animation: { duration: 250 },
+        plugins: { legend: { display: false } },
+        scales: {
+          r: {
+            min: 0, max: 100,
+            ticks: { display: false }
+          }
+        }
+      }
+    });
+
+    const drvCtx = document.getElementById("drivers");
+    driversChart = new Chart(drvCtx, {
+      type: "bar",
+      data: {
+        labels: ["—"],
+        datasets: [{
+          label: "Contribution",
+          data: [0]
+        }]
+      },
+      options: {
+        responsive: true,
+        animation: { duration: 250 },
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { min: 0, max: 40 }
+        }
+      }
+    });
+  }
+
+  function updateCharts(bias){
+    radarChart.data.datasets[0].data = biasTypes.map(k => bias.scores[k]);
+    radarChart.update();
+
+    driversChart.data.labels = bias.topDrivers.map(d => d[0]);
+    driversChart.data.datasets[0].data = bias.topDrivers.map(d => d[1]);
+    driversChart.options.scales.y.max = Math.max(30, ...bias.topDrivers.map(d=>d[1])) + 6;
+    driversChart.update();
+  }
+
+  // ----------------------------
+  // Tabs
+  // ----------------------------
+  const panels = {
+    data: document.getElementById("panel-data"),
+    method: document.getElementById("panel-method"),
+    rates: document.getElementById("panel-rates"),
+    risk: document.getElementById("panel-risk")
+  };
+
+  document.getElementById("domainTabs").addEventListener("click", (e) => {
+    const tab = e.target.closest(".tab");
+    if(!tab) return;
+    const key = tab.dataset.tab;
+
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    tab.classList.add("active");
+
+    Object.keys(panels).forEach(k => panels[k].style.display = (k===key) ? "block" : "none");
+  });
+
+  // ----------------------------
+  // UI binding
+  // ----------------------------
+  const bind = (id, key, type="value") => {
+    const el = document.getElementById(id);
+    el.addEventListener("input", () => {
+      if(type === "checked"){ state[key] = el.checked; }
+      else if(el.type === "range" || el.type === "number"){ state[key] = Number(el.value); }
+      else { state[key] = el.value; }
+      update();
+    });
+  };
+
+  function updatePills(){
+    setPill("val_sourceType", document.getElementById("sourceType").selectedOptions[0].textContent);
+    setPill("val_traceLevel", document.getElementById("traceLevel").selectedOptions[0].textContent);
+    setPill("val_norm", document.getElementById("norm").selectedOptions[0].textContent);
+    setPill("val_missing", document.getElementById("missing").selectedOptions[0].textContent);
+    setPill("val_outliers", document.getElementById("outliers").selectedOptions[0].textContent);
+    setPill("val_survivorship", document.getElementById("survivorship").selectedOptions[0].textContent);
+
+    setPill("val_boe", document.getElementById("boe").selectedOptions[0].textContent);
+    const checks = [
+      state.chk_indep ? "Peer/indep" : null,
+      state.chk_param ? "Parametric" : null,
+      state.chk_analogy ? "Analogy" : null
+    ].filter(Boolean);
+    setPill("val_checks", checks.length ? checks.join(" • ") : "None selected");
+
+    setPill("val_learning", document.getElementById("learning").selectedOptions[0].textContent);
+    setPill("val_commitment", document.getElementById("commitment").selectedOptions[0].textContent);
+
+    setPill("val_contract", document.getElementById("contract").selectedOptions[0].textContent);
+    setPill("val_escalation", document.getElementById("escalation").selectedOptions[0].textContent);
+    setPill("val_priceTrend", document.getElementById("priceTrend").selectedOptions[0].textContent);
+    setPill("val_indirects", document.getElementById("indirects").selectedOptions[0].textContent);
+
+    setPill("val_percentile", document.getElementById("percentile").selectedOptions[0].textContent);
+    setPill("val_corr", document.getElementById("corr").selectedOptions[0].textContent);
+    setPill("val_riskReg", document.getElementById("riskReg").selectedOptions[0].textContent);
+
+    setPill("val_context", [
+      state.mustFit ? "Budget cap" : "No cap",
+      state.anchor ? "Anchor present" : "No anchor"
+    ].join(" • "));
+  }
+
+  function update(){
+    normalizeBlend();
+
+    // Refresh range pills
+    document.getElementById("val_wbsAlign").textContent = `${state.wbsAlign}%`;
+    document.getElementById("val_sampleSize").textContent = `${state.sampleSize}`;
+    document.getElementById("val_similarity").textContent = `${state.similarity}%`;
+    document.getElementById("val_timeRelevance").textContent = `${state.timeRelevance}%`;
+
+    document.getElementById("val_analogyPct").textContent = `${state.analogyPct}%`;
+    document.getElementById("val_parametricPct").textContent = `${state.parametricPct}%`;
+    document.getElementById("val_buildupPct").textContent = `${state.buildupPct}%`;
+    document.getElementById("val_reuse").textContent = `${state.reuse}%`;
+
+    document.getElementById("val_vcpu").textContent = `${state.vcpu.toLocaleString()}`;
+    document.getElementById("val_storage").textContent = `${state.storage.toLocaleString()}`;
+    document.getElementById("val_egress").textContent = `${state.egress.toLocaleString()}`;
+    document.getElementById("val_requests").textContent = `${state.requests.toLocaleString()}`;
+
+    document.getElementById("val_fee").textContent = `${Number(state.fee).toFixed(1)}%`;
+    document.getElementById("val_rateStance").textContent = `${state.rateStance}%`;
+    document.getElementById("val_plugPct").textContent = `${state.plugPct}%`;
+
+    document.getElementById("val_sched").textContent = `${state.sched}%`;
+    document.getElementById("val_uncert").textContent = `${state.uncert}%`;
+    document.getElementById("val_comp").textContent = `${state.comp}%`;
+
+    updatePills();
+
+    // Compute outputs
+    const est = computeEstimateAnnual();
+    const bias = computeBias();
+    const trace = computeTraceability();
+    const card = computeCardReadiness(trace);
+
+    // KPI updates
+    document.getElementById("kpi_estimate").textContent = fmtMoney(est);
+    document.getElementById("kpi_biasScore").textContent = `${bias.overall}`;
+
+    const band = bias.overall < 30 ? "Low" : (bias.overall < 60 ? "Moderate" : "High");
+    document.getElementById("kpi_biasBand").textContent = `${band} bias exposure`;
+
+    document.getElementById("kpi_trace").textContent = `${trace}`;
+    const tband = trace >= 80 ? "Strong" : (trace >= 55 ? "Mixed" : "Weak");
+    document.getElementById("kpi_traceBand").textContent = `${tband} traceability`;
+
+    const low = est * bias.low;
+    const high = est * bias.high;
+    document.getElementById("kpi_range").textContent = `${fmtMoney(low)} – ${fmtMoney(high)}`;
+
+    // Chips
+    const chipCard = document.getElementById("chip_card");
+    chipCard.textContent = `CARD readiness: ${card}`;
+    chipCard.className = "chip " + (card >= 80 ? "good" : (card >= 55 ? "warn" : "bad"));
+
+    const chipTop = document.getElementById("chip_topbias");
+    chipTop.textContent = `Top bias: ${bias.topBias}`;
+    chipTop.className = "chip " + (bias.overall < 30 ? "good" : (bias.overall < 60 ? "warn" : "bad"));
+
+    const chipDir = document.getElementById("chip_direction");
+    chipDir.textContent = `Direction: ${bias.direction}`;
+    chipDir.className = "chip " + (bias.direction.startsWith("Likely") ? "warn" : "");
+
+    // Top bias pill
+    document.getElementById("topBiasPill").textContent = `Top bias: ${bias.topBias}`;
+
+    // Mitigations (render as rows)
+    const ul = document.getElementById("mitigations");
+    ul.innerHTML = "";
+    bias.mitigationsFinal.forEach(m => {
+      const li = document.createElement("li");
+      li.style.borderBottom = "1px solid rgba(255,255,255,0.08)";
+      li.style.padding = "10px 6px";
+      li.innerHTML = `<div style="color: var(--text); font-weight:650; margin-bottom:4px;">${m.title}</div>
+                      <div style="color: var(--muted); line-height:1.45;">${m.detail}</div>`;
+      ul.appendChild(li);
+    });
+
+    // Charts
+    updateCharts(bias);
+
+    // Scenario table
+    renderScenarioTable();
+  }
+
+  // ----------------------------
+  // Scenario saving (localStorage)
+  // ----------------------------
+  const LS_KEY = "bias_sandbox_scenarios_v2_dod";
+
+  function getScenarios(){
+    try{ return JSON.parse(localStorage.getItem(LS_KEY) || "[]"); }
+    catch{ return []; }
+  }
+
+  function setScenarios(arr){
+    localStorage.setItem(LS_KEY, JSON.stringify(arr));
+    refreshScenarioSelect();
+  }
+
+  function scenarioSummary(s){
+    const old = state;
+    state = structuredClone(s.payload);
+    const est = computeEstimateAnnual();
+    const bias = computeBias();
+    const trace = computeTraceability();
+    state = old;
+    return { name: s.name, estimate: est, biasScore: bias.overall, trace, topBias: bias.topBias };
+  }
+
+  function refreshScenarioSelect(){
+    const sel = document.getElementById("scenarioSelect");
+    const scenarios = getScenarios();
+    sel.innerHTML = "";
+    const opt0 = document.createElement("option");
+    opt0.value = "";
+    opt0.textContent = scenarios.length ? "Select a saved scenario…" : "No saved scenarios yet";
+    sel.appendChild(opt0);
+    scenarios.forEach((s, idx) => {
+      const opt = document.createElement("option");
+      opt.value = String(idx);
+      opt.textContent = s.name;
+      sel.appendChild(opt);
+    });
+  }
+
+  function renderScenarioTable(){
+    const tbody = document.querySelector("#scenarioTable tbody");
+    const scenarios = getScenarios();
+    tbody.innerHTML = "";
+    scenarios.forEach(s => {
+      const sum = scenarioSummary(s);
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td>${sum.name}</td><td>${fmtMoney(sum.estimate)}</td><td>${sum.biasScore}</td><td>${sum.trace}</td><td>${sum.topBias}</td>`;
+      tbody.appendChild(tr);
+    });
+  }
+
+  document.getElementById("saveScenario").addEventListener("click", () => {
+    const name = prompt("Scenario name (e.g., 'P50 must-fit' or 'P70 defensible'):");
+    if(!name) return;
+    const scenarios = getScenarios();
+    scenarios.unshift({ name, created: new Date().toISOString(), payload: structuredClone(state) });
+    setScenarios(scenarios.slice(0,12));
+    update();
+  });
+
+  document.getElementById("loadScenario").addEventListener("click", () => {
+    const idx = document.getElementById("scenarioSelect").value;
+    if(idx === "") return;
+    const scenarios = getScenarios();
+    const s = scenarios[Number(idx)];
+    if(!s) return;
+    state = structuredClone(s.payload);
+
+    // push state into controls
+    for(const k of Object.keys(defaults)){
+      const el = document.getElementById(k);
+      if(!el) continue;
+      if(el.type === "checkbox") el.checked = state[k];
+      else el.value = state[k];
+    }
+    update();
+  });
+
+  document.getElementById("deleteScenario").addEventListener("click", () => {
+    const idx = document.getElementById("scenarioSelect").value;
+    if(idx === "") return;
+    const scenarios = getScenarios();
+    scenarios.splice(Number(idx), 1);
+    setScenarios(scenarios);
+    update();
+  });
+
+  document.getElementById("reset").addEventListener("click", () => {
+    state = structuredClone(defaults);
+    for(const k of Object.keys(defaults)){
+      const el = document.getElementById(k);
+      if(!el) continue;
+      if(el.type === "checkbox") el.checked = state[k];
+      else el.value = state[k];
+    }
+    update();
+  });
+
+  // Copy CARD-style summary
+  document.getElementById("copySummary").addEventListener("click", async () => {
+    const est = computeEstimateAnnual();
+    const bias = computeBias();
+    const trace = computeTraceability();
+    const card = computeCardReadiness(trace);
+
+    const lines = [];
+    lines.push("=== CARD/BOE Assumption Summary (Bias Sandbox) ===");
+    lines.push(`Point estimate (annual): ${fmtMoney(est)} | Bias Score: ${bias.overall} | Traceability: ${trace} | CARD readiness: ${card}`);
+    lines.push("");
+    lines.push("Data Pedigree:");
+    lines.push(`- Source: ${document.getElementById("sourceType").selectedOptions[0].textContent}`);
+    lines.push(`- Traceability: ${document.getElementById("traceLevel").selectedOptions[0].textContent}`);
+    lines.push(`- WBS alignment: ${state.wbsAlign}% | Normalization: ${document.getElementById("norm").selectedOptions[0].textContent}`);
+    lines.push(`- Sample size: ${state.sampleSize} | Similarity: ${state.similarity}% | Time relevance: ${state.timeRelevance}%`);
+    lines.push(`- Missing data: ${document.getElementById("missing").selectedOptions[0].textContent}`);
+    lines.push(`- Outliers: ${document.getElementById("outliers").selectedOptions[0].textContent} | Survivorship: ${document.getElementById("survivorship").selectedOptions[0].textContent}`);
+    lines.push("");
+    lines.push("Method Choices:");
+    lines.push(`- Method blend: Analogy ${state.analogyPct} / Parametric ${state.parametricPct} / Build-up ${state.buildupPct}`);
+    lines.push(`- BOE maturity: ${document.getElementById("boe").selectedOptions[0].textContent}`);
+    const checks = [
+      state.chk_indep ? "Independent/peer" : null,
+      state.chk_param ? "Parametric cross-check" : null,
+      state.chk_analogy ? "Analogy cross-check" : null
+    ].filter(Boolean);
+    lines.push(`- Cross-checks: ${checks.length ? checks.join(", ") : "None"}`);
+    lines.push(`- Learning: ${document.getElementById("learning").selectedOptions[0].textContent} | Reuse: ${state.reuse}% | Commitment: ${document.getElementById("commitment").selectedOptions[0].textContent}`);
+    lines.push("");
+    lines.push("Economic & Rates:");
+    lines.push(`- Contract type: ${document.getElementById("contract").selectedOptions[0].textContent} | Fee/profit (context): ${Number(state.fee).toFixed(1)}%`);
+    lines.push(`- Escalation: ${document.getElementById("escalation").selectedOptions[0].textContent} | Rate stance: ${state.rateStance}% | Price trend: ${document.getElementById("priceTrend").selectedOptions[0].textContent}`);
+    lines.push(`- Indirects: ${document.getElementById("indirects").selectedOptions[0].textContent} (plug ${state.plugPct}%)`);
+    lines.push("");
+    lines.push("Schedule & Risk:");
+    lines.push(`- Schedule realism: ${state.sched}% | Percentile: ${document.getElementById("percentile").selectedOptions[0].textContent} | Correlation: ${document.getElementById("corr").selectedOptions[0].textContent}`);
+    lines.push(`- Uncertainty stance: ${state.uncert}% | Risk register linkage: ${document.getElementById("riskReg").selectedOptions[0].textContent}`);
+    lines.push(`- Decision context: ${state.mustFit ? "Must-fit cap" : "No cap"}, ${state.anchor ? "Anchor present" : "No anchor"}, competitive pressure ${state.comp}%`);
+    lines.push("");
+    lines.push(`Top bias: ${bias.topBias} | Direction: ${bias.direction}`);
+    lines.push("Mitigations (top):");
+    bias.mitigationsFinal.slice(0,4).forEach(m => lines.push(`- ${m.title}: ${m.detail}`));
+
+    const text = lines.join("\n");
+    try{
+      await navigator.clipboard.writeText(text);
+      alert("Copied summary to clipboard.");
+    }catch{
+      // fallback
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      ta.remove();
+      alert("Copied summary to clipboard (fallback).");
+    }
+  });
+
+  // ----------------------------
+  // Bind controls
+  // ----------------------------
+  bind("sourceType", "sourceType");
+  bind("traceLevel", "traceLevel");
+  bind("wbsAlign", "wbsAlign");
+  bind("norm", "norm");
+  bind("sampleSize", "sampleSize");
+  bind("similarity", "similarity");
+  bind("timeRelevance", "timeRelevance");
+  bind("missing", "missing");
+  bind("outliers", "outliers");
+  bind("survivorship", "survivorship");
+
+  bind("analogyPct", "analogyPct");
+  bind("parametricPct", "parametricPct");
+  bind("buildupPct", "buildupPct");
+  bind("boe", "boe");
+  bind("chk_indep", "chk_indep", "checked");
+  bind("chk_param", "chk_param", "checked");
+  bind("chk_analogy", "chk_analogy", "checked");
+  bind("learning", "learning");
+  bind("reuse", "reuse");
+  bind("commitment", "commitment");
+
+  bind("vcpu", "vcpu");
+  bind("storage", "storage");
+  bind("egress", "egress");
+  bind("requests", "requests");
+  bind("contract", "contract");
+  bind("fee", "fee");
+  bind("escalation", "escalation");
+  bind("rateStance", "rateStance");
+  bind("priceTrend", "priceTrend");
+  bind("indirects", "indirects");
+  bind("plugPct", "plugPct");
+
+  bind("sched", "sched");
+  bind("percentile", "percentile");
+  bind("corr", "corr");
+  bind("uncert", "uncert");
+  bind("riskReg", "riskReg");
+  bind("mustFit", "mustFit", "checked");
+  bind("anchor", "anchor", "checked");
+  bind("comp", "comp");
+
+  // Init
+  initCharts();
+  refreshScenarioSelect();
+  update();
+</script>
+</body>
+</html>
