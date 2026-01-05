@@ -452,11 +452,23 @@
     #domainTabs::-webkit-scrollbar{ height: 6px; }
     #domainTabs::-webkit-scrollbar-thumb{ background: rgba(255,255,255,0.12); border-radius: 999px; }
     input[type="range"]{ 
-      height: 44px; 
+      height: 44px;
+      width: 100%;
       /* Better touch target */
       -webkit-appearance: none;
       appearance: none;
+      background: transparent;
+      cursor: pointer;
     }
+    /* Webkit slider track */
+    input[type="range"]::-webkit-slider-runnable-track{
+      width: 100%;
+      height: 6px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 3px;
+      border: 1px solid var(--line);
+    }
+    /* Webkit slider thumb */
     input[type="range"]::-webkit-slider-thumb{
       -webkit-appearance: none;
       appearance: none;
@@ -465,26 +477,64 @@
       background: var(--accent);
       border-radius: 50%;
       cursor: pointer;
+      margin-top: -8px;
+      border: 2px solid rgba(122,162,255,0.3);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      transition: all 0.2s ease;
     }
+    input[type="range"]::-webkit-slider-thumb:hover{
+      background: rgba(122,162,255,0.9);
+      transform: scale(1.1);
+      box-shadow: 0 3px 8px rgba(122,162,255,0.4);
+    }
+    input[type="range"]::-webkit-slider-thumb:active{
+      transform: scale(1.15);
+    }
+    /* Firefox slider track */
+    input[type="range"]::-moz-range-track{
+      width: 100%;
+      height: 6px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 3px;
+      border: 1px solid var(--line);
+    }
+    /* Firefox slider thumb */
     input[type="range"]::-moz-range-thumb{
       width: 20px;
       height: 20px;
       background: var(--accent);
       border-radius: 50%;
       cursor: pointer;
-      border: none;
+      border: 2px solid rgba(122,162,255,0.3);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      transition: all 0.2s ease;
+    }
+    input[type="range"]::-moz-range-thumb:hover{
+      background: rgba(122,162,255,0.9);
+      transform: scale(1.1);
+      box-shadow: 0 3px 8px rgba(122,162,255,0.4);
+    }
+    input[type="range"]::-moz-range-thumb:active{
+      transform: scale(1.15);
     }
     @media (min-width: 768px){
       input[type="range"]{ 
         height: 28px; 
       }
+      input[type="range"]::-webkit-slider-runnable-track{
+        height: 4px;
+      }
       input[type="range"]::-webkit-slider-thumb{
-        width: 16px;
-        height: 16px;
+        width: 18px;
+        height: 18px;
+        margin-top: -7px;
+      }
+      input[type="range"]::-moz-range-track{
+        height: 4px;
       }
       input[type="range"]::-moz-range-thumb{
-        width: 16px;
-        height: 16px;
+        width: 18px;
+        height: 18px;
       }
     }
     input[type="checkbox"]{ 
@@ -543,6 +593,166 @@
       clip: rect(0,0,0,0);
       white-space: nowrap;
       border-width: 0;
+    }
+    
+    /* Print styles */
+    @media print{
+      body{
+        background: white;
+        color: #000;
+      }
+      header{
+        position: static;
+        border-bottom: 2px solid #000;
+        background: white;
+        color: #000;
+      }
+      .badge{
+        border: 1px solid #000;
+        color: #000;
+        background: #f0f0f0;
+      }
+      .card{
+        border: 1px solid #000;
+        background: white;
+        page-break-inside: avoid;
+        margin-bottom: 20px;
+      }
+      .btn, button{
+        display: none;
+      }
+      .kpi{
+        border: 1px solid #ccc;
+        background: #f9f9f9;
+      }
+      canvas{
+        max-height: 400px !important;
+      }
+      .note, .footer{
+        color: #666;
+      }
+      @page{
+        margin: 1.5cm;
+      }
+    }
+    
+    /* Search input for scenarios */
+    .search-box{
+      width: 100%;
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: rgba(15,23,48,0.7);
+      color: var(--text);
+      font-size: 13px;
+      margin-bottom: 10px;
+    }
+    .search-box:focus{
+      border-color: rgba(122,162,255,0.5);
+      box-shadow: 0 0 0 3px rgba(122,162,255,0.1);
+      outline: none;
+    }
+    
+    /* Preset templates */
+    .preset-btn{
+      padding: 6px 10px;
+      font-size: 11px;
+      margin: 2px;
+    }
+    
+    /* Validation warnings */
+    .field-warning{
+      margin-top: 6px;
+      padding: 8px;
+      background: rgba(255,204,102,0.15);
+      border: 1px solid rgba(255,204,102,0.4);
+      border-radius: 6px;
+      font-size: 11px;
+      color: var(--warn);
+      display: none;
+    }
+    .field-warning.show{
+      display: block;
+    }
+    
+    /* Tooltip styles */
+    .tooltip{
+      position: relative;
+      display: inline-block;
+      cursor: help;
+    }
+    .tooltip .tooltiptext{
+      visibility: hidden;
+      background-color: rgba(17,26,51,0.95);
+      color: var(--text);
+      text-align: left;
+      border-radius: 8px;
+      padding: 8px 12px;
+      position: absolute;
+      z-index: 1000;
+      bottom: 125%;
+      left: 50%;
+      transform: translateX(-50%);
+      opacity: 0;
+      transition: opacity 0.3s;
+      font-size: 11px;
+      line-height: 1.4;
+      max-width: 250px;
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      pointer-events: none;
+    }
+    .tooltip:hover .tooltiptext{
+      visibility: visible;
+      opacity: 1;
+    }
+    .tooltip .tooltiptext::after{
+      content: "";
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      margin-left: -5px;
+      border-width: 5px;
+      border-style: solid;
+      border-color: rgba(17,26,51,0.95) transparent transparent transparent;
+    }
+    
+    /* Keyboard shortcut hint */
+    .shortcut-hint{
+      font-size: 10px;
+      color: var(--muted);
+      opacity: 0.6;
+      margin-left: 4px;
+    }
+    
+    /* Toast notification */
+    .toast{
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: rgba(17,26,51,0.95);
+      color: var(--text);
+      padding: 12px 16px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      z-index: 10000;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.3s ease;
+      max-width: 300px;
+    }
+    .toast.show{
+      opacity: 1;
+      transform: translateY(0);
+    }
+    @media (max-width: 767px){
+      .toast{
+        bottom: 10px;
+        right: 10px;
+        left: 10px;
+        max-width: none;
+      }
     }
 
   </style>
@@ -862,8 +1072,22 @@
 
         <div class="row">
           <button class="btn" id="saveScenario" aria-label="Save current scenario">Save scenario</button>
-          <button class="btn secondary" id="copySummary" aria-label="Copy CARD-style summary to clipboard">Copy CARD-style summary</button>
-          <button class="btn secondary" id="reset" aria-label="Reset all fields to default values">Reset to default</button>
+          <button class="btn secondary" id="copySummary" aria-label="Copy CARD-style summary to clipboard">Copy summary</button>
+          <button class="btn secondary" id="exportScenario" aria-label="Export scenario as JSON">Export</button>
+          <button class="btn secondary" id="reset" aria-label="Reset all fields to default values">Reset</button>
+        </div>
+        <div class="row" style="margin-top:8px;">
+          <button class="btn secondary" id="shareUrl" aria-label="Generate shareable URL">Share URL</button>
+          <button class="btn secondary" id="exportChart" aria-label="Export charts as images">Export charts</button>
+        </div>
+        <div style="margin-top:12px; padding:10px; background: rgba(255,255,255,0.02); border-radius: 8px; border: 1px solid var(--line);">
+          <div style="font-size:11px; color:var(--muted); margin-bottom:6px; font-weight:600;">Quick Presets:</div>
+          <div style="display:flex; gap:6px; flex-wrap:wrap;">
+            <button class="btn secondary preset-btn" id="presetOptimistic" aria-label="Load optimistic scenario preset">Optimistic (P50)</button>
+            <button class="btn secondary preset-btn" id="presetDefensible" aria-label="Load defensible scenario preset">Defensible (P70)</button>
+            <button class="btn secondary preset-btn" id="presetConservative" aria-label="Load conservative scenario preset">Conservative (P90)</button>
+            <button class="btn secondary preset-btn" id="presetMustFit" aria-label="Load must-fit budget scenario preset">Must-Fit Budget</button>
+          </div>
         </div>
 
         <div style="margin-top:12px;">
@@ -961,13 +1185,14 @@
                 </div>
               </div>
               <div class="card-b">
+                <input type="text" id="scenarioSearch" class="search-box" placeholder="Search scenarios..." aria-label="Search saved scenarios"/>
                 <div class="table-wrap"><table class="table" id="scenarioTable">
                   <thead>
                     <tr><th>Name</th><th>Estimate</th><th>Bias Score</th><th>Traceability</th><th>Top Bias</th></tr>
                   </thead>
                   <tbody></tbody>
                 </table></div>
-                <div class="footer">Tip: Save “P50 optimistic” vs “P70 optimistic” and “P70 defensible” to demo how bias can move without changing scope.</div>
+                <div class="footer">Tip: Save "P50 optimistic" vs "P70 optimistic" and "P70 defensible" to demo how bias can move without changing scope.</div>
               </div>
             </div>
           </div>
@@ -1452,25 +1677,67 @@
         console.warn("Radar chart canvas not found");
         return;
       }
+      
+      // Calculate initial bias scores from default state
+      const initialBias = computeBias();
+      
       radarChart = new Chart(radarCtx, {
       type: "radar",
       data: {
         labels: biasTypes,
         datasets: [{
           label: "Bias likelihood/severity",
-          data: biasTypes.map(_=>0),
+          data: biasTypes.map(k => initialBias.scores[k]),
+          backgroundColor: "rgba(122,162,255,0.2)",
+          borderColor: "rgba(122,162,255,0.8)",
+          borderWidth: 2,
+          pointBackgroundColor: "rgba(122,162,255,0.9)",
+          pointBorderColor: "#fff",
+          pointHoverBackgroundColor: "rgba(122,162,255,1)",
+          pointHoverBorderColor: "#fff",
+          pointRadius: 4,
+          pointHoverRadius: 6,
           fill: true
         }]
       },
       options: {
         responsive: true,
         animation: { duration: 250 },
-        plugins: { legend: { display: false } },
+        plugins: { 
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: "rgba(17,26,51,0.95)",
+            titleColor: "rgba(232,236,255,0.9)",
+            bodyColor: "rgba(232,236,255,0.8)",
+            borderColor: "rgba(122,162,255,0.5)",
+            borderWidth: 1,
+            padding: 12,
+            displayColors: false,
+            callbacks: {
+              label: function(context) {
+                return `${context.label}: ${context.parsed.r}%`;
+              }
+            }
+          }
+        },
         scales: {
           r: {
             min: 0, max: 100,
-            ticks: { display: false }
+            ticks: { display: false },
+            grid: {
+              color: "rgba(255,255,255,0.1)"
+            },
+            pointLabels: {
+              color: "rgba(232,236,255,0.7)",
+              font: {
+                size: 11
+              }
+            }
           }
+        },
+        interaction: {
+          intersect: false,
+          mode: 'point'
         }
       }
     });
@@ -1480,21 +1747,71 @@
         console.warn("Drivers chart canvas not found");
         return;
       }
+      // Calculate initial drivers from default state
+      const initialBiasForDrivers = computeBias();
+      
       driversChart = new Chart(drvCtx, {
       type: "bar",
       data: {
-        labels: ["—"],
+        labels: initialBiasForDrivers.topDrivers.map(d => d[0]),
         datasets: [{
           label: "Contribution",
-          data: [0]
+          data: initialBiasForDrivers.topDrivers.map(d => d[1]),
+          backgroundColor: "rgba(122,162,255,0.6)",
+          borderColor: "rgba(122,162,255,0.9)",
+          borderWidth: 1,
+          borderRadius: 4
         }]
       },
       options: {
         responsive: true,
         animation: { duration: 250 },
-        plugins: { legend: { display: false } },
+        plugins: { 
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: "rgba(17,26,51,0.95)",
+            titleColor: "rgba(232,236,255,0.9)",
+            bodyColor: "rgba(232,236,255,0.8)",
+            borderColor: "rgba(122,162,255,0.5)",
+            borderWidth: 1,
+            padding: 12,
+            displayColors: false,
+            callbacks: {
+              label: function(context) {
+                return `Contribution: ${context.parsed.y}`;
+              }
+            }
+          }
+        },
         scales: {
-          y: { min: 0, max: 40 }
+          y: { 
+            min: 0, 
+            max: Math.max(30, ...initialBiasForDrivers.topDrivers.map(d=>d[1])) + 6,
+            grid: {
+              color: "rgba(255,255,255,0.1)"
+            },
+            ticks: {
+              color: "rgba(232,236,255,0.6)",
+              font: {
+                size: 10
+              }
+            }
+          },
+          x: {
+            ticks: {
+              color: "rgba(232,236,255,0.6)",
+              font: {
+                size: 10
+              }
+            },
+            grid: {
+              display: false
+            }
+          }
+        },
+        interaction: {
+          intersect: false,
+          mode: 'index'
         }
       }
     });
@@ -1800,14 +2117,113 @@
   function renderScenarioTable(){
     const tbody = document.querySelector("#scenarioTable tbody");
     const scenarios = getScenarios();
+    const searchInput = document.getElementById("scenarioSearch");
+    const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : "";
+    
     tbody.innerHTML = "";
-    scenarios.forEach(s => {
-      const sum = scenarioSummary(s);
+    
+    const filteredScenarios = searchTerm 
+      ? scenarios.filter(s => s.name.toLowerCase().includes(searchTerm))
+      : scenarios;
+    
+    if (filteredScenarios.length === 0 && scenarios.length > 0) {
       const tr = document.createElement("tr");
-      tr.innerHTML = `<td>${sum.name}</td><td>${fmtMoney(sum.estimate)}</td><td>${sum.biasScore}</td><td>${sum.trace}</td><td>${sum.topBias}</td>`;
+      tr.innerHTML = `<td colspan="5" style="text-align:center; color:var(--muted); padding:20px;">No scenarios match "${searchTerm}"</td>`;
       tbody.appendChild(tr);
-    });
+    } else if (filteredScenarios.length === 0) {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td colspan="5" style="text-align:center; color:var(--muted); padding:20px;">No saved scenarios yet</td>`;
+      tbody.appendChild(tr);
+    } else {
+      filteredScenarios.forEach(s => {
+        const sum = scenarioSummary(s);
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${sum.name}</td><td>${fmtMoney(sum.estimate)}</td><td>${sum.biasScore}</td><td>${sum.trace}</td><td>${sum.topBias}</td>`;
+        tbody.appendChild(tr);
+      });
+    }
   }
+  
+  // Search functionality for scenarios
+  const scenarioSearchInput = document.getElementById("scenarioSearch");
+  if (scenarioSearchInput) {
+    scenarioSearchInput.addEventListener("input", debounce(() => {
+      renderScenarioTable();
+    }, 200));
+  }
+  
+  // Preset templates
+  const presets = {
+    optimistic: {
+      percentile: "p50",
+      sched: 40,
+      uncert: 40,
+      comp: 60,
+      mustFit: true,
+      anchor: true,
+      learning: "aggressive",
+      reuse: 50,
+      priceTrend: "deflate"
+    },
+    defensible: {
+      percentile: "p70",
+      sched: 60,
+      uncert: 60,
+      comp: 30,
+      mustFit: false,
+      anchor: false,
+      traceLevel: "audited",
+      boe: "standard",
+      chk_indep: true,
+      chk_param: true
+    },
+    conservative: {
+      percentile: "p90",
+      sched: 75,
+      uncert: 75,
+      comp: 20,
+      mustFit: false,
+      anchor: false,
+      traceLevel: "audited",
+      riskReg: "linked",
+      escalation: "cpi"
+    },
+    mustFit: {
+      percentile: "p50",
+      sched: 35,
+      uncert: 35,
+      comp: 80,
+      mustFit: true,
+      anchor: true,
+      priceTrend: "deflate",
+      learning: "aggressive",
+      reuse: 60
+    }
+  };
+  
+  function loadPreset(presetName) {
+    const preset = presets[presetName];
+    if (!preset) return;
+    
+    // Merge preset with defaults
+    state = { ...defaults, ...preset };
+    
+    // Update UI controls
+    for (const k of Object.keys(defaults)) {
+      const el = document.getElementById(k);
+      if (!el) continue;
+      if (el.type === "checkbox") el.checked = state[k];
+      else el.value = state[k];
+    }
+    
+    update();
+    showToast(`Loaded ${presetName} preset`, 2000);
+  }
+  
+  document.getElementById("presetOptimistic")?.addEventListener("click", () => loadPreset("optimistic"));
+  document.getElementById("presetDefensible")?.addEventListener("click", () => loadPreset("defensible"));
+  document.getElementById("presetConservative")?.addEventListener("click", () => loadPreset("conservative"));
+  document.getElementById("presetMustFit")?.addEventListener("click", () => loadPreset("mustFit"));
 
   document.getElementById("saveScenario").addEventListener("click", () => {
     try {
@@ -1878,6 +2294,185 @@
     update();
   });
 
+  // Toast notification helper
+  function showToast(message, duration = 3000) {
+    const toast = document.createElement("div");
+    toast.className = "toast";
+    toast.textContent = message;
+    toast.setAttribute("role", "status");
+    toast.setAttribute("aria-live", "polite");
+    document.body.appendChild(toast);
+    
+    setTimeout(() => toast.classList.add("show"), 10);
+    setTimeout(() => {
+      toast.classList.remove("show");
+      setTimeout(() => toast.remove(), 300);
+    }, duration);
+  }
+  
+  // Export scenario as JSON
+  document.getElementById("exportScenario").addEventListener("click", () => {
+    try {
+      const exportData = {
+        name: "Current Scenario",
+        created: new Date().toISOString(),
+        state: structuredClone(state),
+        summary: {
+          estimate: computeEstimateAnnual(),
+          biasScore: computeBias().overall,
+          traceability: computeTraceability(),
+          topBias: computeBias().topBias
+        }
+      };
+      
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `bias-scenario-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast("Scenario exported successfully!");
+    } catch (error) {
+      console.error("Error exporting scenario:", error);
+      showToast("Failed to export scenario", 4000);
+    }
+  });
+  
+  // Share URL functionality
+  document.getElementById("shareUrl").addEventListener("click", async () => {
+    try {
+      // Create compressed state (base64 encoded)
+      const stateJson = JSON.stringify(state);
+      const compressed = btoa(encodeURIComponent(stateJson));
+      const url = new URL(window.location.href);
+      url.searchParams.set("scenario", compressed);
+      url.hash = ""; // Remove hash
+      
+      await navigator.clipboard.writeText(url.toString());
+      showToast("Shareable URL copied to clipboard!");
+    } catch (error) {
+      console.error("Error generating share URL:", error);
+      showToast("Failed to generate share URL", 4000);
+    }
+  });
+  
+  // Export charts as images
+  document.getElementById("exportChart").addEventListener("click", async () => {
+    try {
+      const charts = [];
+      if (radarChart) charts.push({ name: "bias-radar", chart: radarChart });
+      if (driversChart) charts.push({ name: "bias-drivers", chart: driversChart });
+      
+      if (charts.length === 0) {
+        showToast("No charts available to export", 3000);
+        return;
+      }
+      
+      for (const { name, chart } of charts) {
+        const url = chart.toBase64Image();
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${name}-${new Date().toISOString().split('T')[0]}.png`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        // Small delay between downloads
+        await new Promise(resolve => setTimeout(resolve, 300));
+      }
+      
+      showToast(`Exported ${charts.length} chart(s) successfully!`);
+    } catch (error) {
+      console.error("Error exporting charts:", error);
+      showToast("Failed to export charts", 4000);
+    }
+  });
+  
+  // Load scenario from URL parameters
+  function loadScenarioFromURL() {
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const scenarioParam = urlParams.get("scenario");
+      if (!scenarioParam) return false;
+      
+      const stateJson = decodeURIComponent(atob(scenarioParam));
+      const loadedState = JSON.parse(stateJson);
+      
+      // Validate and merge with defaults
+      state = { ...defaults, ...loadedState };
+      
+      // Push state into controls
+      for (const k of Object.keys(defaults)) {
+        const el = document.getElementById(k);
+        if (!el) continue;
+        if (el.type === "checkbox") el.checked = state[k];
+        else el.value = state[k];
+      }
+      
+      update();
+      showToast("Scenario loaded from URL!", 3000);
+      return true;
+    } catch (error) {
+      console.error("Error loading scenario from URL:", error);
+      return false;
+    }
+  }
+  
+  // Keyboard shortcuts
+  document.addEventListener("keydown", (e) => {
+    // Don't trigger shortcuts when typing in inputs
+    if (e.target.tagName === "INPUT" || e.target.tagName === "SELECT" || e.target.tagName === "TEXTAREA") {
+      if (e.key === "Escape") {
+        e.target.blur();
+      }
+      return;
+    }
+    
+    // Ctrl/Cmd + S: Save scenario
+    if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+      e.preventDefault();
+      document.getElementById("saveScenario").click();
+    }
+    
+    // Ctrl/Cmd + C: Copy summary (when not in input)
+    if ((e.ctrlKey || e.metaKey) && e.key === "c" && !e.shiftKey) {
+      // Only trigger if not copying text
+      if (window.getSelection().toString() === "") {
+        // Don't trigger, let normal copy work
+      }
+    }
+    
+    // Ctrl/Cmd + E: Export scenario
+    if ((e.ctrlKey || e.metaKey) && e.key === "e") {
+      e.preventDefault();
+      document.getElementById("exportScenario").click();
+    }
+    
+    // Ctrl/Cmd + Shift + S: Share URL
+    if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "S") {
+      e.preventDefault();
+      document.getElementById("shareUrl").click();
+    }
+    
+    // Escape: Close any modals/tooltips
+    if (e.key === "Escape") {
+      // Could add modal closing logic here
+    }
+    
+    // Number keys 1-4: Switch tabs
+    if (e.key >= "1" && e.key <= "4" && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      const tabs = ["data", "method", "rates", "risk"];
+      const tabIndex = parseInt(e.key) - 1;
+      if (tabIndex < tabs.length) {
+        e.preventDefault();
+        switchTab(tabs[tabIndex]);
+        document.querySelector(`.tab[data-tab="${tabs[tabIndex]}"]`)?.focus();
+      }
+    }
+  });
+  
   // Copy CARD-style summary
   document.getElementById("copySummary").addEventListener("click", async () => {
     try {
@@ -1926,13 +2521,7 @@
       const text = lines.join("\n");
       try{
         await navigator.clipboard.writeText(text);
-        // Visual feedback
-        const btn = document.getElementById("copySummary");
-        const originalText = btn.textContent;
-        btn.textContent = "✓ Copied!";
-        setTimeout(() => {
-          btn.textContent = originalText;
-        }, 2000);
+        showToast("Summary copied to clipboard!");
       }catch{
         // fallback
         const ta = document.createElement("textarea");
@@ -1943,14 +2532,9 @@
         ta.select();
         try {
           document.execCommand("copy");
-          const btn = document.getElementById("copySummary");
-          const originalText = btn.textContent;
-          btn.textContent = "✓ Copied!";
-          setTimeout(() => {
-            btn.textContent = originalText;
-          }, 2000);
+          showToast("Summary copied to clipboard!");
         } catch (err) {
-          alert("Failed to copy. Please select and copy manually.");
+          showToast("Failed to copy. Please select and copy manually.", 4000);
         }
         ta.remove();
       }
@@ -2019,7 +2603,12 @@
     }
     
     refreshScenarioSelect();
-    update();
+    
+    // Try to load scenario from URL first
+    const loadedFromURL = loadScenarioFromURL();
+    if (!loadedFromURL) {
+      update();
+    }
     
     // Announce page load to screen readers
     const announcement = document.createElement("div");
