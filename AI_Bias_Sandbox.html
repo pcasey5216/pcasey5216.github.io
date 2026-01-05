@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="theme-color" content="#0b1020"/>
+  <title>AI Bias Sandbox — DoD/ICEAA (Cost Analysis)</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root{
+      --bg:#0b1020; --panel:#111a33; --text:#e8ecff; --muted:#aab4e6;
+      --line:rgba(255,255,255,0.08); --accent:#7aa2ff;
+      --good:#39d98a; --warn:#ffcc66; --bad:#ff6b6b;
+      --shadow: 0 10px 30px rgba(0,0,0,0.35); --radius: 16px;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      background:radial-gradient(1200px 800px at 15% 15%, #182656 0%, var(--bg) 55%);color:var(--text);}
+    header{padding:18px 22px;border-bottom:1px solid var(--line);backdrop-filter: blur(10px);
+      position:sticky; top:0; z-index:10;background: rgba(11,16,32,0.75);}
+    header .title{display:flex; gap:12px; align-items:center; flex-wrap:wrap;}
+    .badge{font-size:12px; padding:4px 10px; border:1px solid var(--line); border-radius:999px;
+      color:var(--muted); background: rgba(255,255,255,0.04);}
+    .container{max-width:1350px;margin:0 auto;padding:18px 18px 26px;}
+    .grid{display:grid;grid-template-columns:440px 1fr;gap:16px;}
+    @media (max-width:1100px){.grid{grid-template-columns:1fr}}
+    .card{background:linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+      border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);}
+    .card .card-h{padding:14px 14px 10px;border-bottom:1px solid var(--line);
+      display:flex;align-items:center;justify-content:space-between;gap:12px;}
+    .card .card-h h2{margin:0;font-size:14px;letter-spacing:0.4px;text-transform:uppercase;color:var(--muted);}
+    .card .card-b{padding:14px}
+    .tabs{display:flex;gap:8px;flex-wrap:wrap;overflow-x:auto;-webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;padding-bottom:6px;}
+    .tabs::-webkit-scrollbar{height:6px}
+    .tabs::-webkit-scrollbar-thumb{background: rgba(255,255,255,0.12); border-radius:999px;}
+    .tab{border:1px solid var(--line);background: rgba(255,255,255,0.03);color:var(--muted);
+      padding:8px 10px;border-radius:999px;font-size:12px;cursor:pointer;user-select:none;white-space:nowrap;}
+    .tab.active{border-color: rgba(122,162,255,0.55);color:var(--text);background: rgba(122,162,255,0.15);}
+    .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+    @media (max-width:1100px){.kpis{grid-template-columns:repeat(2,1fr)}}
+    @media (max-width:520px){.kpis{grid-template-columns:1fr}}
+    .kpi{padding:12px;border-radius:14px;background: rgba(255,255,255,0.03);border:1px solid var(--line);min-height:86px;}
+    .kpi .label{font-size:12px;color:var(--muted)}
+    .kpi .value{font-size:20px;margin-top:6px;font-weight:650}
+    .kpi .sub{font-size:12px;color:var(--muted);margin-top:6px}
+    .chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center;}
+    .chip{padding:6px 10px;border-radius:999px;font-size:12px;border:1px solid var(--line);
+      background: rgba(255,255,255,0.03);color:var(--muted);max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .chip.good{border-color: rgba(57,217,138,0.4); background: rgba(57,217,138,0.12); color: var(--text)}
+    .chip.warn{border-color: rgba(255,204,102,0.4); background: rgba(255,204,102,0.12); color: var(--text)}
+    .chip.bad{border-color: rgba(255,107,107,0.4); background: rgba(255,107,107,0.12); color: var(--text)}
+    .field{margin-bottom:12px;padding:12px;border:1px solid var(--line);border-radius:14px;background: rgba(255,255,255,0.02);}
+    .field label{display:flex;justify-content:space-between;gap:10px;font-size:12px;color:var(--muted);margin-bottom:8px;}
+    .field input[type="range"]{width:100%;height:28px}
+    input[type="checkbox"]{width:16px;height:16px}
+    .field select,.field input[type="number"],.field input[type="text"],.field textarea{
+      width:100%;padding:10px;border-radius:12px;border:1px solid var(--line);background: rgba(15,23,48,0.7);color:var(--text);outline:none;min-height:42px;}
+    .mini{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;}
+    .pill{font-size:12px;padding:4px 8px;border-radius:999px;border:1px solid var(--line);background: rgba(255,255,255,0.03);color:var(--muted);}
+    .btn{cursor:pointer;border:1px solid var(--line);background: rgba(122,162,255,0.14);color:var(--text);
+      padding:10px 12px;border-radius:12px;font-weight:600;font-size:13px;}
+    .btn.secondary{background: rgba(255,255,255,0.03);color:var(--muted)}
+    .btn:active{transform: translateY(1px)}
+    .note{font-size:12px;color:var(--muted);line-height:1.45}
+    .divider{height:1px;background: var(--line);margin:12px 0}
+    canvas{max-height:320px}
+    .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    @media (max-width:1100px){.two{grid-template-columns:1fr}}
+    .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+    .table{width:100%;min-width:540px;border-collapse:collapse;font-size:12px;color:var(--muted)}
+    .table th,.table td{border-bottom:1px solid var(--line);padding:8px 6px;text-align:left}
+    .table th{color:var(--text);font-weight:650}
+    .footer{margin-top:14px;font-size:11px;color: rgba(232,236,255,0.55);line-height:1.45}
+  </style>
+</head>
+<body>
+<header>
+  <div class="title">
+    <div style="font-weight:800; font-size:16px;">AI Bias Sandbox</div>
+    <span class="badge">Cost Analysis Use Cases</span>
+    <span class="badge">DoD/ICEAA language (CARD addendum • Model Card • IGCE)</span>
+    <span class="badge">Rules-based educational tool</span>
+  </div>
+</header>
+
+<div class="container">
+  <div class="grid">
+    <div class="card">
+      <div class="card-h">
+        <h2>Inputs</h2>
+        <div class="tabs" id="domainTabs">
+          <div class="tab active" data-tab="usecase">Use Case</div>
+          <div class="tab" data-tab="data">Data & Training</div>
+          <div class="tab" data-tab="prompt">Prompt & Context</div>
+          <div class="tab" data-tab="eval">Evaluation & Monitoring</div>
+          <div class="tab" data-tab="gov">Governance & Use</div>
+        </div>
+      </div>
+      <div class="card-b">
+
+        <div id="panel-usecase">
+          <div class="field">
+            <label><span>AI task in the cost workflow</span><span class="pill" id="val_task"></span></label>
+            <select id="task">
+              <option value="sow" selected>Summarize SOW / requirements → draft assumptions</option>
+              <option value="wbs">Generate WBS / mapping suggestions</option>
+              <option value="estimate">Draft cost narrative / estimating approach (BOE support)</option>
+              <option value="rates">Labor rate banding / market scan assistance</option>
+              <option value="risk">Risk identification / risk register drafting</option>
+              <option value="anomaly">Anomaly detection / data QA suggestions</option>
+            </select>
+            <div class="note" style="margin-top:8px;">This sets the baseline bias profile for the task.</div>
+          </div>
+
+          <div class="field">
+            <label><span>Output style</span><span class="pill" id="val_outputStyle"></span></label>
+            <select id="outputStyle">
+              <option value="bullet" selected>Bullets with sources + confidence tags</option>
+              <option value="narrative">Narrative prose (more persuasive)</option>
+              <option value="tables">Tables/structured output (looks “precise”)</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label><span>Decision impact</span><span class="pill" id="val_stakes"></span></label>
+            <select id="stakes">
+              <option value="low">Low (drafting / brainstorming)</option>
+              <option value="med" selected>Medium (inputs to an estimate)</option>
+              <option value="high">High (directly influences dollars / decisions)</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="panel-data" style="display:none;">
+          <div class="field">
+            <label><span>Training data provenance</span><span class="pill" id="val_provenance"></span></label>
+            <select id="provenance">
+              <option value="closed" selected>Closed model (unknown training mix)</option>
+              <option value="fine">Fine-tuned on internal data</option>
+              <option value="rag">RAG over curated internal corpus</option>
+              <option value="gov">Gov/DoD controlled corpus + governance</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label><span>Domain representativeness</span><span class="pill" id="val_repr"></span></label>
+            <input id="repr" type="range" min="0" max="100" step="1" value="55"/>
+            <div class="note" style="margin-top:8px;">Low representativeness increases coverage/representation bias.</div>
+          </div>
+
+          <div class="field">
+            <label><span>Recency vs current guidance</span><span class="pill" id="val_recency"></span></label>
+            <input id="recency" type="range" min="0" max="100" step="1" value="45"/>
+          </div>
+
+          <div class="field">
+            <label><span>Label / ground-truth quality</span><span class="pill" id="val_labelq"></span></label>
+            <input id="labelq" type="range" min="0" max="100" step="1" value="55"/>
+          </div>
+
+          <div class="field">
+            <label><span>Data leakage risk</span><span class="pill" id="val_leak"></span></label>
+            <select id="leak">
+              <option value="low">Low (segregated datasets)</option>
+              <option value="med" selected>Medium (some overlap risk)</option>
+              <option value="high">High (unknown overlap / copied examples)</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label><span>Sensitive data exposure posture</span><span class="pill" id="val_sensitive"></span></label>
+            <select id="sensitive">
+              <option value="controlled" selected>Controlled (approved handling)</option>
+              <option value="mixed">Mixed (ad-hoc redaction)</option>
+              <option value="risky">Risky (unsafe inputs)</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="panel-prompt" style="display:none;">
+          <div class="field">
+            <label><span>Prompt discipline</span><span class="pill" id="val_promptDisc"></span></label>
+            <select id="promptDisc">
+              <option value="strict" selected>Strict (role, scope, constraints, cite sources)</option>
+              <option value="normal">Normal</option>
+              <option value="loose">Loose (“just answer”)</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label><span>Grounding method</span><span class="pill" id="val_grounding"></span></label>
+            <select id="grounding">
+              <option value="none" selected>None (pure model response)</option>
+              <option value="rag">RAG (retrieval with citations)</option>
+              <option value="docs">Attached documents only</option>
+              <option value="tools">Tools + verification steps</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label><span>Temperature / creativity</span><span class="pill" id="val_temp"></span></label>
+            <input id="temp" type="range" min="0" max="100" step="1" value="25"/>
+          </div>
+
+          <div class="field">
+            <label><span>Implicit persuasion risk</span><span class="pill" id="val_persuade"></span></label>
+            <input id="persuade" type="range" min="0" max="100" step="1" value="55"/>
+          </div>
+
+          <div class="field">
+            <label><span>Anchors provided in prompt</span><span class="pill" id="val_anchor"></span></label>
+            <div class="mini" style="margin-top:6px;">
+              <label class="pill"><input id="hasAnchor" type="checkbox" style="margin-right:6px;"> Prior estimate / target shown</label>
+              <label class="pill"><input id="mustFit" type="checkbox" style="margin-right:6px;"> Must-fit constraint stated</label>
+            </div>
+          </div>
+        </div>
+
+        <div id="panel-eval" style="display:none;">
+          <div class="field">
+            <label><span>Evaluation rigor</span><span class="pill" id="val_eval"></span></label>
+            <select id="eval">
+              <option value="none">None</option>
+              <option value="basic" selected>Basic spot checks</option>
+              <option value="bench">Benchmarks + holdout set</option>
+              <option value="red">Red-teaming + adversarial tests</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label><span>Bias testing coverage</span><span class="pill" id="val_biastest"></span></label>
+            <input id="biastest" type="range" min="0" max="100" step="1" value="35"/>
+          </div>
+
+          <div class="field">
+            <label><span>Hallucination controls</span><span class="pill" id="val_hctrl"></span></label>
+            <select id="hctrl">
+              <option value="none">None</option>
+              <option value="prompts" selected>Prompt-based constraints</option>
+              <option value="verify">Verification step</option>
+              <option value="gated">Gated release + human approval</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label><span>Monitoring & drift detection</span><span class="pill" id="val_drift"></span></label>
+            <select id="drift">
+              <option value="none">None</option>
+              <option value="manual" selected>Manual review cadence</option>
+              <option value="auto">Automated monitoring</option>
+              <option value="auto+alert">Auto monitoring + alerts + rollback</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label><span>Human-in-the-loop requirement</span><span class="pill" id="val_hitl"></span></label>
+            <select id="hitl">
+              <option value="required" selected>Required (review + sign-off)</option>
+              <option value="recommended">Recommended</option>
+              <option value="none">None (auto-use allowed)</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="panel-gov" style="display:none;">
+          <div class="field">
+            <label><span>Access & environment</span><span class="pill" id="val_env"></span></label>
+            <select id="env">
+              <option value="public" selected>Public SaaS</option>
+              <option value="enterprise">Enterprise tenant controls</option>
+              <option value="gov">Gov-approved enclave</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label><span>Documentation posture</span><span class="pill" id="val_docs"></span></label>
+            <select id="docs">
+              <option value="none">None</option>
+              <option value="some" selected>Some (templates/examples)</option>
+              <option value="modelcard">Model card + data sheet + change log</option>
+              <option value="full">Full package (SOP + audit trail)</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label><span>Automation level in workflow</span><span class="pill" id="val_auto"></span></label>
+            <input id="auto" type="range" min="0" max="100" step="1" value="35"/>
+          </div>
+
+          <div class="field">
+            <label><span>Incentive pressure</span><span class="pill" id="val_incent"></span></label>
+            <input id="incent" type="range" min="0" max="100" step="1" value="45"/>
+          </div>
+
+          <div class="field">
+            <label><span>Policy guardrails</span><span class="pill" id="val_guard"></span></label>
+            <div class="mini" style="margin-top:6px;">
+              <label class="pill"><input id="guard_noNumbers" type="checkbox" style="margin-right:6px;"> No unaudited numbers</label>
+              <label class="pill"><input id="guard_cite" type="checkbox" style="margin-right:6px;" checked> Citations required</label>
+              <label class="pill"><input id="guard_log" type="checkbox" style="margin-right:6px;"> Logging/audit enabled</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+        <div class="mini">
+          <button class="btn" id="saveScenario">Save scenario</button>
+          <button class="btn secondary" id="copySummary">Copy Model-Card / CARD addendum</button>
+          <button class="btn secondary" id="reset">Reset</button>
+        </div>
+        <div style="margin-top:12px;"><div class="note">Saved scenarios live in your browser (localStorage). Host with GitHub Pages like your other sandbox.</div></div>
+
+      </div>
+    </div>
+
+    <div>
+      <div class="card">
+        <div class="card-h">
+          <h2>Outputs</h2>
+          <div class="pill">Updates instantly</div>
+        </div>
+        <div class="card-b">
+          <div class="kpis">
+            <div class="kpi">
+              <div class="label">AI Bias Exposure Score</div>
+              <div class="value" id="kpi_bias">0</div>
+              <div class="sub" id="kpi_band">—</div>
+            </div>
+            <div class="kpi">
+              <div class="label">Reliability (hallucination/traceability)</div>
+              <div class="value" id="kpi_rel">0</div>
+              <div class="sub" id="kpi_relBand">—</div>
+            </div>
+            <div class="kpi">
+              <div class="label">Governance readiness</div>
+              <div class="value" id="kpi_gov">0</div>
+              <div class="sub" id="kpi_govBand">—</div>
+            </div>
+            <div class="kpi">
+              <div class="label">Likely failure mode</div>
+              <div class="value" id="kpi_mode">—</div>
+              <div class="sub">Most likely “how it goes wrong”</div>
+            </div>
+          </div>
+
+          <div class="chips">
+            <span class="chip" id="chip_top">Top bias: —</span>
+            <span class="chip" id="chip_dir">Impact: —</span>
+            <span class="chip" id="chip_control">Controls: —</span>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="two">
+            <div class="card" style="box-shadow:none;">
+              <div class="card-h" style="border-bottom:1px solid var(--line);">
+                <h2>Bias radar</h2>
+                <div class="pill" id="topBiasPill">Top bias: —</div>
+              </div>
+              <div class="card-b">
+                <canvas id="radar"></canvas>
+                <div class="footer">Axes are 0–100 (rules-based) for training/demos.</div>
+              </div>
+            </div>
+
+            <div class="card" style="box-shadow:none;">
+              <div class="card-h" style="border-bottom:1px solid var(--line);">
+                <h2>Drivers</h2>
+                <div class="pill">What’s pushing risk</div>
+              </div>
+              <div class="card-b">
+                <canvas id="drivers"></canvas>
+                <div class="footer">Attribution is heuristic based on your settings.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="two">
+            <div class="card" style="box-shadow:none;">
+              <div class="card-h" style="border-bottom:1px solid var(--line);">
+                <h2>Mitigation suggestions</h2>
+                <div class="pill">DoD/ICEAA phrasing</div>
+              </div>
+              <div class="card-b">
+                <ul class="table" style="list-style:none; padding-left:0; margin:0;" id="mitigations"></ul>
+              </div>
+            </div>
+
+            <div class="card" style="box-shadow:none;">
+              <div class="card-h" style="border-bottom:1px solid var(--line);">
+                <h2>Scenario compare</h2>
+                <div class="mini">
+                  <select id="scenarioSelect" style="min-width:180px;"></select>
+                  <button class="btn secondary" id="loadScenario">Load</button>
+                  <button class="btn secondary" id="deleteScenario">Delete</button>
+                </div>
+              </div>
+              <div class="card-b">
+                <div class="table-wrap">
+                  <table class="table" id="scenarioTable">
+                    <thead><tr><th>Name</th><th>Bias</th><th>Reliability</th><th>Gov</th><th>Top Bias</th><th>Failure Mode</th></tr></thead>
+                    <tbody></tbody>
+                  </table>
+                </div>
+                <div class="footer">Tip: Save “Loose prompt / no eval” vs “RAG + red-team + HITL”.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="footer"><b>Presenter note:</b> Flip anchors/must-fit and watch confirmation/anchoring grow—even if grounded.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const defaults = {
+    task:"sow", outputStyle:"bullet", stakes:"med",
+    provenance:"closed", repr:55, recency:45, labelq:55, leak:"med", sensitive:"controlled",
+    promptDisc:"strict", grounding:"none", temp:25, persuade:55, hasAnchor:false, mustFit:false,
+    eval:"basic", biastest:35, hctrl:"prompts", drift:"manual", hitl:"required",
+    env:"public", docs:"some", auto:35, incent:45, guard_noNumbers:false, guard_cite:true, guard_log:false
+  };
+  let state = structuredClone(defaults);
+
+  const biasTypes = ["Representation","Selection / Coverage","Measurement / Label","Anchoring","Confirmation","Automation Bias","Hallucination","Overconfidence"];
+  const clamp=(x,lo,hi)=>Math.max(lo,Math.min(hi,x));
+  const pill=(id,t)=>document.getElementById(id).textContent=t;
+  const bandLabel=x=>x<30?"Low":(x<60?"Moderate":"High");
+
+  function baseProfile(task){
+    const m={
+      sow:{Hallucination:30,Confirmation:22,Anchoring:18,Overconfidence:18,"Automation Bias":18,"Selection / Coverage":16,Representation:14,"Measurement / Label":12},
+      wbs:{Hallucination:32,Confirmation:18,Anchoring:14,Overconfidence:18,"Automation Bias":20,"Selection / Coverage":18,Representation:16,"Measurement / Label":12},
+      estimate:{Hallucination:36,Confirmation:26,Anchoring:20,Overconfidence:22,"Automation Bias":24,"Selection / Coverage":16,Representation:14,"Measurement / Label":12},
+      rates:{Hallucination:28,Confirmation:18,Anchoring:18,Overconfidence:18,"Automation Bias":18,"Selection / Coverage":22,Representation:18,"Measurement / Label":16},
+      risk:{Hallucination:24,Confirmation:18,Anchoring:14,Overconfidence:16,"Automation Bias":16,"Selection / Coverage":14,Representation:12,"Measurement / Label":12},
+      anomaly:{Hallucination:18,Confirmation:12,Anchoring:10,Overconfidence:14,"Automation Bias":14,"Selection / Coverage":12,Representation:12,"Measurement / Label":20},
+    };
+    const base={}; biasTypes.forEach(k=>base[k]=0);
+    const src=m[task]||m.sow; Object.keys(src).forEach(k=>base[k]=src[k]);
+    return base;
+  }
+
+  function computeScores(){
+    const scores=baseProfile(state.task);
+    const stakeMult=state.stakes==="low"?0.85:(state.stakes==="high"?1.18:1.0);
+
+    if(state.outputStyle==="narrative"){scores["Automation Bias"]+=6;scores["Overconfidence"]+=6;}
+    if(state.outputStyle==="tables"){scores["Overconfidence"]+=8;scores["Automation Bias"]+=4;}
+
+    const repr=state.repr/100, rec=state.recency/100, lab=state.labelq/100;
+    scores["Representation"]+=30*(1-repr);
+    scores["Selection / Coverage"]+=20*(1-repr);
+    scores["Hallucination"]+=10*(1-rec);
+    scores["Measurement / Label"]+=28*(1-lab);
+
+    if(state.leak==="med"){scores["Overconfidence"]+=6;scores["Hallucination"]+=3;}
+    if(state.leak==="high"){scores["Overconfidence"]+=12;scores["Hallucination"]+=6;scores["Confirmation"]+=4;}
+
+    if(state.sensitive==="mixed"){scores["Automation Bias"]+=4;}
+    if(state.sensitive==="risky"){scores["Automation Bias"]+=8;scores["Overconfidence"]+=6;}
+
+    if(state.provenance==="closed"){scores["Representation"]+=8;scores["Selection / Coverage"]+=8;scores["Hallucination"]+=6;}
+    if(state.provenance==="fine"){scores["Confirmation"]+=6;scores["Selection / Coverage"]+=4;}
+    if(state.provenance==="rag"){scores["Hallucination"]-=10;scores["Overconfidence"]-=4;}
+    if(state.provenance==="gov"){scores["Representation"]-=4;scores["Selection / Coverage"]-=4;scores["Hallucination"]-=6;}
+
+    if(state.promptDisc==="normal"){scores["Hallucination"]+=6;scores["Overconfidence"]+=4;}
+    if(state.promptDisc==="loose"){scores["Hallucination"]+=14;scores["Overconfidence"]+=10;scores["Confirmation"]+=6;}
+
+    if(state.grounding==="none"){scores["Hallucination"]+=14;scores["Overconfidence"]+=6;}
+    if(state.grounding==="rag"){scores["Hallucination"]-=12;scores["Overconfidence"]-=4;}
+    if(state.grounding==="docs"){scores["Hallucination"]-=10;}
+    if(state.grounding==="tools"){scores["Hallucination"]-=14;scores["Overconfidence"]-=6;}
+
+    const temp=state.temp/100;
+    scores["Hallucination"]+=18*temp; scores["Overconfidence"]+=8*temp;
+
+    const persuade=state.persuade/100;
+    scores["Automation Bias"]+=16*persuade; scores["Overconfidence"]+=10*persuade;
+
+    if(state.hasAnchor){scores["Anchoring"]+=30;scores["Confirmation"]+=8;}
+    if(state.mustFit){scores["Confirmation"]+=22;scores["Anchoring"]+=8;scores["Automation Bias"]+=6;}
+
+    if(state.eval==="none"){scores["Overconfidence"]+=12;scores["Hallucination"]+=8;}
+    if(state.eval==="basic"){scores["Overconfidence"]+=6;}
+    if(state.eval==="bench"){scores["Overconfidence"]-=6;scores["Hallucination"]-=4;}
+    if(state.eval==="red"){scores["Overconfidence"]-=10;scores["Hallucination"]-=6;scores["Confirmation"]-=4;}
+
+    const bt=state.biastest/100;
+    scores["Representation"]-=10*bt; scores["Selection / Coverage"]-=8*bt; scores["Measurement / Label"]-=8*bt;
+
+    if(state.hctrl==="none"){scores["Hallucination"]+=12;}
+    if(state.hctrl==="prompts"){scores["Hallucination"]+=4;}
+    if(state.hctrl==="verify"){scores["Hallucination"]-=8;scores["Overconfidence"]-=4;}
+    if(state.hctrl==="gated"){scores["Hallucination"]-=12;scores["Automation Bias"]-=4;}
+
+    if(state.drift==="none"){scores["Selection / Coverage"]+=6;scores["Hallucination"]+=4;}
+    if(state.drift==="auto"){scores["Selection / Coverage"]-=4;}
+    if(state.drift==="auto+alert"){scores["Selection / Coverage"]-=8;scores["Hallucination"]-=2;}
+
+    if(state.hitl==="recommended"){scores["Automation Bias"]+=6;}
+    if(state.hitl==="none"){scores["Automation Bias"]+=18;scores["Overconfidence"]+=8;}
+
+    if(state.env==="public"){scores["Automation Bias"]+=6;scores["Overconfidence"]+=4;}
+    if(state.env==="enterprise"){scores["Automation Bias"]+=2;}
+    if(state.env==="gov"){scores["Automation Bias"]-=4;scores["Overconfidence"]-=2;}
+
+    if(state.docs==="none"){scores["Overconfidence"]+=10;}
+    if(state.docs==="modelcard"){scores["Overconfidence"]-=6;scores["Confirmation"]-=2;}
+    if(state.docs==="full"){scores["Overconfidence"]-=10;scores["Confirmation"]-=4;scores["Automation Bias"]-=2;}
+
+    const auto=state.auto/100;
+    scores["Automation Bias"]+=26*auto; scores["Overconfidence"]+=10*auto;
+
+    const incent=state.incent/100;
+    scores["Confirmation"]+=20*incent; scores["Anchoring"]+=6*incent;
+
+    if(state.guard_noNumbers){scores["Hallucination"]-=6;scores["Overconfidence"]-=4;}
+    if(state.guard_cite){scores["Hallucination"]-=6;scores["Overconfidence"]-=3;}
+    if(state.guard_log){scores["Automation Bias"]-=3;scores["Overconfidence"]-=2;}
+
+    biasTypes.forEach(k=>scores[k]=Math.round(clamp(scores[k]*stakeMult,0,100)));
+
+    const w={"Representation":1.05,"Selection / Coverage":1.1,"Measurement / Label":1.05,"Anchoring":1.1,"Confirmation":1.15,"Automation Bias":1.15,"Hallucination":1.2,"Overconfidence":1.15};
+    let total=0,wsum=0; biasTypes.forEach(k=>{total+=scores[k]*w[k];wsum+=w[k];});
+    const overall=Math.round(total/wsum);
+
+    let reliability=65;
+    if(state.grounding==="none") reliability-=18;
+    if(state.grounding==="rag") reliability+=10;
+    if(state.grounding==="tools") reliability+=14;
+    if(state.eval==="none") reliability-=16;
+    if(state.eval==="bench") reliability+=6;
+    if(state.eval==="red") reliability+=10;
+    if(state.hctrl==="none") reliability-=12;
+    if(state.hctrl==="verify") reliability+=8;
+    if(state.hctrl==="gated") reliability+=12;
+    reliability-=10*(state.temp/100); reliability-=8*(state.persuade/100);
+    reliability=Math.round(clamp(reliability,0,100));
+
+    let gov=50;
+    if(state.env==="enterprise") gov+=10;
+    if(state.env==="gov") gov+=16;
+    if(state.docs==="none") gov-=18;
+    if(state.docs==="some") gov-=6;
+    if(state.docs==="modelcard") gov+=10;
+    if(state.docs==="full") gov+=18;
+    if(state.hitl==="required") gov+=10;
+    if(state.hitl==="none") gov-=12;
+    if(state.drift==="none") gov-=10;
+    if(state.drift==="auto") gov+=6;
+    if(state.drift==="auto+alert") gov+=12;
+    if(state.guard_log) gov+=8;
+    if(state.guard_cite) gov+=4;
+    gov=Math.round(clamp(gov,0,100));
+
+    const sorted=biasTypes.map(k=>[k,scores[k]]).sort((a,b)=>b[1]-a[1]);
+    const topBias=sorted[0][0];
+
+    let mode="Inconsistent output";
+    if(scores["Hallucination"]>=65 && reliability<55) mode="Hallucinated facts / fabricated citations";
+    else if(scores["Automation Bias"]>=65 && state.hitl!=="required") mode="Over-trust / auto-use without skepticism";
+    else if(scores["Confirmation"]>=65 || state.mustFit) mode="Cherry-picked evidence supporting a narrative";
+    else if(scores["Anchoring"]>=65 || state.hasAnchor) mode="Anchored to prior value / target";
+    else if(scores["Representation"]>=65 || scores["Selection / Coverage"]>=65) mode="Wrong analogies / coverage gaps";
+    else if(scores["Measurement / Label"]>=65) mode="Bad labels / wrong definitions driving output";
+
+    const drivers=[];
+    drivers.push(["Low representativeness", Math.round(28*(1-repr))]);
+    drivers.push(["Low recency", Math.round(22*(1-rec))]);
+    drivers.push(["Loose prompts / high temp", Math.round(18*(state.temp/100) + (state.promptDisc==="loose"?10:0))]);
+    drivers.push(["No grounding", state.grounding==="none"?18:(state.grounding==="rag"?4:6)]);
+    drivers.push(["Low eval rigor", state.eval==="none"?18:(state.eval==="basic"?10:(state.eval==="bench"?6:4))]);
+    drivers.push(["Automation level", Math.round(26*(state.auto/100))]);
+    if(state.hasAnchor) drivers.push(["Anchor provided", 18]);
+    if(state.mustFit) drivers.push(["Must-fit constraint", 20]);
+    if(state.hitl==="none") drivers.push(["No human review", 18]);
+    if(state.docs==="none") drivers.push(["No documentation", 16]);
+    if(state.leak==="high") drivers.push(["Leakage risk", 14]);
+    drivers.sort((a,b)=>b[1]-a[1]);
+    const topDrivers=drivers.slice(0,6);
+
+    const mitigations=[];
+    const add=(t,d)=>mitigations.push({title:t,detail:d});
+    if(scores["Hallucination"]>=55) add("Ground the response","Use RAG/tools; require citations and flag uncertainty for non-sourced claims.");
+    if(state.temp>35) add("Reduce variability","Lower temperature for analytical tasks; enforce structured outputs + checks.");
+    if(state.hasAnchor || scores["Anchoring"]>=55) add("Anchor control","Run a blind pass without prior values; compare deltas; document in the CARD addendum.");
+    if(state.mustFit || scores["Confirmation"]>=55) add("Narrative pressure check","Predefine disconfirming evidence; keep should-cost vs will-cost separated.");
+    if(scores["Automation Bias"]>=55) add("Human-in-the-loop","Require reviewer sign-off for any output affecting dollars/schedule/decisions.");
+    if(scores["Representation"]>=55 || scores["Selection / Coverage"]>=55) add("Coverage & analog integrity","Audit for missing mission types, security tiers, program phases; expand examples.");
+    if(scores["Measurement / Label"]>=55) add("Define terms & mappings","Standardize definitions (units, WBS mappings, rate categories) and validate labels.");
+    if(gov<60) add("Documentation package","Create a Model Card + Prompt SOP + change log; record inputs/outputs for auditability.");
+    if(state.eval==="none" || state.eval==="basic") add("Evaluation uplift","Add holdout tests and red-team cases relevant to estimating tasks; track failure rates.");
+
+    return {scores,overall,reliability,gov,topBias,mode,topDrivers,mitigations:mitigations.slice(0,8)};
+  }
+
+  let radarChart, driversChart;
+  function initCharts(){
+    radarChart=new Chart(document.getElementById("radar"),{
+      type:"radar",
+      data:{labels:biasTypes,datasets:[{label:"Bias",data:biasTypes.map(_=>0),fill:true}]},
+      options:{responsive:true,animation:{duration:250},plugins:{legend:{display:false}},scales:{r:{min:0,max:100,ticks:{display:false}}}}
+    });
+    driversChart=new Chart(document.getElementById("drivers"),{
+      type:"bar",
+      data:{labels:["—"],datasets:[{label:"Contribution",data:[0]}]},
+      options:{responsive:true,animation:{duration:250},plugins:{legend:{display:false}},scales:{y:{min:0,max:40}}}
+    });
+  }
+  function updateCharts(res){
+    radarChart.data.datasets[0].data=biasTypes.map(k=>res.scores[k]); radarChart.update();
+    driversChart.data.labels=res.topDrivers.map(d=>d[0]);
+    driversChart.data.datasets[0].data=res.topDrivers.map(d=>d[1]);
+    driversChart.options.scales.y.max=Math.max(30,...res.topDrivers.map(d=>d[1]))+6;
+    driversChart.update();
+  }
+
+  const panels={usecase:document.getElementById("panel-usecase"),data:document.getElementById("panel-data"),
+    prompt:document.getElementById("panel-prompt"),eval:document.getElementById("panel-eval"),gov:document.getElementById("panel-gov")};
+  document.getElementById("domainTabs").addEventListener("click",(e)=>{
+    const tab=e.target.closest(".tab"); if(!tab) return;
+    const key=tab.dataset.tab;
+    document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active")); tab.classList.add("active");
+    Object.keys(panels).forEach(k=>panels[k].style.display=(k===key)?"block":"none");
+  });
+
+  const bind=(id,key,type="value")=>{
+    const el=document.getElementById(id);
+    el.addEventListener("input",()=>{
+      if(type==="checked") state[key]=el.checked;
+      else if(el.type==="range"||el.type==="number") state[key]=Number(el.value);
+      else state[key]=el.value;
+      update();
+    });
+  };
+
+  function updatePills(){
+    pill("val_task", document.getElementById("task").selectedOptions[0].textContent);
+    pill("val_outputStyle", document.getElementById("outputStyle").selectedOptions[0].textContent);
+    pill("val_stakes", document.getElementById("stakes").selectedOptions[0].textContent);
+    pill("val_provenance", document.getElementById("provenance").selectedOptions[0].textContent);
+    pill("val_leak", document.getElementById("leak").selectedOptions[0].textContent);
+    pill("val_sensitive", document.getElementById("sensitive").selectedOptions[0].textContent);
+    pill("val_promptDisc", document.getElementById("promptDisc").selectedOptions[0].textContent);
+    pill("val_grounding", document.getElementById("grounding").selectedOptions[0].textContent);
+    pill("val_eval", document.getElementById("eval").selectedOptions[0].textContent);
+    pill("val_hctrl", document.getElementById("hctrl").selectedOptions[0].textContent);
+    pill("val_drift", document.getElementById("drift").selectedOptions[0].textContent);
+    pill("val_hitl", document.getElementById("hitl").selectedOptions[0].textContent);
+    pill("val_env", document.getElementById("env").selectedOptions[0].textContent);
+    pill("val_docs", document.getElementById("docs").selectedOptions[0].textContent);
+    pill("val_anchor", [state.hasAnchor?"Anchor":"No anchor", state.mustFit?"Must-fit":"No must-fit"].join(" • "));
+  }
+
+  const LS_KEY="ai_bias_sandbox_scenarios_v1";
+  const getScenarios=()=>{try{return JSON.parse(localStorage.getItem(LS_KEY)||"[]")}catch{return[]}};
+  const setScenarios=(arr)=>{localStorage.setItem(LS_KEY,JSON.stringify(arr)); refreshScenarioSelect();};
+  function summary(payload){
+    const old=state; state=structuredClone(payload); const r=computeScores(); state=old; return r;
+  }
+  function refreshScenarioSelect(){
+    const sel=document.getElementById("scenarioSelect");
+    const sc=getScenarios();
+    sel.innerHTML="";
+    const opt0=document.createElement("option");
+    opt0.value=""; opt0.textContent=sc.length?"Select a saved scenario…":"No saved scenarios yet";
+    sel.appendChild(opt0);
+    sc.forEach((s,idx)=>{const opt=document.createElement("option"); opt.value=String(idx); opt.textContent=s.name; sel.appendChild(opt);});
+  }
+  function renderScenarioTable(){
+    const tbody=document.querySelector("#scenarioTable tbody");
+    const sc=getScenarios();
+    tbody.innerHTML="";
+    sc.forEach(s=>{
+      const r=summary(s.payload);
+      const tr=document.createElement("tr");
+      tr.innerHTML=`<td>${s.name}</td><td>${r.overall}</td><td>${r.reliability}</td><td>${r.gov}</td><td>${r.topBias}</td><td>${r.mode}</td>`;
+      tbody.appendChild(tr);
+    });
+  }
+
+  function update(){
+    pill("val_repr", `${state.repr}%`);
+    pill("val_recency", `${state.recency}%`);
+    pill("val_labelq", `${state.labelq}%`);
+    pill("val_temp", `${state.temp}%`);
+    pill("val_persuade", `${state.persuade}%`);
+    pill("val_biastest", `${state.biastest}%`);
+    pill("val_auto", `${state.auto}%`);
+    pill("val_incent", `${state.incent}%`);
+    pill("val_guard", [state.guard_noNumbers?"No unaudited numbers":null, state.guard_cite?"Citations required":null, state.guard_log?"Logging/audit":null].filter(Boolean).join(" • ")||"None");
+    updatePills();
+
+    const res=computeScores();
+    document.getElementById("kpi_bias").textContent=`${res.overall}`;
+    document.getElementById("kpi_band").textContent=`${bandLabel(res.overall)} exposure`;
+
+    document.getElementById("kpi_rel").textContent=`${res.reliability}`;
+    document.getElementById("kpi_relBand").textContent=`${bandLabel(100-res.reliability)} reliability risk`;
+
+    document.getElementById("kpi_gov").textContent=`${res.gov}`;
+    document.getElementById("kpi_govBand").textContent=`${bandLabel(100-res.gov)} governance gaps`;
+
+    document.getElementById("kpi_mode").textContent=res.mode;
+
+    const chipTop=document.getElementById("chip_top");
+    chipTop.textContent=`Top bias: ${res.topBias}`;
+    chipTop.className="chip "+(res.overall<30?"good":(res.overall<60?"warn":"bad"));
+
+    const chipDir=document.getElementById("chip_dir");
+    let impact="Draft-quality risk";
+    if(state.stakes==="high" && res.overall>=60) impact="High decision risk";
+    else if(state.stakes!=="low" && res.overall>=60) impact="Material estimate risk";
+    else if(res.overall>=30) impact="Review recommended";
+    chipDir.textContent=`Impact: ${impact}`;
+    chipDir.className="chip "+(res.overall<30?"good":(res.overall<60?"warn":"bad"));
+
+    const chipCtrl=document.getElementById("chip_control");
+    const ctrlCount=
+      (state.grounding!=="none")+
+      (state.eval==="bench"||state.eval==="red")+
+      (state.hctrl==="verify"||state.hctrl==="gated")+
+      (state.hitl==="required")+
+      (state.docs==="modelcard"||state.docs==="full")+
+      (state.guard_cite?1:0)+
+      (state.guard_log?1:0)+
+      (state.guard_noNumbers?1:0);
+    chipCtrl.textContent=`Controls: ${ctrlCount}/8`;
+    chipCtrl.className="chip "+(ctrlCount>=6?"good":(ctrlCount>=3?"warn":"bad"));
+
+    document.getElementById("topBiasPill").textContent=`Top bias: ${res.topBias}`;
+
+    const ul=document.getElementById("mitigations"); ul.innerHTML="";
+    res.mitigations.forEach(m=>{
+      const li=document.createElement("li");
+      li.style.borderBottom="1px solid rgba(255,255,255,0.08)";
+      li.style.padding="10px 6px";
+      li.innerHTML=`<div style="color: var(--text); font-weight:650; margin-bottom:4px;">${m.title}</div>
+                    <div style="color: var(--muted); line-height:1.45;">${m.detail}</div>`;
+      ul.appendChild(li);
+    });
+
+    updateCharts(res);
+    renderScenarioTable();
+  }
+
+  document.getElementById("saveScenario").addEventListener("click",()=>{
+    const name=prompt("Scenario name (e.g., 'Loose prompt / no eval' or 'RAG + red-team + HITL'):");
+    if(!name) return;
+    const sc=getScenarios();
+    sc.unshift({name,created:new Date().toISOString(),payload: structuredClone(state)});
+    setScenarios(sc.slice(0,12));
+    update();
+  });
+  document.getElementById("loadScenario").addEventListener("click",()=>{
+    const idx=document.getElementById("scenarioSelect").value; if(idx==="") return;
+    const sc=getScenarios(); const s=sc[Number(idx)]; if(!s) return;
+    state=structuredClone(s.payload);
+    for(const k of Object.keys(defaults)){
+      const el=document.getElementById(k); if(!el) continue;
+      if(el.type==="checkbox") el.checked=state[k]; else el.value=state[k];
+    }
+    update();
+  });
+  document.getElementById("deleteScenario").addEventListener("click",()=>{
+    const idx=document.getElementById("scenarioSelect").value; if(idx==="") return;
+    const sc=getScenarios(); sc.splice(Number(idx),1); setScenarios(sc); update();
+  });
+  document.getElementById("reset").addEventListener("click",()=>{
+    state=structuredClone(defaults);
+    for(const k of Object.keys(defaults)){
+      const el=document.getElementById(k); if(!el) continue;
+      if(el.type==="checkbox") el.checked=state[k]; else el.value=state[k];
+    }
+    update();
+  });
+
+  document.getElementById("copySummary").addEventListener("click", async ()=>{
+    const r=computeScores();
+    const lines=[];
+    lines.push("=== AI Model Card / CARD Addendum (AI Bias Sandbox) ===");
+    lines.push(`Task: ${document.getElementById("task").selectedOptions[0].textContent}`);
+    lines.push(`Stakes: ${document.getElementById("stakes").selectedOptions[0].textContent}`);
+    lines.push(`Bias Exposure: ${r.overall} (Top: ${r.topBias}) | Reliability: ${r.reliability} | Governance: ${r.gov}`);
+    lines.push(`Likely failure mode: ${r.mode}`);
+    lines.push("");
+    lines.push("Data & Training:");
+    lines.push(`- Provenance: ${document.getElementById("provenance").selectedOptions[0].textContent}`);
+    lines.push(`- Representativeness: ${state.repr}% | Recency: ${state.recency}% | Label quality: ${state.labelq}%`);
+    lines.push(`- Leakage risk: ${document.getElementById("leak").selectedOptions[0].textContent}`);
+    lines.push(`- Sensitive posture: ${document.getElementById("sensitive").selectedOptions[0].textContent}`);
+    lines.push("");
+    lines.push("Prompt & Context:");
+    lines.push(`- Prompt discipline: ${document.getElementById("promptDisc").selectedOptions[0].textContent}`);
+    lines.push(`- Grounding: ${document.getElementById("grounding").selectedOptions[0].textContent}`);
+    lines.push(`- Temperature: ${state.temp}% | Persuasion risk: ${state.persuade}%`);
+    lines.push(`- Anchors: ${state.hasAnchor?"Present":"None"} | Must-fit: ${state.mustFit?"Yes":"No"}`);
+    lines.push("");
+    lines.push("Evaluation & Monitoring:");
+    lines.push(`- Eval rigor: ${document.getElementById("eval").selectedOptions[0].textContent}`);
+    lines.push(`- Bias test coverage: ${state.biastest}%`);
+    lines.push(`- Hallucination controls: ${document.getElementById("hctrl").selectedOptions[0].textContent}`);
+    lines.push(`- Drift monitoring: ${document.getElementById("drift").selectedOptions[0].textContent}`);
+    lines.push(`- Human-in-loop: ${document.getElementById("hitl").selectedOptions[0].textContent}`);
+    lines.push("");
+    lines.push("Governance & Use:");
+    lines.push(`- Environment: ${document.getElementById("env").selectedOptions[0].textContent}`);
+    lines.push(`- Documentation: ${document.getElementById("docs").selectedOptions[0].textContent}`);
+    lines.push(`- Automation level: ${state.auto}% | Incentive pressure: ${state.incent}%`);
+    lines.push(`- Guardrails: ${[state.guard_noNumbers?"No unaudited numbers":null,state.guard_cite?"Citations required":null,state.guard_log?"Logging/audit":null].filter(Boolean).join(", ")||"None"}`);
+    lines.push("");
+    lines.push("Mitigations (top):");
+    r.mitigations.slice(0,5).forEach(m=>lines.push(`- ${m.title}: ${m.detail}`));
+    const text=lines.join("\n");
+    try{ await navigator.clipboard.writeText(text); alert("Copied to clipboard."); }
+    catch{
+      const ta=document.createElement("textarea"); ta.value=text; document.body.appendChild(ta); ta.select();
+      document.execCommand("copy"); ta.remove(); alert("Copied to clipboard (fallback).");
+    }
+  });
+
+  bind("task","task"); bind("outputStyle","outputStyle"); bind("stakes","stakes");
+  bind("provenance","provenance"); bind("repr","repr"); bind("recency","recency"); bind("labelq","labelq"); bind("leak","leak"); bind("sensitive","sensitive");
+  bind("promptDisc","promptDisc"); bind("grounding","grounding"); bind("temp","temp"); bind("persuade","persuade"); bind("hasAnchor","hasAnchor","checked"); bind("mustFit","mustFit","checked");
+  bind("eval","eval"); bind("biastest","biastest"); bind("hctrl","hctrl"); bind("drift","drift"); bind("hitl","hitl");
+  bind("env","env"); bind("docs","docs"); bind("auto","auto"); bind("incent","incent"); bind("guard_noNumbers","guard_noNumbers","checked"); bind("guard_cite","guard_cite","checked"); bind("guard_log","guard_log","checked");
+
+  initCharts(); refreshScenarioSelect(); update();
+</script>
+</body>
+</html>
