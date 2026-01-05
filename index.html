@@ -2,9 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes"/>
   <meta name="theme-color" content="#0b1020"/>
   <meta name="description" content="Interactive bias forecasting sandbox for cloud services cost estimation with DoD/ICEAA vocabulary"/>
+  <meta name="mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
   <title>Bias Forecasting Sandbox (Cloud Services • DoD/ICEAA-flavored)</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <style>
@@ -28,13 +31,31 @@
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       background: radial-gradient(1200px 800px at 15% 15%, #182656 0%, var(--bg) 55%);
       color:var(--text);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      /* Prevent horizontal scroll on mobile */
+      overflow-x: hidden;
+      /* Better scrolling on mobile */
+      -webkit-overflow-scrolling: touch;
+      /* Prevent text size adjustment on iOS */
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
     }
     header{
-      padding:18px 12px;
+      padding:12px 8px;
       border-bottom:1px solid var(--line);
       backdrop-filter: blur(10px);
       position:sticky; top:0; z-index:10;
       background: rgba(11,16,32,0.75);
+      /* Safe area for iOS notch */
+      padding-top: max(12px, env(safe-area-inset-top));
+      padding-left: max(8px, env(safe-area-inset-left));
+      padding-right: max(8px, env(safe-area-inset-right));
+    }
+    @media (min-width: 768px){
+      header{
+        padding:18px 12px;
+      }
     }
     @media (min-width: 1400px){
       header{
@@ -42,20 +63,48 @@
       }
     }
     header .title{
-      display:flex; gap:12px; align-items:center; flex-wrap:wrap;
+      display:flex; gap:8px; align-items:center; flex-wrap:wrap;
+    }
+    @media (min-width: 768px){
+      header .title{
+        gap:12px;
+      }
+    }
+    header .title h1{
+      font-size: 14px;
+    }
+    @media (min-width: 768px){
+      header .title h1{
+        font-size: 16px;
+      }
     }
     .badge{
-      font-size:12px; padding:4px 10px; border:1px solid var(--line);
+      font-size:10px; padding:3px 8px; border:1px solid var(--line);
       border-radius:999px; color:var(--muted); background: rgba(255,255,255,0.04);
+      white-space: nowrap;
+    }
+    @media (min-width: 768px){
+      .badge{
+        font-size:12px; padding:4px 10px;
+      }
     }
     .container{
       max-width: 1350px;
-      margin: 0 auto;
-      padding: 18px 12px 26px;
+      margin: 0;
+      padding: 12px 8px 20px;
+      /* Safe area for iOS */
+      padding-left: max(8px, env(safe-area-inset-left));
+      padding-right: max(8px, env(safe-area-inset-right));
+      padding-bottom: max(20px, env(safe-area-inset-bottom));
+    }
+    @media (min-width: 768px){
+      .container{
+        padding: 18px 8px 26px;
+      }
     }
     @media (min-width: 1400px){
       .container{
-        padding: 18px 18px 26px;
+        padding: 18px 12px 26px;
       }
     }
     .grid{
@@ -64,7 +113,15 @@
       gap:16px;
     }
     @media (max-width: 1100px){
-      .grid{grid-template-columns:1fr}
+      .grid{
+        grid-template-columns:1fr;
+        gap:12px;
+      }
+    }
+    @media (max-width: 767px){
+      .grid{
+        gap:10px;
+      }
     }
 
     .card{
@@ -74,15 +131,34 @@
       box-shadow: var(--shadow);
     }
     .card .card-h{
-      padding:14px 14px 10px;
+      padding:12px 10px 8px;
       border-bottom:1px solid var(--line);
       display:flex; align-items:center; justify-content:space-between;
-      gap:12px;
+      gap:8px;
+      flex-wrap: wrap;
+    }
+    @media (min-width: 768px){
+      .card .card-h{
+        padding:14px 14px 10px;
+        gap:12px;
+      }
     }
     .card .card-h h2{
-      margin:0; font-size:14px; letter-spacing:0.4px; text-transform:uppercase; color:var(--muted);
+      margin:0; font-size:12px; letter-spacing:0.3px; text-transform:uppercase; color:var(--muted);
     }
-    .card .card-b{padding:14px}
+    @media (min-width: 768px){
+      .card .card-h h2{
+        font-size:14px; letter-spacing:0.4px;
+      }
+    }
+    .card .card-b{
+      padding:10px;
+    }
+    @media (min-width: 768px){
+      .card .card-b{
+        padding:14px;
+      }
+    }
     .tabs{
       display:flex; gap:8px; flex-wrap:wrap;
     }
@@ -90,12 +166,25 @@
       border:1px solid var(--line);
       background: rgba(255,255,255,0.03);
       color: var(--muted);
-      padding:8px 10px;
+      padding:10px 12px;
       border-radius: 999px;
       font-size: 12px;
       cursor:pointer;
       user-select:none;
       transition: all 0.2s ease;
+      /* Minimum touch target size for mobile */
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      /* Prevent text selection on tap */
+      -webkit-tap-highlight-color: rgba(122,162,255,0.2);
+    }
+    @media (min-width: 768px){
+      .tab{
+        padding:8px 10px;
+        min-height: auto;
+      }
     }
     .tab:hover{
       background: rgba(255,255,255,0.06);
@@ -111,10 +200,33 @@
       background: rgba(122,162,255,0.15);
     }
 
-    .row{display:flex; gap:12px; flex-wrap:wrap}
-    .kpis{display:grid; grid-template-columns:repeat(4, 1fr); gap:12px}
-    @media (max-width: 1100px){ .kpis{grid-template-columns:repeat(2,1fr)} }
-    @media (max-width: 520px){ .kpis{grid-template-columns:1fr} }
+    .row{
+      display:flex; 
+      gap:8px; 
+      flex-wrap:wrap;
+    }
+    @media (min-width: 768px){
+      .row{
+        gap:12px;
+      }
+    }
+    .kpis{
+      display:grid; 
+      grid-template-columns:repeat(4, 1fr); 
+      gap:8px;
+    }
+    @media (max-width: 1100px){ 
+      .kpis{
+        grid-template-columns:repeat(2,1fr);
+        gap:10px;
+      } 
+    }
+    @media (max-width: 767px){ 
+      .kpis{
+        grid-template-columns:1fr;
+        gap:8px;
+      } 
+    }
 
     .kpi{
       padding:12px;
@@ -128,43 +240,84 @@
       transform: translateY(-2px);
       box-shadow: 0 4px 12px rgba(0,0,0,0.2);
     }
-    .kpi .label{font-size:12px; color:var(--muted)}
-    .kpi .value{font-size:20px; margin-top:6px; font-weight:650; transition: color 0.3s ease;}
-    .kpi .sub{font-size:12px; color:var(--muted); margin-top:6px}
+    .kpi .label{font-size:11px; color:var(--muted)}
+    @media (min-width: 768px){
+      .kpi .label{font-size:12px}
+    }
+    .kpi .value{font-size:18px; margin-top:4px; font-weight:650; transition: color 0.3s ease;}
+    @media (min-width: 768px){
+      .kpi .value{font-size:20px; margin-top:6px}
+    }
+    .kpi .sub{font-size:11px; color:var(--muted); margin-top:4px}
+    @media (min-width: 768px){
+      .kpi .sub{font-size:12px; margin-top:6px}
+    }
 
     .chips{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;}
     .chip{
-      padding:6px 10px; border-radius: 999px; font-size:12px;
+      padding:6px 10px; border-radius: 999px; font-size:11px;
       border:1px solid var(--line);
       background: rgba(255,255,255,0.03);
       color: var(--muted);
+    }
+    @media (min-width: 768px){
+      .chip{
+        font-size:12px;
+      }
     }
     .chip.good{border-color: rgba(57,217,138,0.4); background: rgba(57,217,138,0.12); color: var(--text)}
     .chip.warn{border-color: rgba(255,204,102,0.4); background: rgba(255,204,102,0.12); color: var(--text)}
     .chip.bad{border-color: rgba(255,107,107,0.4); background: rgba(255,107,107,0.12); color: var(--text)}
 
     .field{
-      margin-bottom:12px;
-      padding:12px;
+      margin-bottom:10px;
+      padding:10px;
       border:1px solid var(--line);
       border-radius: 14px;
       background: rgba(255,255,255,0.02);
     }
+    @media (min-width: 768px){
+      .field{
+        margin-bottom:12px;
+        padding:12px;
+      }
+    }
     .field label{
-      display:flex; justify-content:space-between; gap:10px;
-      font-size:12px; color:var(--muted);
-      margin-bottom:8px;
+      display:flex; justify-content:space-between; gap:8px;
+      font-size:11px; color:var(--muted);
+      margin-bottom:6px;
+      flex-wrap: wrap;
+    }
+    @media (min-width: 768px){
+      .field label{
+        gap:10px;
+        font-size:12px;
+        margin-bottom:8px;
+      }
     }
     .field input[type="range"]{width:100%}
     .field select, .field input[type="number"], .field input[type="text"], .field textarea{
       width:100%;
-      padding:10px;
+      padding:12px;
       border-radius: 12px;
       border:1px solid var(--line);
       background: rgba(15,23,48,0.7);
       color: var(--text);
       outline:none;
       transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      /* Better mobile input experience */
+      font-size: 16px; /* Prevents zoom on iOS */
+      -webkit-appearance: none;
+      appearance: none;
+      /* Minimum touch target */
+      min-height: 44px;
+    }
+    @media (min-width: 768px){
+      .field select, .field input[type="number"], .field input[type="text"], .field textarea{
+        padding:10px;
+        font-size: inherit;
+        min-height: 42px;
+      }
     }
     .field select:focus, .field input:focus, .field textarea:focus{
       border-color: rgba(122,162,255,0.5);
@@ -187,11 +340,23 @@
       border:1px solid var(--line);
       background: rgba(122,162,255,0.14);
       color: var(--text);
-      padding:10px 12px;
+      padding:12px 16px;
       border-radius: 12px;
       font-weight:600;
-      font-size: 13px;
+      font-size: 14px;
       transition: all 0.2s ease;
+      /* Minimum touch target size for mobile */
+      min-height: 44px;
+      /* Prevent text selection on tap */
+      -webkit-tap-highlight-color: rgba(122,162,255,0.2);
+      touch-action: manipulation;
+    }
+    @media (min-width: 768px){
+      .btn{
+        padding:10px 12px;
+        font-size: 13px;
+        min-height: auto;
+      }
     }
     .btn:hover{
       background: rgba(122,162,255,0.22);
@@ -214,15 +379,41 @@
       background: rgba(255,255,255,0.06);
     }
     .note{
-      font-size:12px; color: var(--muted); line-height:1.45;
+      font-size:11px; color: var(--muted); line-height:1.5;
+    }
+    @media (min-width: 768px){
+      .note{
+        font-size:12px; line-height:1.45;
+      }
     }
     .divider{height:1px; background: var(--line); margin:12px 0}
 
-    canvas{max-height:320px}
-    .two{
-      display:grid; grid-template-columns: 1fr 1fr; gap:12px;
+    canvas{
+      max-height:320px;
+      max-width: 100%;
+      height: auto;
     }
-    @media (max-width: 1100px){ .two{grid-template-columns:1fr} }
+    @media (max-width: 767px){
+      canvas{
+        max-height: 280px;
+      }
+    }
+    .two{
+      display:grid; 
+      grid-template-columns: 1fr 1fr; 
+      gap:10px;
+    }
+    @media (max-width: 1100px){ 
+      .two{
+        grid-template-columns:1fr;
+        gap:12px;
+      } 
+    }
+    @media (max-width: 767px){
+      .two{
+        gap:10px;
+      }
+    }
 
     .table{
       width:100%;
@@ -238,10 +429,17 @@
     .table th{color: var(--text); font-weight:650}
 
     .footer{
-      margin-top: 14px;
-      font-size: 11px;
+      margin-top: 12px;
+      font-size: 10px;
       color: rgba(232,236,255,0.55);
-      line-height: 1.45;
+      line-height: 1.5;
+    }
+    @media (min-width: 768px){
+      .footer{
+        margin-top: 14px;
+        font-size: 11px;
+        line-height: 1.45;
+      }
     }
   
     /* Mobile-first polish (keeps same layout, improves usability) */
@@ -253,10 +451,54 @@
     }
     #domainTabs::-webkit-scrollbar{ height: 6px; }
     #domainTabs::-webkit-scrollbar-thumb{ background: rgba(255,255,255,0.12); border-radius: 999px; }
-    input[type="range"]{ height: 28px; }
-    input[type="checkbox"]{ width:16px; height:16px; }
-    select, input[type="text"], input[type="number"], textarea{
-      min-height: 42px;
+    input[type="range"]{ 
+      height: 44px; 
+      /* Better touch target */
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    input[type="range"]::-webkit-slider-thumb{
+      -webkit-appearance: none;
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      background: var(--accent);
+      border-radius: 50%;
+      cursor: pointer;
+    }
+    input[type="range"]::-moz-range-thumb{
+      width: 20px;
+      height: 20px;
+      background: var(--accent);
+      border-radius: 50%;
+      cursor: pointer;
+      border: none;
+    }
+    @media (min-width: 768px){
+      input[type="range"]{ 
+        height: 28px; 
+      }
+      input[type="range"]::-webkit-slider-thumb{
+        width: 16px;
+        height: 16px;
+      }
+      input[type="range"]::-moz-range-thumb{
+        width: 16px;
+        height: 16px;
+      }
+    }
+    input[type="checkbox"]{ 
+      width:20px; 
+      height:20px; 
+      /* Better touch target */
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    @media (min-width: 768px){
+      input[type="checkbox"]{ 
+        width:16px; 
+        height:16px; 
+      }
     }
     /* Make wide tables scroll instead of squishing */
     .table-wrap{ overflow-x:auto; -webkit-overflow-scrolling: touch; }
