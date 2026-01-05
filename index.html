@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <meta name="theme-color" content="#0b1020"/>
+  <meta name="description" content="Interactive bias forecasting sandbox for cloud services cost estimation with DoD/ICEAA vocabulary"/>
   <title>Bias Forecasting Sandbox (Cloud Services • DoD/ICEAA-flavored)</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <style>
@@ -44,7 +45,7 @@
     }
     .container{
       max-width: 1350px;
-      margin: 0;
+      margin: 0 auto;
       padding: 18px 18px 26px;
     }
     .grid{
@@ -84,6 +85,15 @@
       font-size: 12px;
       cursor:pointer;
       user-select:none;
+      transition: all 0.2s ease;
+    }
+    .tab:hover{
+      background: rgba(255,255,255,0.06);
+      border-color: rgba(122,162,255,0.3);
+    }
+    .tab:focus-visible{
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
     }
     .tab.active{
       border-color: rgba(122,162,255,0.55);
@@ -102,9 +112,14 @@
       background: rgba(255,255,255,0.03);
       border: 1px solid var(--line);
       min-height: 86px;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .kpi:hover{
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
     }
     .kpi .label{font-size:12px; color:var(--muted)}
-    .kpi .value{font-size:20px; margin-top:6px; font-weight:650}
+    .kpi .value{font-size:20px; margin-top:6px; font-weight:650; transition: color 0.3s ease;}
     .kpi .sub{font-size:12px; color:var(--muted); margin-top:6px}
 
     .chips{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;}
@@ -139,6 +154,11 @@
       background: rgba(15,23,48,0.7);
       color: var(--text);
       outline:none;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .field select:focus, .field input:focus, .field textarea:focus{
+      border-color: rgba(122,162,255,0.5);
+      box-shadow: 0 0 0 3px rgba(122,162,255,0.1);
     }
     .mini{
       display:flex; gap:10px; align-items:center; justify-content:space-between;
@@ -161,12 +181,28 @@
       border-radius: 12px;
       font-weight:600;
       font-size: 13px;
+      transition: all 0.2s ease;
+    }
+    .btn:hover{
+      background: rgba(122,162,255,0.22);
+      border-color: rgba(122,162,255,0.4);
+    }
+    .btn:focus-visible{
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+    .btn:active{transform: translateY(1px)}
+    .btn:disabled{
+      opacity: 0.5;
+      cursor: not-allowed;
     }
     .btn.secondary{
       background: rgba(255,255,255,0.03);
       color: var(--muted);
     }
-    .btn:active{transform: translateY(1px)}
+    .btn.secondary:hover{
+      background: rgba(255,255,255,0.06);
+    }
     .note{
       font-size:12px; color: var(--muted); line-height:1.45;
     }
@@ -217,18 +253,56 @@
     .table{ min-width: 540px; }
     /* Prevent long chip text from breaking layout */
     .chips{ align-items:center; }
-    .chip{ max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .chip{ max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: all 0.2s ease; }
+
+    /* Loading state */
+    .loading{opacity: 0.6; pointer-events: none;}
+    .loading::after{
+      content: "";
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border: 2px solid var(--line);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      margin-left: 8px;
+    }
+    @keyframes spin{to{transform: rotate(360deg);}}
+
+    /* Smooth transitions for dynamic content */
+    .card-b > * {transition: opacity 0.3s ease;}
+    
+    /* Better focus indicators */
+    input[type="range"]:focus-visible{
+      outline: 2px solid var(--accent);
+      outline-offset: 4px;
+      border-radius: 4px;
+    }
+    
+    /* Screen reader only */
+    .sr-only{
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0,0,0,0);
+      white-space: nowrap;
+      border-width: 0;
+    }
 
   </style>
 </head>
 <body>
-<header>
+<header role="banner">
   <div class="title">
-    <div style="font-weight:800; font-size:16px;">Bias Forecasting Sandbox</div>
-    <span class="badge">Cloud Services (CSP-agnostic)</span>
-    <span class="badge">DoD/ICEAA vocabulary (CARD • BOE • IGCE • CSDR)</span>
-    <span class="badge">Assumption Domains: Data • Method • Rates • Risk</span>
-    <span class="badge">Educational model (rules-based)</span>
+    <h1 style="font-weight:800; font-size:16px; margin:0;">Bias Forecasting Sandbox</h1>
+    <span class="badge" aria-label="Cloud Services CSP-agnostic">Cloud Services (CSP-agnostic)</span>
+    <span class="badge" aria-label="DoD ICEAA vocabulary">DoD/ICEAA vocabulary (CARD • BOE • IGCE • CSDR)</span>
+    <span class="badge" aria-label="Assumption Domains">Assumption Domains: Data • Method • Rates • Risk</span>
+    <span class="badge" aria-label="Educational model">Educational model (rules-based)</span>
   </div>
 </header>
 
@@ -238,11 +312,11 @@
     <div class="card">
       <div class="card-h">
         <h2>Assumptions</h2>
-        <div class="tabs" id="domainTabs">
-          <div class="tab active" data-tab="data">Data Pedigree</div>
-          <div class="tab" data-tab="method">Method Choices</div>
-          <div class="tab" data-tab="rates">Economic & Rates</div>
-          <div class="tab" data-tab="risk">Schedule & Risk</div>
+        <div class="tabs" id="domainTabs" role="tablist" aria-label="Assumption domain tabs">
+          <div class="tab active" data-tab="data" role="tab" aria-selected="true" aria-controls="panel-data" tabindex="0">Data Pedigree</div>
+          <div class="tab" data-tab="method" role="tab" aria-selected="false" aria-controls="panel-method" tabindex="0">Method Choices</div>
+          <div class="tab" data-tab="rates" role="tab" aria-selected="false" aria-controls="panel-rates" tabindex="0">Economic & Rates</div>
+          <div class="tab" data-tab="risk" role="tab" aria-selected="false" aria-controls="panel-risk" tabindex="0">Schedule & Risk</div>
         </div>
       </div>
       <div class="card-b">
@@ -262,7 +336,7 @@
         </div>
 
         <!-- DOMAIN PANELS -->
-        <div id="panel-data">
+        <div id="panel-data" role="tabpanel" aria-labelledby="tab-data">
           <div class="field">
             <label><span>Data source type (traceable?)</span><span class="pill" id="val_sourceType"></span></label>
             <select id="sourceType">
@@ -342,7 +416,7 @@
           </div>
         </div>
 
-        <div id="panel-method" style="display:none;">
+        <div id="panel-method" style="display:none;" role="tabpanel" aria-labelledby="tab-method" hidden>
           <div class="field">
             <label><span>Method blend: Analogy (%)</span><span class="pill" id="val_analogyPct"></span></label>
             <input id="analogyPct" type="range" min="0" max="100" step="5" value="35"/>
@@ -400,7 +474,7 @@
           </div>
         </div>
 
-        <div id="panel-rates" style="display:none;">
+        <div id="panel-rates" style="display:none;" role="tabpanel" aria-labelledby="tab-rates" hidden>
           <div class="field">
             <label><span>Compute usage (vCPU-hours / month)</span><span class="pill" id="val_vcpu"></span></label>
             <input id="vcpu" type="range" min="10000" max="600000" step="5000" value="120000"/>
@@ -475,7 +549,7 @@
           </div>
         </div>
 
-        <div id="panel-risk" style="display:none;">
+        <div id="panel-risk" style="display:none;" role="tabpanel" aria-labelledby="tab-risk" hidden>
           <div class="field">
             <label><span>Schedule realism</span><span class="pill" id="val_sched"></span></label>
             <input id="sched" type="range" min="0" max="100" step="1" value="55"/>
@@ -535,9 +609,9 @@
         <div class="divider"></div>
 
         <div class="row">
-          <button class="btn" id="saveScenario">Save scenario</button>
-          <button class="btn secondary" id="copySummary">Copy CARD-style summary</button>
-          <button class="btn secondary" id="reset">Reset to default</button>
+          <button class="btn" id="saveScenario" aria-label="Save current scenario">Save scenario</button>
+          <button class="btn secondary" id="copySummary" aria-label="Copy CARD-style summary to clipboard">Copy CARD-style summary</button>
+          <button class="btn secondary" id="reset" aria-label="Reset all fields to default values">Reset to default</button>
         </div>
 
         <div style="margin-top:12px;">
@@ -661,6 +735,31 @@
   // ----------------------------
   // State & defaults
   // ----------------------------
+  
+  // Debounce helper for performance optimization
+  function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+      const later = () => {
+        clearTimeout(timeout);
+        func(...args);
+      };
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+    };
+  }
+  
+  // Throttle helper for rapid updates (e.g., range sliders)
+  function throttle(func, limit) {
+    let inThrottle;
+    return function(...args) {
+      if (!inThrottle) {
+        func.apply(this, args);
+        inThrottle = true;
+        setTimeout(() => inThrottle = false, limit);
+      }
+    };
+  }
   const defaults = {
     sourceType: "internal",
     traceLevel: "audited",
@@ -1095,8 +1194,13 @@
   let radarChart, driversChart;
 
   function initCharts(){
-    const radarCtx = document.getElementById("radar");
-    radarChart = new Chart(radarCtx, {
+    try {
+      const radarCtx = document.getElementById("radar");
+      if (!radarCtx) {
+        console.warn("Radar chart canvas not found");
+        return;
+      }
+      radarChart = new Chart(radarCtx, {
       type: "radar",
       data: {
         labels: biasTypes,
@@ -1119,8 +1223,12 @@
       }
     });
 
-    const drvCtx = document.getElementById("drivers");
-    driversChart = new Chart(drvCtx, {
+      const drvCtx = document.getElementById("drivers");
+      if (!drvCtx) {
+        console.warn("Drivers chart canvas not found");
+        return;
+      }
+      driversChart = new Chart(drvCtx, {
       type: "bar",
       data: {
         labels: ["—"],
@@ -1138,16 +1246,27 @@
         }
       }
     });
+    } catch (error) {
+      console.error("Error initializing charts:", error);
+    }
   }
 
   function updateCharts(bias){
-    radarChart.data.datasets[0].data = biasTypes.map(k => bias.scores[k]);
-    radarChart.update();
-
-    driversChart.data.labels = bias.topDrivers.map(d => d[0]);
-    driversChart.data.datasets[0].data = bias.topDrivers.map(d => d[1]);
-    driversChart.options.scales.y.max = Math.max(30, ...bias.topDrivers.map(d=>d[1])) + 6;
-    driversChart.update();
+    try {
+      if (radarChart) {
+        radarChart.data.datasets[0].data = biasTypes.map(k => bias.scores[k]);
+        radarChart.update('none'); // 'none' mode for instant update without animation on rapid changes
+      }
+      
+      if (driversChart) {
+        driversChart.data.labels = bias.topDrivers.map(d => d[0]);
+        driversChart.data.datasets[0].data = bias.topDrivers.map(d => d[1]);
+        driversChart.options.scales.y.max = Math.max(30, ...bias.topDrivers.map(d=>d[1])) + 6;
+        driversChart.update('none');
+      }
+    } catch (error) {
+      console.error("Error updating charts:", error);
+    }
   }
 
   // ----------------------------
@@ -1160,15 +1279,62 @@
     risk: document.getElementById("panel-risk")
   };
 
+  // Tab switching with keyboard support
+  function switchTab(key) {
+    const tab = document.querySelector(`.tab[data-tab="${key}"]`);
+    if (!tab) return;
+    
+    document.querySelectorAll(".tab").forEach(t => {
+      t.classList.remove("active");
+      t.setAttribute("aria-selected", "false");
+    });
+    tab.classList.add("active");
+    tab.setAttribute("aria-selected", "true");
+
+    Object.keys(panels).forEach(k => {
+      const panel = panels[k];
+      if (k === key) {
+        panel.style.display = "block";
+        panel.removeAttribute("hidden");
+        panel.setAttribute("aria-hidden", "false");
+      } else {
+        panel.style.display = "none";
+        panel.setAttribute("hidden", "");
+        panel.setAttribute("aria-hidden", "true");
+      }
+    });
+  }
+
   document.getElementById("domainTabs").addEventListener("click", (e) => {
     const tab = e.target.closest(".tab");
     if(!tab) return;
-    const key = tab.dataset.tab;
-
-    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-    tab.classList.add("active");
-
-    Object.keys(panels).forEach(k => panels[k].style.display = (k===key) ? "block" : "none");
+    switchTab(tab.dataset.tab);
+  });
+  
+  // Keyboard navigation for tabs
+  document.getElementById("domainTabs").addEventListener("keydown", (e) => {
+    const tabs = Array.from(document.querySelectorAll(".tab"));
+    const currentIndex = tabs.findIndex(t => t.classList.contains("active"));
+    
+    let nextIndex = currentIndex;
+    if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+      e.preventDefault();
+      nextIndex = currentIndex > 0 ? currentIndex - 1 : tabs.length - 1;
+    } else if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+      e.preventDefault();
+      nextIndex = currentIndex < tabs.length - 1 ? currentIndex + 1 : 0;
+    } else if (e.key === "Home") {
+      e.preventDefault();
+      nextIndex = 0;
+    } else if (e.key === "End") {
+      e.preventDefault();
+      nextIndex = tabs.length - 1;
+    }
+    
+    if (nextIndex !== currentIndex) {
+      switchTab(tabs[nextIndex].dataset.tab);
+      tabs[nextIndex].focus();
+    }
   });
 
   // ----------------------------
@@ -1176,12 +1342,35 @@
   // ----------------------------
   const bind = (id, key, type="value") => {
     const el = document.getElementById(id);
-    el.addEventListener("input", () => {
-      if(type === "checked"){ state[key] = el.checked; }
-      else if(el.type === "range" || el.type === "number"){ state[key] = Number(el.value); }
-      else { state[key] = el.value; }
-      update();
-    });
+    if (!el) {
+      console.warn(`Element with id "${id}" not found`);
+      return;
+    }
+    
+    // Use throttle for range inputs (rapid updates), debounce for others
+    const updateHandler = el.type === "range" 
+      ? throttle(() => {
+          if(type === "checked"){ state[key] = el.checked; }
+          else if(el.type === "range" || el.type === "number"){ state[key] = Number(el.value); }
+          else { state[key] = el.value; }
+          update();
+        }, 50)
+      : debounce(() => {
+          if(type === "checked"){ state[key] = el.checked; }
+          else if(el.type === "range" || el.type === "number"){ state[key] = Number(el.value); }
+          else { state[key] = el.value; }
+          update();
+        }, 150);
+    
+    el.addEventListener("input", updateHandler);
+    
+    // Add aria-label if missing
+    if (!el.getAttribute("aria-label") && el.type !== "checkbox") {
+      const label = el.closest(".field")?.querySelector("label span");
+      if (label) {
+        el.setAttribute("aria-label", label.textContent.trim());
+      }
+    }
   };
 
   function updatePills(){
@@ -1219,88 +1408,100 @@
   }
 
   function update(){
-    normalizeBlend();
+    try {
+      normalizeBlend();
 
-    // Refresh range pills
-    document.getElementById("val_wbsAlign").textContent = `${state.wbsAlign}%`;
-    document.getElementById("val_sampleSize").textContent = `${state.sampleSize}`;
-    document.getElementById("val_similarity").textContent = `${state.similarity}%`;
-    document.getElementById("val_timeRelevance").textContent = `${state.timeRelevance}%`;
+      // Refresh range pills
+      document.getElementById("val_wbsAlign").textContent = `${state.wbsAlign}%`;
+      document.getElementById("val_sampleSize").textContent = `${state.sampleSize}`;
+      document.getElementById("val_similarity").textContent = `${state.similarity}%`;
+      document.getElementById("val_timeRelevance").textContent = `${state.timeRelevance}%`;
 
-    document.getElementById("val_analogyPct").textContent = `${state.analogyPct}%`;
-    document.getElementById("val_parametricPct").textContent = `${state.parametricPct}%`;
-    document.getElementById("val_buildupPct").textContent = `${state.buildupPct}%`;
-    document.getElementById("val_reuse").textContent = `${state.reuse}%`;
+      document.getElementById("val_analogyPct").textContent = `${state.analogyPct}%`;
+      document.getElementById("val_parametricPct").textContent = `${state.parametricPct}%`;
+      document.getElementById("val_buildupPct").textContent = `${state.buildupPct}%`;
+      document.getElementById("val_reuse").textContent = `${state.reuse}%`;
 
-    document.getElementById("val_vcpu").textContent = `${state.vcpu.toLocaleString()}`;
-    document.getElementById("val_storage").textContent = `${state.storage.toLocaleString()}`;
-    document.getElementById("val_egress").textContent = `${state.egress.toLocaleString()}`;
-    document.getElementById("val_requests").textContent = `${state.requests.toLocaleString()}`;
+      document.getElementById("val_vcpu").textContent = `${state.vcpu.toLocaleString()}`;
+      document.getElementById("val_storage").textContent = `${state.storage.toLocaleString()}`;
+      document.getElementById("val_egress").textContent = `${state.egress.toLocaleString()}`;
+      document.getElementById("val_requests").textContent = `${state.requests.toLocaleString()}`;
 
-    document.getElementById("val_fee").textContent = `${Number(state.fee).toFixed(1)}%`;
-    document.getElementById("val_rateStance").textContent = `${state.rateStance}%`;
-    document.getElementById("val_plugPct").textContent = `${state.plugPct}%`;
+      document.getElementById("val_fee").textContent = `${Number(state.fee).toFixed(1)}%`;
+      document.getElementById("val_rateStance").textContent = `${state.rateStance}%`;
+      document.getElementById("val_plugPct").textContent = `${state.plugPct}%`;
 
-    document.getElementById("val_sched").textContent = `${state.sched}%`;
-    document.getElementById("val_uncert").textContent = `${state.uncert}%`;
-    document.getElementById("val_comp").textContent = `${state.comp}%`;
+      document.getElementById("val_sched").textContent = `${state.sched}%`;
+      document.getElementById("val_uncert").textContent = `${state.uncert}%`;
+      document.getElementById("val_comp").textContent = `${state.comp}%`;
 
-    updatePills();
+      updatePills();
 
-    // Compute outputs
-    const est = computeEstimateAnnual();
-    const bias = computeBias();
-    const trace = computeTraceability();
-    const card = computeCardReadiness(trace);
+      // Compute outputs
+      const est = computeEstimateAnnual();
+      const bias = computeBias();
+      const trace = computeTraceability();
+      const card = computeCardReadiness(trace);
 
-    // KPI updates
-    document.getElementById("kpi_estimate").textContent = fmtMoney(est);
-    document.getElementById("kpi_biasScore").textContent = `${bias.overall}`;
+      // KPI updates
+      document.getElementById("kpi_estimate").textContent = fmtMoney(est);
+      document.getElementById("kpi_biasScore").textContent = `${bias.overall}`;
 
-    const band = bias.overall < 30 ? "Low" : (bias.overall < 60 ? "Moderate" : "High");
-    document.getElementById("kpi_biasBand").textContent = `${band} bias exposure`;
+      const band = bias.overall < 30 ? "Low" : (bias.overall < 60 ? "Moderate" : "High");
+      document.getElementById("kpi_biasBand").textContent = `${band} bias exposure`;
 
-    document.getElementById("kpi_trace").textContent = `${trace}`;
-    const tband = trace >= 80 ? "Strong" : (trace >= 55 ? "Mixed" : "Weak");
-    document.getElementById("kpi_traceBand").textContent = `${tband} traceability`;
+      document.getElementById("kpi_trace").textContent = `${trace}`;
+      const tband = trace >= 80 ? "Strong" : (trace >= 55 ? "Mixed" : "Weak");
+      document.getElementById("kpi_traceBand").textContent = `${tband} traceability`;
 
-    const low = est * bias.low;
-    const high = est * bias.high;
-    document.getElementById("kpi_range").textContent = `${fmtMoney(low)} – ${fmtMoney(high)}`;
+      const low = est * bias.low;
+      const high = est * bias.high;
+      document.getElementById("kpi_range").textContent = `${fmtMoney(low)} – ${fmtMoney(high)}`;
 
-    // Chips
-    const chipCard = document.getElementById("chip_card");
-    chipCard.textContent = `CARD readiness: ${card}`;
-    chipCard.className = "chip " + (card >= 80 ? "good" : (card >= 55 ? "warn" : "bad"));
+      // Chips
+      const chipCard = document.getElementById("chip_card");
+      chipCard.textContent = `CARD readiness: ${card}`;
+      chipCard.className = "chip " + (card >= 80 ? "good" : (card >= 55 ? "warn" : "bad"));
 
-    const chipTop = document.getElementById("chip_topbias");
-    chipTop.textContent = `Top bias: ${bias.topBias}`;
-    chipTop.className = "chip " + (bias.overall < 30 ? "good" : (bias.overall < 60 ? "warn" : "bad"));
+      const chipTop = document.getElementById("chip_topbias");
+      chipTop.textContent = `Top bias: ${bias.topBias}`;
+      chipTop.className = "chip " + (bias.overall < 30 ? "good" : (bias.overall < 60 ? "warn" : "bad"));
 
-    const chipDir = document.getElementById("chip_direction");
-    chipDir.textContent = `Direction: ${bias.direction}`;
-    chipDir.className = "chip " + (bias.direction.startsWith("Likely") ? "warn" : "");
+      const chipDir = document.getElementById("chip_direction");
+      chipDir.textContent = `Direction: ${bias.direction}`;
+      chipDir.className = "chip " + (bias.direction.startsWith("Likely") ? "warn" : "");
 
-    // Top bias pill
-    document.getElementById("topBiasPill").textContent = `Top bias: ${bias.topBias}`;
+      // Top bias pill
+      document.getElementById("topBiasPill").textContent = `Top bias: ${bias.topBias}`;
 
-    // Mitigations (render as rows)
-    const ul = document.getElementById("mitigations");
-    ul.innerHTML = "";
-    bias.mitigationsFinal.forEach(m => {
-      const li = document.createElement("li");
-      li.style.borderBottom = "1px solid rgba(255,255,255,0.08)";
-      li.style.padding = "10px 6px";
-      li.innerHTML = `<div style="color: var(--text); font-weight:650; margin-bottom:4px;">${m.title}</div>
-                      <div style="color: var(--muted); line-height:1.45;">${m.detail}</div>`;
-      ul.appendChild(li);
-    });
+      // Mitigations (render as rows)
+      const ul = document.getElementById("mitigations");
+      ul.innerHTML = "";
+      bias.mitigationsFinal.forEach(m => {
+        const li = document.createElement("li");
+        li.style.borderBottom = "1px solid rgba(255,255,255,0.08)";
+        li.style.padding = "10px 6px";
+        li.innerHTML = `<div style="color: var(--text); font-weight:650; margin-bottom:4px;">${m.title}</div>
+                        <div style="color: var(--muted); line-height:1.45;">${m.detail}</div>`;
+        ul.appendChild(li);
+      });
 
-    // Charts
-    updateCharts(bias);
+      // Charts
+      updateCharts(bias);
 
-    // Scenario table
-    renderScenarioTable();
+      // Scenario table
+      renderScenarioTable();
+    } catch (error) {
+      console.error("Error updating display:", error);
+      // Show user-friendly error message
+      const errorMsg = document.createElement("div");
+      errorMsg.className = "note";
+      errorMsg.style.color = "var(--bad)";
+      errorMsg.textContent = "An error occurred while updating. Please refresh the page.";
+      errorMsg.setAttribute("role", "alert");
+      document.querySelector(".card-b").prepend(errorMsg);
+      setTimeout(() => errorMsg.remove(), 5000);
+    }
   }
 
   // ----------------------------
@@ -1357,12 +1558,34 @@
   }
 
   document.getElementById("saveScenario").addEventListener("click", () => {
-    const name = prompt("Scenario name (e.g., 'P50 must-fit' or 'P70 defensible'):");
-    if(!name) return;
-    const scenarios = getScenarios();
-    scenarios.unshift({ name, created: new Date().toISOString(), payload: structuredClone(state) });
-    setScenarios(scenarios.slice(0,12));
-    update();
+    try {
+      const name = prompt("Scenario name (e.g., 'P50 must-fit' or 'P70 defensible'):");
+      if(!name || !name.trim()) return;
+      
+      const scenarios = getScenarios();
+      // Check for duplicate names
+      if (scenarios.some(s => s.name.toLowerCase() === name.trim().toLowerCase())) {
+        if (!confirm(`A scenario named "${name}" already exists. Overwrite it?`)) return;
+        scenarios.splice(scenarios.findIndex(s => s.name.toLowerCase() === name.trim().toLowerCase()), 1);
+      }
+      
+      scenarios.unshift({ name: name.trim(), created: new Date().toISOString(), payload: structuredClone(state) });
+      setScenarios(scenarios.slice(0,12));
+      update();
+      
+      // Visual feedback
+      const btn = document.getElementById("saveScenario");
+      const originalText = btn.textContent;
+      btn.textContent = "✓ Saved!";
+      btn.disabled = true;
+      setTimeout(() => {
+        btn.textContent = originalText;
+        btn.disabled = false;
+      }, 1500);
+    } catch (error) {
+      console.error("Error saving scenario:", error);
+      alert("Failed to save scenario. Please try again.");
+    }
   });
 
   document.getElementById("loadScenario").addEventListener("click", () => {
@@ -1405,12 +1628,13 @@
 
   // Copy CARD-style summary
   document.getElementById("copySummary").addEventListener("click", async () => {
-    const est = computeEstimateAnnual();
-    const bias = computeBias();
-    const trace = computeTraceability();
-    const card = computeCardReadiness(trace);
+    try {
+      const est = computeEstimateAnnual();
+      const bias = computeBias();
+      const trace = computeTraceability();
+      const card = computeCardReadiness(trace);
 
-    const lines = [];
+      const lines = [];
     lines.push("=== CARD/BOE Assumption Summary (Bias Sandbox) ===");
     lines.push(`Point estimate (annual): ${fmtMoney(est)} | Bias Score: ${bias.overall} | Traceability: ${trace} | CARD readiness: ${card}`);
     lines.push("");
@@ -1447,19 +1671,40 @@
     lines.push("Mitigations (top):");
     bias.mitigationsFinal.slice(0,4).forEach(m => lines.push(`- ${m.title}: ${m.detail}`));
 
-    const text = lines.join("\n");
-    try{
-      await navigator.clipboard.writeText(text);
-      alert("Copied summary to clipboard.");
-    }catch{
-      // fallback
-      const ta = document.createElement("textarea");
-      ta.value = text;
-      document.body.appendChild(ta);
-      ta.select();
-      document.execCommand("copy");
-      ta.remove();
-      alert("Copied summary to clipboard (fallback).");
+      const text = lines.join("\n");
+      try{
+        await navigator.clipboard.writeText(text);
+        // Visual feedback
+        const btn = document.getElementById("copySummary");
+        const originalText = btn.textContent;
+        btn.textContent = "✓ Copied!";
+        setTimeout(() => {
+          btn.textContent = originalText;
+        }, 2000);
+      }catch{
+        // fallback
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.select();
+        try {
+          document.execCommand("copy");
+          const btn = document.getElementById("copySummary");
+          const originalText = btn.textContent;
+          btn.textContent = "✓ Copied!";
+          setTimeout(() => {
+            btn.textContent = originalText;
+          }, 2000);
+        } catch (err) {
+          alert("Failed to copy. Please select and copy manually.");
+        }
+        ta.remove();
+      }
+    } catch (error) {
+      console.error("Error generating summary:", error);
+      alert("Failed to generate summary. Please try again.");
     }
   });
 
@@ -1509,10 +1754,34 @@
   bind("anchor", "anchor", "checked");
   bind("comp", "comp");
 
-  // Init
-  initCharts();
-  refreshScenarioSelect();
-  update();
+  // Init with error handling
+  try {
+    // Check if Chart.js is loaded
+    if (typeof Chart === 'undefined') {
+      console.error("Chart.js library failed to load");
+      document.body.insertAdjacentHTML('afterbegin', 
+        '<div style="background: var(--bad); color: white; padding: 12px; text-align: center;">' +
+        'Chart.js library failed to load. Please check your internet connection and refresh.</div>');
+    } else {
+      initCharts();
+    }
+    
+    refreshScenarioSelect();
+    update();
+    
+    // Announce page load to screen readers
+    const announcement = document.createElement("div");
+    announcement.setAttribute("role", "status");
+    announcement.setAttribute("aria-live", "polite");
+    announcement.className = "sr-only";
+    announcement.textContent = "Bias Forecasting Sandbox loaded. Use tabs to navigate between assumption domains.";
+    document.body.appendChild(announcement);
+    setTimeout(() => announcement.remove(), 1000);
+    
+  } catch (error) {
+    console.error("Initialization error:", error);
+    alert("An error occurred while initializing the application. Please refresh the page.");
+  }
 </script>
 </body>
 </html>
