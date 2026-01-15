@@ -306,6 +306,7 @@
         <div class="divider"></div>
         <div class="mini">
           <button class="btn" id="saveScenario">Save scenario</button>
+          <button type="button" class="btn secondary" onclick="seedDefaultScenariosOnce()">Load micro-pilot scenarios</button>
           <button class="btn secondary" id="copySummary">Copy Model-Card / CARD addendum</button>
           <button class="btn secondary" id="reset">Reset</button>
         </div>
@@ -663,7 +664,7 @@
   const DEFAULT_SCENARIOS = [
     // S1 — BOE drafting
     {
-      name: "S1-HR",
+      name: "S1-High Risk (HR) (BOE Drafting)",
       values: {
         task: "Draft cost narrative / estimating approach (BOE support)",
         outputStyle: "Narrative prose (more persuasive)",
@@ -695,7 +696,7 @@
       }
     },
     {
-      name: "S1-CTL",
+      name: "S1-Control (CTL) (BOE Drafting)",
       values: {
         task: "Draft cost narrative / estimating approach (BOE support)",
         outputStyle: "Bullets with sources + confidence tags",
@@ -729,7 +730,7 @@
 
     // S2 — Market scan / labor rates
     {
-      name: "S2-HR",
+      name: "S2-HR (Labor Rate Assistance)",
       values: {
         task: "Labor rate banding / market scan assistance",
         outputStyle: "Narrative prose (more persuasive)",
@@ -761,7 +762,7 @@
       }
     },
     {
-      name: "S2-CTL",
+      name: "S2-CTL (Labor Rate Assistance)",
       values: {
         task: "Labor rate banding / market scan assistance",
         outputStyle: "Tables/structured output (looks \"precise\")",
@@ -795,7 +796,7 @@
 
     // S3 — Anomaly detection
     {
-      name: "S3-HR",
+      name: "S3-HR (Anomaly Detection)",
       values: {
         task: "Anomaly detection / data QA suggestions",
         outputStyle: "Tables/structured output (looks \"precise\")",
@@ -827,7 +828,7 @@
       }
     },
     {
-      name: "S3-CTL",
+      name: "S3-CTL (Anomaly Detection)",
       values: {
         task: "Anomaly detection / data QA suggestions",
         outputStyle: "Bullets with sources + confidence tags",
@@ -982,24 +983,29 @@
     try{
       const stored = localStorage.getItem(LS_KEY);
       if (!stored || stored === "[]") {
-        // Initialize with default scenarios
-        const defaults = DEFAULT_SCENARIOS.map(mapScenarioToInternal);
-        localStorage.setItem(LS_KEY, JSON.stringify(defaults));
-        return defaults;
+        return [];
       }
       return JSON.parse(stored);
     }catch{
-      // If parsing fails, try to initialize with defaults
-      try {
-        const defaults = DEFAULT_SCENARIOS.map(mapScenarioToInternal);
-        localStorage.setItem(LS_KEY, JSON.stringify(defaults));
-        return defaults;
-      } catch {
-        return [];
-      }
+      return [];
     }
   };
   const setScenarios=(arr)=>{localStorage.setItem(LS_KEY,JSON.stringify(arr)); refreshScenarioSelect();};
+  
+  function seedDefaultScenariosOnce(){
+    const existing = getScenarios();
+    const existingNames = new Set(existing.map(s => s.name));
+    const defaults = DEFAULT_SCENARIOS.map(mapScenarioToInternal);
+    const toAdd = defaults.filter(s => !existingNames.has(s.name));
+    if (toAdd.length === 0) {
+      alert("All micro-pilot scenarios are already loaded.");
+      return;
+    }
+    const updated = [...existing, ...toAdd];
+    setScenarios(updated);
+    renderScenarioTable();
+    alert(`Loaded ${toAdd.length} micro-pilot scenario${toAdd.length > 1 ? 's' : ''}: ${toAdd.map(s => s.name).join(', ')}`);
+  }
   function summary(payload){
     const old=state; state=structuredClone(payload); const r=computeScores(); state=old; return r;
   }
