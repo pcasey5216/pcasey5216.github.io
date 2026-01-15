@@ -660,8 +660,345 @@
     pill("val_anchor", [state.hasAnchor?"Anchor":"No anchor", state.mustFit?"Must-fit":"No must-fit"].join(" • "));
   }
 
+  const DEFAULT_SCENARIOS = [
+    // S1 — BOE drafting
+    {
+      name: "S1-HR",
+      values: {
+        task: "Draft cost narrative / estimating approach (BOE support)",
+        outputStyle: "Narrative prose (more persuasive)",
+        decisionImpact: "High (directly influences dollars / decisions)",
+        trainingProvenance: "Closed model (unknown training mix)",
+        domainRepresentativeness: 35,
+        recency: 40,
+        labelQuality: 40,
+        dataLeakageRisk: "High (unknown overlap / copied examples)",
+        sensitiveExposure: "Mixed (ad-hoc redaction)",
+        promptDiscipline: "Loose (\"just answer\")",
+        groundingMethod: "None (pure model response)",
+        temperature: 65,
+        persuasionRisk: 85,
+        anchorPriorEstimate: true,
+        anchorMustFit: true,
+        evalRigor: "None",
+        biasTestingCoverage: 10,
+        hallucinationControls: "None",
+        monitoring: "None",
+        hitl: "None (auto-use allowed)",
+        accessEnv: "Public SaaS",
+        documentation: "None",
+        automationLevel: 85,
+        incentivePressure: 85,
+        guardNoUnauditedNumbers: false,
+        guardCitationsRequired: false,
+        guardLoggingEnabled: false
+      }
+    },
+    {
+      name: "S1-CTL",
+      values: {
+        task: "Draft cost narrative / estimating approach (BOE support)",
+        outputStyle: "Bullets with sources + confidence tags",
+        decisionImpact: "High (directly influences dollars / decisions)",
+        trainingProvenance: "RAG over curated internal corpus",
+        domainRepresentativeness: 80,
+        recency: 80,
+        labelQuality: 70,
+        dataLeakageRisk: "Low (segregated datasets)",
+        sensitiveExposure: "Controlled (approved handling)",
+        promptDiscipline: "Strict (role, scope, constraints, cite sources)",
+        groundingMethod: "Tools + verification steps",
+        temperature: 15,
+        persuasionRisk: 25,
+        anchorPriorEstimate: false,
+        anchorMustFit: false,
+        evalRigor: "Basic spot checks",
+        biasTestingCoverage: 55,
+        hallucinationControls: "Gated release + human approval",
+        monitoring: "Manual review cadence",
+        hitl: "Required (review + sign-off)",
+        accessEnv: "Enterprise tenant controls",
+        documentation: "Full package (SOP + audit trail)",
+        automationLevel: 20,
+        incentivePressure: 30,
+        guardNoUnauditedNumbers: true,
+        guardCitationsRequired: true,
+        guardLoggingEnabled: true
+      }
+    },
+
+    // S2 — Market scan / labor rates
+    {
+      name: "S2-HR",
+      values: {
+        task: "Labor rate banding / market scan assistance",
+        outputStyle: "Narrative prose (more persuasive)",
+        decisionImpact: "High (directly influences dollars / decisions)",
+        trainingProvenance: "Closed model (unknown training mix)",
+        domainRepresentativeness: 30,
+        recency: 35,
+        labelQuality: 35,
+        dataLeakageRisk: "High (unknown overlap / copied examples)",
+        sensitiveExposure: "Mixed (ad-hoc redaction)",
+        promptDiscipline: "Loose (\"just answer\")",
+        groundingMethod: "None (pure model response)",
+        temperature: 55,
+        persuasionRisk: 70,
+        anchorPriorEstimate: true,
+        anchorMustFit: true,
+        evalRigor: "None",
+        biasTestingCoverage: 10,
+        hallucinationControls: "None",
+        monitoring: "None",
+        hitl: "None (auto-use allowed)",
+        accessEnv: "Public SaaS",
+        documentation: "None",
+        automationLevel: 70,
+        incentivePressure: 80,
+        guardNoUnauditedNumbers: false,
+        guardCitationsRequired: false,
+        guardLoggingEnabled: false
+      }
+    },
+    {
+      name: "S2-CTL",
+      values: {
+        task: "Labor rate banding / market scan assistance",
+        outputStyle: "Tables/structured output (looks \"precise\")",
+        decisionImpact: "High (directly influences dollars / decisions)",
+        trainingProvenance: "RAG over curated internal corpus",
+        domainRepresentativeness: 60,
+        recency: 85,
+        labelQuality: 55,
+        dataLeakageRisk: "Low (segregated datasets)",
+        sensitiveExposure: "Controlled (approved handling)",
+        promptDiscipline: "Strict (role, scope, constraints, cite sources)",
+        groundingMethod: "RAG (retrieval with citations)",
+        temperature: 20,
+        persuasionRisk: 30,
+        anchorPriorEstimate: false,
+        anchorMustFit: false,
+        evalRigor: "Benchmarks + holdout set",
+        biasTestingCoverage: 60,
+        hallucinationControls: "Verification step",
+        monitoring: "Manual review cadence",
+        hitl: "Required (review + sign-off)",
+        accessEnv: "Enterprise tenant controls",
+        documentation: "Model card + data sheet + change log",
+        automationLevel: 25,
+        incentivePressure: 25,
+        guardNoUnauditedNumbers: true,
+        guardCitationsRequired: true,
+        guardLoggingEnabled: true
+      }
+    },
+
+    // S3 — Anomaly detection
+    {
+      name: "S3-HR",
+      values: {
+        task: "Anomaly detection / data QA suggestions",
+        outputStyle: "Tables/structured output (looks \"precise\")",
+        decisionImpact: "Medium (inputs to an estimate)",
+        trainingProvenance: "Closed model (unknown training mix)",
+        domainRepresentativeness: 45,
+        recency: 45,
+        labelQuality: 30,
+        dataLeakageRisk: "High (unknown overlap / copied examples)",
+        sensitiveExposure: "Risky (unsafe inputs)",
+        promptDiscipline: "Normal",
+        groundingMethod: "None (pure model response)",
+        temperature: 40,
+        persuasionRisk: 60,
+        anchorPriorEstimate: false,
+        anchorMustFit: false,
+        evalRigor: "None",
+        biasTestingCoverage: 10,
+        hallucinationControls: "None",
+        monitoring: "None",
+        hitl: "None (auto-use allowed)",
+        accessEnv: "Public SaaS",
+        documentation: "None",
+        automationLevel: 75,
+        incentivePressure: 60,
+        guardNoUnauditedNumbers: false,
+        guardCitationsRequired: false,
+        guardLoggingEnabled: false
+      }
+    },
+    {
+      name: "S3-CTL",
+      values: {
+        task: "Anomaly detection / data QA suggestions",
+        outputStyle: "Bullets with sources + confidence tags",
+        decisionImpact: "Medium (inputs to an estimate)",
+        trainingProvenance: "Fine-tuned on internal data",
+        domainRepresentativeness: 75,
+        recency: 70,
+        labelQuality: 70,
+        dataLeakageRisk: "Low (segregated datasets)",
+        sensitiveExposure: "Controlled (approved handling)",
+        promptDiscipline: "Strict (role, scope, constraints, cite sources)",
+        groundingMethod: "Tools + verification steps",
+        temperature: 15,
+        persuasionRisk: 25,
+        anchorPriorEstimate: false,
+        anchorMustFit: false,
+        evalRigor: "Benchmarks + holdout set",
+        biasTestingCoverage: 55,
+        hallucinationControls: "Verification step",
+        monitoring: "Manual review cadence",
+        hitl: "Required (review + sign-off)",
+        accessEnv: "Enterprise tenant controls",
+        documentation: "Model card + data sheet + change log",
+        automationLevel: 25,
+        incentivePressure: 25,
+        guardNoUnauditedNumbers: true,
+        guardCitationsRequired: true,
+        guardLoggingEnabled: true
+      }
+    }
+  ];
+
+  function mapScenarioToInternal(scenario) {
+    const v = scenario.values;
+    const mapDecisionImpact = (val) => {
+      if (val.includes("High")) return "high";
+      if (val.includes("Medium")) return "med";
+      return "low";
+    };
+    const mapProvenance = (val) => {
+      if (val.includes("Closed model")) return "closed";
+      if (val.includes("Fine-tuned")) return "fine";
+      if (val.includes("RAG")) return "rag";
+      return "gov";
+    };
+    const mapOutputStyle = (val) => {
+      if (val.includes("Narrative")) return "narrative";
+      if (val.includes("Tables")) return "tables";
+      return "bullet";
+    };
+    const mapLeak = (val) => {
+      if (val.includes("High")) return "high";
+      if (val.includes("Low")) return "low";
+      return "med";
+    };
+    const mapSensitive = (val) => {
+      if (val.includes("Risky")) return "risky";
+      if (val.includes("Mixed")) return "mixed";
+      return "controlled";
+    };
+    const mapPromptDisc = (val) => {
+      if (val.includes("Loose")) return "loose";
+      if (val.includes("Strict")) return "strict";
+      return "normal";
+    };
+    const mapGrounding = (val) => {
+      if (val.includes("None")) return "none";
+      if (val.includes("RAG")) return "rag";
+      if (val.includes("Tools")) return "tools";
+      return "docs";
+    };
+    const mapEval = (val) => {
+      if (val === "None") return "none";
+      if (val.includes("Basic")) return "basic";
+      if (val.includes("Benchmarks")) return "bench";
+      return "red";
+    };
+    const mapHctrl = (val) => {
+      if (val === "None") return "none";
+      if (val.includes("Gated")) return "gated";
+      if (val.includes("Verification")) return "verify";
+      return "prompts";
+    };
+    const mapMonitoring = (val) => {
+      if (val === "None") return "none";
+      if (val.includes("Manual")) return "manual";
+      if (val.includes("Auto monitoring + alerts")) return "auto+alert";
+      return "auto";
+    };
+    const mapHitl = (val) => {
+      if (val.includes("None")) return "none";
+      if (val.includes("Required")) return "required";
+      return "recommended";
+    };
+    const mapEnv = (val) => {
+      if (val.includes("Public")) return "public";
+      if (val.includes("Enterprise")) return "enterprise";
+      return "gov";
+    };
+    const mapDocs = (val) => {
+      if (val === "None") return "none";
+      if (val.includes("Full package")) return "full";
+      if (val.includes("Model card")) return "modelcard";
+      return "some";
+    };
+    const mapTask = (val) => {
+      if (val.includes("Draft cost narrative")) return "estimate";
+      if (val.includes("Labor rate")) return "rates";
+      if (val.includes("Anomaly")) return "anomaly";
+      if (val.includes("SOW")) return "sow";
+      if (val.includes("WBS")) return "wbs";
+      return "risk";
+    };
+
+    return {
+      name: scenario.name,
+      created: new Date().toISOString(),
+      payload: {
+        task: mapTask(v.task),
+        outputStyle: mapOutputStyle(v.outputStyle),
+        stakes: mapDecisionImpact(v.decisionImpact),
+        provenance: mapProvenance(v.trainingProvenance),
+        repr: v.domainRepresentativeness,
+        recency: v.recency,
+        labelq: v.labelQuality,
+        leak: mapLeak(v.dataLeakageRisk),
+        sensitive: mapSensitive(v.sensitiveExposure),
+        promptDisc: mapPromptDisc(v.promptDiscipline),
+        grounding: mapGrounding(v.groundingMethod),
+        temp: v.temperature,
+        persuade: v.persuasionRisk,
+        hasAnchor: v.anchorPriorEstimate,
+        mustFit: v.anchorMustFit,
+        eval: mapEval(v.evalRigor),
+        biastest: v.biasTestingCoverage,
+        hctrl: mapHctrl(v.hallucinationControls),
+        drift: mapMonitoring(v.monitoring),
+        hitl: mapHitl(v.hitl),
+        env: mapEnv(v.accessEnv),
+        docs: mapDocs(v.documentation),
+        auto: v.automationLevel,
+        incent: v.incentivePressure,
+        guard_noNumbers: v.guardNoUnauditedNumbers,
+        guard_cite: v.guardCitationsRequired,
+        guard_log: v.guardLoggingEnabled
+      }
+    };
+  }
+
   const LS_KEY="ai_bias_sandbox_scenarios_v1";
-  const getScenarios=()=>{try{return JSON.parse(localStorage.getItem(LS_KEY)||"[]")}catch{return[]}};
+  const getScenarios=()=>{
+    try{
+      const stored = localStorage.getItem(LS_KEY);
+      if (!stored || stored === "[]") {
+        // Initialize with default scenarios
+        const defaults = DEFAULT_SCENARIOS.map(mapScenarioToInternal);
+        localStorage.setItem(LS_KEY, JSON.stringify(defaults));
+        return defaults;
+      }
+      return JSON.parse(stored);
+    }catch{
+      // If parsing fails, try to initialize with defaults
+      try {
+        const defaults = DEFAULT_SCENARIOS.map(mapScenarioToInternal);
+        localStorage.setItem(LS_KEY, JSON.stringify(defaults));
+        return defaults;
+      } catch {
+        return [];
+      }
+    }
+  };
   const setScenarios=(arr)=>{localStorage.setItem(LS_KEY,JSON.stringify(arr)); refreshScenarioSelect();};
   function summary(payload){
     const old=state; state=structuredClone(payload); const r=computeScores(); state=old; return r;
