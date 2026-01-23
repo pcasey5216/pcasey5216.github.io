@@ -219,12 +219,15 @@ details.howto li{margin:6px 0}
 
     /* ===== Responsive polish ===== */
     @media (max-width: 720px){
-      header{padding:14px 14px;}
+      header{padding:12px 14px;}
       .container{padding:12px 12px 20px;}
       .grid{grid-template-columns:1fr;}
-      .header-row{flex-wrap:wrap;}
-      .header-actions{width:100%; justify-content:flex-end;}
-      .badge{font-size:11px;}
+      /* keep Start tour inline (avoid extra header height) */
+      .header-row{flex-wrap:nowrap; align-items:center;}
+      .header-actions{width:auto; justify-content:flex-end; flex:0 0 auto;}
+      header .title{gap:8px;}
+      /* keep badges from multi-line wrapping inside each pill */
+      .badge{font-size:11px; padding:3px 8px; max-width:100%; display:inline-flex; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
       .btn{min-height:var(--tap);}
       .tab{padding:10px 12px;}
       .field{padding:12px;}
