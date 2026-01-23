@@ -7,105 +7,105 @@
 <title>AI Bias Sandbox — DoD/ICEAA (Cost Analysis)</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
-    :root{
-      --bg:#0b1020; --panel:#111a33; --text:#e8ecff; --muted:#aab4e6;
-      --line:rgba(255,255,255,0.08); --accent:#7aa2ff;
-      --good:#39d98a; --warn:#ffcc66; --bad:#ff6b6b;
-      --shadow: 0 10px 30px rgba(0,0,0,0.35); --radius: 16px;
-      --fz-base: clamp(14px, 1.05vw, 16px);
-      --fz-title: clamp(16px, 1.6vw, 20px);
-      --fz-label: clamp(12px, 0.95vw, 13px);
-      --fz-small: clamp(11px, 0.9vw, 12px);
-      --tap: 44px;
-    }
-    *{box-sizing:border-box}
-    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-      font-size:var(--fz-base); line-height:1.45;
-      -webkit-tap-highlight-color: transparent;
-      background:radial-gradient(1200px 800px at 15% 15%, #182656 0%, var(--bg) 55%);color:var(--text);}
-    header{padding:18px 22px;border-bottom:1px solid var(--line);backdrop-filter: blur(10px);
-      position:sticky; top:0; z-index:10;background: rgba(11,16,32,0.75);}
-    header .title{display:flex; gap:12px; align-items:center; flex-wrap:wrap;}
-    .app-name{font-weight:800; font-size:var(--fz-title); letter-spacing:0.2px; white-space:nowrap;}
+  :root{
+  --bg:#0b1020; --panel:#111a33; --text:#e8ecff; --muted:#aab4e6;
+  --line:rgba(255,255,255,0.08); --accent:#7aa2ff;
+  --good:#39d98a; --warn:#ffcc66; --bad:#ff6b6b;
+  --shadow: 0 10px 30px rgba(0,0,0,0.35); --radius: 16px;
+  --fz-base: clamp(14px, 1.05vw, 16px);
+  --fz-title: clamp(16px, 1.6vw, 20px);
+  --fz-label: clamp(12px, 0.95vw, 13px);
+  --fz-small: clamp(11px, 0.9vw, 12px);
+  --tap: 44px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+  font-size:var(--fz-base); line-height:1.45;
+  -webkit-tap-highlight-color: transparent;
+  background:radial-gradient(1200px 800px at 15% 15%, #182656 0%, var(--bg) 55%);color:var(--text);}
+  header{padding:18px 22px;border-bottom:1px solid var(--line);backdrop-filter: blur(10px);
+  position:sticky; top:0; z-index:10;background: rgba(11,16,32,0.75);}
+  header .title{display:flex; gap:12px; align-items:center; flex-wrap:wrap;}
+  .app-name{font-weight:800; font-size:var(--fz-title); letter-spacing:0.2px; white-space:nowrap;}
 
-    .badge{font-size:12px; padding:4px 10px; border:1px solid var(--line); border-radius:999px;
-      color:var(--muted); background: rgba(255,255,255,0.04);}
-    .container{max-width:1350px;margin:0;padding:18px 18px 26px;}
-    .grid{display:grid;grid-template-columns:440px 1fr;gap:16px;}
-    @media (max-width:1100px){.grid{grid-template-columns:1fr}}
-    .card{background:linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
-      border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);}
-    .card .card-h{padding:14px 14px 10px;border-bottom:1px solid var(--line);
-      display:flex;align-items:center;justify-content:space-between;gap:12px;}
-    .card .card-h h2{margin:0;font-size:13px;letter-spacing:0.4px;text-transform:uppercase;color:var(--muted);}
-    .card .card-b{padding:14px}
-    .tabs{display:flex;gap:8px;flex-wrap:wrap;overflow-x:auto;-webkit-overflow-scrolling: touch;
-      scrollbar-width: thin;padding-bottom:6px;}
-    .tabs::-webkit-scrollbar{height:6px}
-    .tabs::-webkit-scrollbar-thumb{background: rgba(255,255,255,0.12); border-radius:999px;}
-    .tab{border:1px solid var(--line);background: rgba(255,255,255,0.03);color:var(--muted);
-      padding:8px 10px;border-radius:999px;font-size:12px;cursor:pointer;user-select:none;white-space:nowrap;}
-    .tab.active{border-color: rgba(122,162,255,0.55);color:var(--text);background: rgba(122,162,255,0.15);}
-    .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
-    @media (max-width:1100px){.kpis{grid-template-columns:repeat(2,1fr)}}
-    @media (max-width:520px){.kpis{grid-template-columns:1fr}}
-    .kpi{padding:12px;border-radius:14px;background: rgba(255,255,255,0.03);border:1px solid var(--line);min-height:86px;}
-    .kpi .label{font-size:12px;color:var(--muted)}
-    .kpi .value{font-size:20px;margin-top:6px;font-weight:650}
-    .kpi .sub{font-size:12px;color:var(--muted);margin-top:6px}
-    .chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center;}
-    .chip{padding:6px 10px;border-radius:999px;font-size:12px;border:1px solid var(--line);
-      background: rgba(255,255,255,0.03);color:var(--muted);max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-    .chip.good{border-color: rgba(57,217,138,0.4); background: rgba(57,217,138,0.12); color: var(--text)}
-    .chip.warn{border-color: rgba(255,204,102,0.4); background: rgba(255,204,102,0.12); color: var(--text)}
-    .chip.bad{border-color: rgba(255,107,107,0.4); background: rgba(255,107,107,0.12); color: var(--text)}
-    .field{margin-bottom:12px;padding:12px;border:1px solid var(--line);border-radius:14px;background: rgba(255,255,255,0.02);}
-    .field label{display:flex;justify-content:space-between;gap:10px;font-size:var(--fz-label);color:var(--muted);margin-bottom:8px;}
-    .field input[type="range"]{width:100%;height:28px}
-    input[type="checkbox"]{width:16px;height:16px}
-    .field select,.field input[type="number"],.field input[type="text"],.field textarea{
-      width:100%;padding:10px;border-radius:12px;border:1px solid var(--line);background: rgba(15,23,48,0.7);color:var(--text);outline:none;min-height:42px;}
-    .mini{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;}
-    .pill{font-size:12px;padding:4px 8px;border-radius:999px;border:1px solid var(--line);background: rgba(255,255,255,0.03);color:var(--muted);}
-    .btn{cursor:pointer;border:1px solid var(--line);background: rgba(122,162,255,0.14);color:var(--text);
-      padding:10px 12px;border-radius:12px;font-weight:600;font-size:13px;
-      min-height:42px; display:inline-flex; align-items:center; justify-content:center; gap:8px;
-      touch-action: manipulation;}
-    .btn.secondary{background: rgba(255,255,255,0.03);color:var(--muted)}
-    .btn:active{transform: translateY(1px)}
-    .note{font-size:12px;color:var(--muted);line-height:1.45}
-    .divider{height:1px;background: var(--line);margin:12px 0}
-    canvas{max-height:320px; width:100% !important}
-    .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    @media (max-width:1100px){.two{grid-template-columns:1fr}}
-    .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
-    .table{width:100%;min-width:540px;border-collapse:collapse;font-size:12px;color:var(--muted)}
-    .table th,.table td{border-bottom:1px solid var(--line);padding:8px 6px;text-align:left}
-    .table th{color:var(--text);font-weight:650}
-    .footer{margin-top:14px;font-size:var(--fz-small);color: rgba(232,236,255,0.55);line-height:1.45}
+  .badge{font-size:12px; padding:4px 10px; border:1px solid var(--line); border-radius:999px;
+  color:var(--muted); background: rgba(255,255,255,0.04);}
+  .container{max-width:1350px;margin:0;padding:18px 18px 26px;}
+  .grid{display:grid;grid-template-columns:440px 1fr;gap:16px;}
+  @media (max-width:1100px){.grid{grid-template-columns:1fr}}
+  .card{background:linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+  border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);}
+  .card .card-h{padding:14px 14px 10px;border-bottom:1px solid var(--line);
+  display:flex;align-items:center;justify-content:space-between;gap:12px;}
+  .card .card-h h2{margin:0;font-size:13px;letter-spacing:0.4px;text-transform:uppercase;color:var(--muted);}
+  .card .card-b{padding:14px}
+  .tabs{display:flex;gap:8px;flex-wrap:wrap;overflow-x:auto;-webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;padding-bottom:6px;}
+  .tabs::-webkit-scrollbar{height:6px}
+  .tabs::-webkit-scrollbar-thumb{background: rgba(255,255,255,0.12); border-radius:999px;}
+  .tab{border:1px solid var(--line);background: rgba(255,255,255,0.03);color:var(--muted);
+  padding:8px 10px;border-radius:999px;font-size:12px;cursor:pointer;user-select:none;white-space:nowrap;}
+  .tab.active{border-color: rgba(122,162,255,0.55);color:var(--text);background: rgba(122,162,255,0.15);}
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  @media (max-width:1100px){.kpis{grid-template-columns:repeat(2,1fr)}}
+  @media (max-width:520px){.kpis{grid-template-columns:1fr}}
+  .kpi{padding:12px;border-radius:14px;background: rgba(255,255,255,0.03);border:1px solid var(--line);min-height:86px;}
+  .kpi .label{font-size:12px;color:var(--muted)}
+  .kpi .value{font-size:20px;margin-top:6px;font-weight:650}
+  .kpi .sub{font-size:12px;color:var(--muted);margin-top:6px}
+  .chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center;}
+  .chip{padding:6px 10px;border-radius:999px;font-size:12px;border:1px solid var(--line);
+  background: rgba(255,255,255,0.03);color:var(--muted);max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .chip.good{border-color: rgba(57,217,138,0.4); background: rgba(57,217,138,0.12); color: var(--text)}
+  .chip.warn{border-color: rgba(255,204,102,0.4); background: rgba(255,204,102,0.12); color: var(--text)}
+  .chip.bad{border-color: rgba(255,107,107,0.4); background: rgba(255,107,107,0.12); color: var(--text)}
+  .field{margin-bottom:12px;padding:12px;border:1px solid var(--line);border-radius:14px;background: rgba(255,255,255,0.02);}
+  .field label{display:flex;justify-content:space-between;gap:10px;font-size:var(--fz-label);color:var(--muted);margin-bottom:8px;}
+  .field input[type="range"]{width:100%;height:28px}
+  input[type="checkbox"]{width:16px;height:16px}
+  .field select,.field input[type="number"],.field input[type="text"],.field textarea{
+  width:100%;padding:10px;border-radius:12px;border:1px solid var(--line);background: rgba(15,23,48,0.7);color:var(--text);outline:none;min-height:42px;}
+  .mini{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;}
+  .pill{font-size:12px;padding:4px 8px;border-radius:999px;border:1px solid var(--line);background: rgba(255,255,255,0.03);color:var(--muted);}
+  .btn{cursor:pointer;border:1px solid var(--line);background: rgba(122,162,255,0.14);color:var(--text);
+  padding:10px 12px;border-radius:12px;font-weight:600;font-size:13px;
+  min-height:42px; display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  touch-action: manipulation;}
+  .btn.secondary{background: rgba(255,255,255,0.03);color:var(--muted)}
+  .btn:active{transform: translateY(1px)}
+  .note{font-size:12px;color:var(--muted);line-height:1.45}
+  .divider{height:1px;background: var(--line);margin:12px 0}
+  canvas{max-height:320px; width:100% !important}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media (max-width:1100px){.two{grid-template-columns:1fr}}
+  .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .table{width:100%;min-width:540px;border-collapse:collapse;font-size:12px;color:var(--muted)}
+  .table th,.table td{border-bottom:1px solid var(--line);padding:8px 6px;text-align:left}
+  .table th{color:var(--text);font-weight:650}
+  .footer{margin-top:14px;font-size:var(--fz-small);color: rgba(232,236,255,0.55);line-height:1.45}
   
-    /* ===== Hover tooltips (labels + inputs) ===== */
-    .tooltip{
-      position:fixed;
-      z-index:9999;
-      max-width:340px;
-      background: rgba(17,26,51,0.96);
-      border:1px solid rgba(255,255,255,0.12);
-      color: var(--text);
-      padding:10px 12px;
-      border-radius:12px;
-      box-shadow:var(--shadow);
-      font-size:12px;
-      line-height:1.35;
-      pointer-events:none;
-      transform: translate(10px, 12px);
-    }
-    .tooltip.hidden{display:none}
-    [data-tip]{cursor:help}
-    .tip-underline{
-      border-bottom: 1px dashed rgba(170,180,230,0.65);
-      padding-bottom:1px;
-    }
+  /* ===== Hover tooltips (labels + inputs) ===== */
+  .tooltip{
+  position:fixed;
+  z-index:9999;
+  max-width:340px;
+  background: rgba(17,26,51,0.96);
+  border:1px solid rgba(255,255,255,0.12);
+  color: var(--text);
+  padding:10px 12px;
+  border-radius:12px;
+  box-shadow:var(--shadow);
+  font-size:12px;
+  line-height:1.35;
+  pointer-events:none;
+  transform: translate(10px, 12px);
+  }
+  .tooltip.hidden{display:none}
+  [data-tip]{cursor:help}
+  .tip-underline{
+  border-bottom: 1px dashed rgba(170,180,230,0.65);
+  padding-bottom:1px;
+  }
 
 
 
@@ -141,6 +141,28 @@
 .help:hover{
   border-color: rgba(122,162,255,0.55);
   background: rgba(122,162,255,0.10);
+}
+
+
+/* Inputs help icon: top-right corner of Inputs card (requested) */
+#inputsCard .card-h{ position: relative; padding-right: 46px; }
+#inputsCard #tip_inputs{
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  margin-left: 0;
+  z-index: 3;
+}
+
+
+/* Scenario Compare help icon: top-right corner of Scenario Compare card (requested) */
+#scenariosCard .card-h{ position: relative; padding-right: 46px; }
+#scenariosCard #tip_scenarios{
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  margin-left: 0;
+  z-index: 3;
 }
 
 details.howto{
@@ -217,34 +239,35 @@ details.howto li{margin:6px 0}
 }
 
 
-    /* ===== Responsive polish ===== */
-    @media (max-width: 720px){
-      header{padding:12px 14px;}
-      .container{padding:12px 12px 20px;}
-      .grid{grid-template-columns:1fr;}
-      /* keep Start tour inline (avoid extra header height) */
-      .header-row{flex-wrap:nowrap; align-items:center;}
-      .header-actions{width:auto; justify-content:flex-end; flex:0 0 auto;}
-      header .title{gap:8px;}
-      /* keep badges from multi-line wrapping inside each pill */
-      .badge{font-size:11px; padding:3px 8px; max-width:100%; display:inline-flex; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
-      .btn{min-height:var(--tap);}
-      .tab{padding:10px 12px;}
-      .field{padding:12px;}
-      .field select,.field input[type="number"],.field input[type="text"],.field textarea{min-height:var(--tap);}
-      input[type="checkbox"]{width:18px;height:18px}
-      .help{width:22px;height:22px}
-      canvas{max-height:260px}
-      /* scenario select should not force overflow */
-      #scenarioSelect{min-width:0 !important; width:100%;}
-    }
-    @media (max-width: 420px){
-      canvas{max-height:240px}
-      .app-name{white-space:normal}
-    }
-    @media (prefers-reduced-motion: reduce){
-      *{scroll-behavior:auto !important; transition:none !important; animation:none !important;}
-    }
+  /* ===== Responsive polish ===== */
+  @media (max-width: 720px){
+  body{background: var(--bg) !important;}
+  header{padding:12px 14px;}
+  .container{padding:12px 12px 20px;}
+  .grid{grid-template-columns:1fr;}
+  /* keep Start tour inline (avoid extra header height) */
+  .header-row{flex-wrap:nowrap; align-items:center;}
+  .header-actions{width:auto; justify-content:flex-end; flex:0 0 auto;}
+  header .title{gap:8px;}
+  /* keep badges from multi-line wrapping inside each pill */
+  .badge{font-size:11px; padding:3px 8px; max-width:100%; display:inline-flex; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .btn{min-height:var(--tap);}
+  .tab{padding:10px 12px;}
+  .field{padding:12px;}
+  .field select,.field input[type="number"],.field input[type="text"],.field textarea{min-height:var(--tap);}
+  input[type="checkbox"]{width:18px;height:18px}
+  .help{width:22px;height:22px}
+  canvas{max-height:260px}
+  /* scenario select should not force overflow */
+  #scenarioSelect{min-width:0 !important; width:100%;}
+  }
+  @media (max-width: 420px){
+  canvas{max-height:240px}
+  .app-name{white-space:normal}
+  }
+  @media (prefers-reduced-motion: reduce){
+  *{scroll-behavior:auto !important; transition:none !important; animation:none !important;}
+  }
 
 /* ===== Walkthrough / Tour (additive) ===== */
 .hidden{display:none !important;}
@@ -314,7 +337,7 @@ body.tour-noscroll{overflow:hidden; touch-action:none;}
 </header>
 <div class="container">
 <div class="grid">
-<div class="card">
+<div class="card" id="inputsCard">
 <div class="card-h">
 <h2>Inputs <span class="help" id="tip_inputs">?</span></h2>
 <div class="tabs" id="domainTabs">
@@ -327,17 +350,17 @@ body.tour-noscroll{overflow:hidden; touch-action:none;}
 </div>
 <div class="card-b">
 <details class="howto">
-  <summary>Quick start <span class="pill">Hover for definitions</span></summary>
+  <summary>Quick start <span class="pill">Hover over labels</span></summary>
   <div class="howto-sub">This is a rules-based training sandbox (not a statistical fairness score). Use it to compare controls, document risk, and explain bias modes.</div>
   <ol>
-    <li><b>Set the use case</b> (task + stakes). Then move through tabs left-to-right.</li>
-    <li><b>Tune controls</b> (grounding/RAG, eval rigor, HITL, documentation, guardrails).</li>
-    <li><b>Read Outputs</b>: higher <b>Exposure</b> = more risk if used “as-is”. Higher <b>Reliability</b>/<b>Gov</b> = better controls.</li>
-    <li><b>Interpret charts</b>: Radar shows <i>which bias types</i> dominate; Drivers shows <i>what settings</i> are pushing the score (hover bars).</li>
-    <li><b>Save & compare</b> scenarios (e.g., “Loose prompt / no eval” vs “RAG + red-team + HITL”).</li>
+  <li><b>Set the use case</b> (task + stakes). Then move through tabs left-to-right.</li>
+  <li><b>Tune controls</b> (grounding/RAG, eval rigor, HITL, documentation, guardrails).</li>
+  <li><b>Read Outputs</b>: higher <b>Exposure</b> = more risk if used “as-is”. Higher <b>Reliability</b>/<b>Gov</b> = better controls.</li>
+  <li><b>Interpret charts</b>: Radar shows <i>which bias types</i> dominate; Drivers shows <i>what settings</i> are pushing the score (hover bars).</li>
+  <li><b>Save & compare</b> scenarios (e.g., “Loose prompt / no eval” vs “RAG + red-team + HITL”).</li>
   </ol>
 </details>
-<div class="note" style="margin:0 0 14px 0;">Tip: Hover <span class="tip-underline">underlined labels</span>, the <b>?</b> icons, and the <b>radar axis text</b> for definitions.</div>
+<div class="note" style="margin:0 0 14px 0;">Tip: Hover over <span class="tip-underline">underlined labels</span>, the <b>?</b> icons, and the <b>radar axis text</b> for definitions.</div>
 
 <div id="panel-usecase">
 <div class="field">
@@ -525,7 +548,7 @@ body.tour-noscroll{overflow:hidden; touch-action:none;}
 <button class="btn secondary" id="copySummary">Copy Model-Card / CARD addendum</button>
 <button class="btn secondary" id="reset">Reset</button>
 </div>
-<div style="margin-top:12px;"><div class="note">Saved scenarios live in your browser (localStorage). Host with GitHub Pages like your other sandbox.</div></div>
+<div style="margin-top:12px;"><div class="note">Saved scenarios live in your browser (localStorage).</div></div>
 </div>
 </div>
 <div>
@@ -566,12 +589,12 @@ body.tour-noscroll{overflow:hidden; touch-action:none;}
   <span><span class="dot" style="background:var(--good)"></span>Low</span>
   <span><span class="dot" style="background:var(--warn)"></span>Moderate</span>
   <span><span class="dot" style="background:var(--bad)"></span>High</span>
-  <span style="opacity:.9;">(Hover the score labels for how each number is computed.)</span>
+  <span style="opacity:.9;">(Hover over the score labels to see how each number is computed.)</span>
 </div>
 </div>
 <div class="divider"></div>
 <div class="two">
-<div class="card" style="box-shadow:none;">
+<div class="card" id="radarCard" style="box-shadow:none;">
 <div class="card-h" style="border-bottom:1px solid var(--line);">
 <h2>Bias radar <span class="help" id="tip_radar">?</span></h2>
 <div class="pill" id="topBiasPill">Top bias: —</div>
@@ -603,7 +626,7 @@ body.tour-noscroll{overflow:hidden; touch-action:none;}
 <ul class="table" id="mitigations" style="list-style:none; padding-left:0; margin:0;"></ul>
 </div>
 </div>
-<div class="card" style="box-shadow:none;">
+<div class="card" id="scenariosCard" style="box-shadow:none;">
 <div class="card-h" style="border-bottom:1px solid var(--line);">
 <h2>Scenario compare <span class="help" id="tip_scenarios">?</span></h2>
 <div class="mini">
@@ -624,7 +647,6 @@ body.tour-noscroll{overflow:hidden; touch-action:none;}
 </div>
 </div>
 </div>
-<div class="footer"><b>Presenter note:</b> Flip anchors/must-fit and watch confirmation/anchoring grow—even if grounded.</div>
 </div>
 </div>
 </div>
@@ -634,73 +656,73 @@ body.tour-noscroll{overflow:hidden; touch-action:none;}
 <script>
 // ===== Hover tooltips (labels + inputs) =====
   const BIAS_DEFS = {
-    "Representation": "Mismatch between the model’s examples and your real population (mission types, phases, security tiers, vendors, etc.). Leads to outputs that reflect the wrong baseline.",
-    "Selection / Coverage": "Blind spots or uneven source coverage (missing data slices, narrow examples, incomplete corpus). Produces gaps and skewed recommendations.",
-    "Measurement / Label": "Inconsistent definitions, units, mappings, or labels (LCATs, WBS elements, rate categories). Can teach/produce the wrong relationship.",
-    "Anchoring": "Over-weighting an initial number/assumption (prior estimate, target) even when evidence suggests a different value.",
-    "Confirmation": "Preferentially selecting or generating evidence that supports a desired narrative/constraint; downplaying disconfirming evidence.",
-    "Automation Bias": "People over-trust the AI because it looks authoritative/efficient, substituting the output for judgment or verification.",
-    "Hallucination": "Fabricated facts, citations, or details not supported by sources.",
-    "Overconfidence": "Excess certainty or “false precision” (definitive language, overly exact values) despite uncertainty."
+  "Representation": "Mismatch between the model’s examples and your real population (mission types, phases, security tiers, vendors, etc.). Leads to outputs that reflect the wrong baseline.",
+  "Selection / Coverage": "Blind spots or uneven source coverage (missing data slices, narrow examples, incomplete corpus). Produces gaps and skewed recommendations.",
+  "Measurement / Label": "Inconsistent definitions, units, mappings, or labels (LCATs, WBS elements, rate categories). Can teach/produce the wrong relationship.",
+  "Anchoring": "Over-weighting an initial number/assumption (prior estimate, target) even when evidence suggests a different value.",
+  "Confirmation": "Preferentially selecting or generating evidence that supports a desired narrative/constraint; downplaying disconfirming evidence.",
+  "Automation Bias": "People over-trust the AI because it looks authoritative/efficient, substituting the output for judgment or verification.",
+  "Hallucination": "Fabricated facts, citations, or details not supported by sources.",
+  "Overconfidence": "Excess certainty or “false precision” (definitive language, overly exact values) despite uncertainty."
   };
 
   
 
   const DRIVER_DEFS = {
-    "Low representativeness": "Your examples don’t reflect the real population (missions, vendors, phases, security tiers). Improves when Representativeness is high.",
-    "Low recency": "Data or references are stale relative to today’s environment; policies, prices, or programs may have shifted.",
-    "Loose prompts / high temp": "Open-ended prompting + higher temperature increases variability and the chance of unsupported claims.",
-    "No grounding": "No retrieval/tools/citations to anchor outputs in authoritative sources.",
-    "Low eval rigor": "Little/no testing (holdouts, red-team cases, benchmarks) means failures go undetected.",
-    "Automation level": "More autonomy means fewer checkpoints; errors can propagate farther before being caught.",
-    "Anchor provided": "A prior value (even a guess) nudges the output toward it (anchoring effect).",
-    "Must-fit constraint": "Forcing a target range/outcome can encourage cherry-picking and confirmation behavior.",
-    "No human review": "No SME/HITL check before use; raises the chance of silent failure in edge cases.",
-    "No documentation": "Missing model card/prompt SOP/change log reduces transparency and drift detection.",
-    "Leakage risk": "Higher chance of train/test contamination or sensitive-data exposure affecting results or compliance."
+  "Low representativeness": "Your examples don’t reflect the real population (missions, vendors, phases, security tiers). Improves when Representativeness is high.",
+  "Low recency": "Data or references are stale relative to today’s environment; policies, prices, or programs may have shifted.",
+  "Loose prompts / high temp": "Open-ended prompting + higher temperature increases variability and the chance of unsupported claims.",
+  "No grounding": "No retrieval/tools/citations to anchor outputs in authoritative sources.",
+  "Low eval rigor": "Little/no testing (holdouts, red-team cases, benchmarks) means failures go undetected.",
+  "Automation level": "More autonomy means fewer checkpoints; errors can propagate farther before being caught.",
+  "Anchor provided": "A prior value (even a guess) nudges the output toward it (anchoring effect).",
+  "Must-fit constraint": "Forcing a target range/outcome can encourage cherry-picking and confirmation behavior.",
+  "No human review": "No SME/HITL check before use; raises the chance of silent failure in edge cases.",
+  "No documentation": "Missing model card/prompt SOP/change log reduces transparency and drift detection.",
+  "Leakage risk": "Higher chance of train/test contamination or sensitive-data exposure affecting results or compliance."
   };
 const UI_TIPS = {
-    task: "Where AI is used in the cost workflow. Different tasks create different baseline bias risks.",
-    outputStyle: "How the model presents output. Narrative/tables can look more convincing, which can increase over-trust and overconfidence.",
-    stakes: "How much this output influences decisions/dollars. Higher stakes increases the overall exposure multiplier.",
-    provenance: "How the model is built/grounded. Closed models have unknown coverage; internal fine-tuning/RAG can reduce hallucination and improve traceability.",
-    repr: "How representative the training/evidence is of your program domain. Low representativeness increases representation and coverage bias.",
-    recency: "Alignment with current guidance and up-to-date information. Low recency increases outdated assumptions and hallucination risk.",
-    labelq: "Quality of definitions/labels (units, WBS mappings, LCAT definitions, etc.). Low quality increases measurement/label bias.",
-    leak: "Risk that evaluation data overlaps training/examples. High leakage inflates apparent performance and increases overconfidence.",
-    sensitive: "How safely sensitive data is handled in prompts/outputs. Risky posture increases misuse risk and automation pressure.",
-    promptDisc: "How constrained the prompt is (role, scope, constraints, citation requirements). Loose prompts increase hallucination and overconfidence.",
-    grounding: "Whether responses are anchored to curated sources (RAG, documents, tools). Better grounding reduces hallucination and improves traceability.",
-    temp: "Randomness/creativity. Higher temperature increases variability and hallucination risk for analytical tasks.",
-    persuade: "Likelihood the model uses confident/persuasive language. Higher persuasion risk increases automation bias and overconfidence.",
-    hasAnchor: "Prior estimate/target is visible to the model/user. Can pull outputs toward the shown value (anchoring).",
-    mustFit: "Prompt implies the output must match a target/constraint. Increases confirmation/cherry-picking pressure.",
-    eval: "How thoroughly the system is evaluated. Stronger evaluation reduces overconfidence and catches failure modes.",
-    biastest: "How much bias testing is performed (slices, fairness checks, edge cases). Higher coverage reduces several bias components.",
-    hctrl: "Controls that prevent fabricated facts/citations (verification steps, gated releases, human approval).",
-    drift: "Monitoring for changes in data/requirements that shift performance over time (drift).",
-    hitl: "Human-in-the-loop review requirement before outputs affect decisions.",
-    env: "Where the tool runs (public SaaS vs enterprise vs gov enclave). Impacts control posture and risk.",
-    docs: "Documentation level (model card, SOP, change log, audit trail). More documentation improves governance and reduces overconfidence.",
-    auto: "How automated the AI step is in the workflow. More automation increases the risk of over-trust.",
-    incent: "Pressure to hit a number or tell a story. Higher pressure increases confirmation and anchoring.",
-    guard_noNumbers: "Policy guardrail: prohibit unaudited numbers. Reduces hallucination/false precision risk.",
-    guard_cite: "Policy guardrail: citations required. Improves traceability and reduces unsupported claims.",
-    guard_log: "Policy guardrail: logging/audit enabled. Improves traceability and governance, discourages over-trust."
+  task: "Where AI is used in the cost workflow. Different tasks create different baseline bias risks.",
+  outputStyle: "How the model presents output. Narrative/tables can look more convincing, which can increase over-trust and overconfidence.",
+  stakes: "How much this output influences decisions/dollars. Higher stakes increases the overall exposure multiplier.",
+  provenance: "How the model is built/grounded. Closed models have unknown coverage; internal fine-tuning/RAG can reduce hallucination and improve traceability.",
+  repr: "How representative the training/evidence is of your program domain. Low representativeness increases representation and coverage bias.",
+  recency: "Alignment with current guidance and up-to-date information. Low recency increases outdated assumptions and hallucination risk.",
+  labelq: "Quality of definitions/labels (units, WBS mappings, LCAT definitions, etc.). Low quality increases measurement/label bias.",
+  leak: "Risk that evaluation data overlaps training/examples. High leakage inflates apparent performance and increases overconfidence.",
+  sensitive: "How safely sensitive data is handled in prompts/outputs. Risky posture increases misuse risk and automation pressure.",
+  promptDisc: "How constrained the prompt is (role, scope, constraints, citation requirements). Loose prompts increase hallucination and overconfidence.",
+  grounding: "Whether responses are anchored to curated sources (RAG, documents, tools). Better grounding reduces hallucination and improves traceability.",
+  temp: "Randomness/creativity. Higher temperature increases variability and hallucination risk for analytical tasks.",
+  persuade: "Likelihood the model uses confident/persuasive language. Higher persuasion risk increases automation bias and overconfidence.",
+  hasAnchor: "Prior estimate/target is visible to the model/user. Can pull outputs toward the shown value (anchoring).",
+  mustFit: "Prompt implies the output must match a target/constraint. Increases confirmation/cherry-picking pressure.",
+  eval: "How thoroughly the system is evaluated. Stronger evaluation reduces overconfidence and catches failure modes.",
+  biastest: "How much bias testing is performed (slices, fairness checks, edge cases). Higher coverage reduces several bias components.",
+  hctrl: "Controls that prevent fabricated facts/citations (verification steps, gated releases, human approval).",
+  drift: "Monitoring for changes in data/requirements that shift performance over time (drift).",
+  hitl: "Human-in-the-loop review requirement before outputs affect decisions.",
+  env: "Where the tool runs (public SaaS vs enterprise vs gov enclave). Impacts control posture and risk.",
+  docs: "Documentation level (model card, SOP, change log, audit trail). More documentation improves governance and reduces overconfidence.",
+  auto: "How automated the AI step is in the workflow. More automation increases the risk of over-trust.",
+  incent: "Pressure to hit a number or tell a story. Higher pressure increases confirmation and anchoring.",
+  guard_noNumbers: "Policy guardrail: prohibit unaudited numbers. Reduces hallucination/false precision risk.",
+  guard_cite: "Policy guardrail: citations required. Improves traceability and reduces unsupported claims.",
+  guard_log: "Policy guardrail: logging/audit enabled. Improves traceability and governance, discourages over-trust."
 
-    ,scenarioSelect: "Choose a saved scenario to load into the inputs. Use this to show before/after controls.",
-    saveScenario: "Save the current settings to your browser so you can compare scenarios during a briefing or pilot.",
-    loadScenario: "Load the selected scenario into the Inputs (overwrites current settings).",
-    deleteScenario: "Delete the selected saved scenario from your browser.",
-    copySummary: "Copies a paste-ready Model Card / CARD addendum summary of this scenario to your clipboard.",
-    reset: "Resets inputs back to the default baseline scenario.",
-    tip_inputs: "Start here. Use the tabs to move from Use Case → Data → Prompt → Evaluation → Governance.",
-    tip_outputs: "These scores update instantly. Hover KPI labels for definitions and what higher/lower means.",
-    tip_radar: "Radar axes are bias types (0–100). Higher = more exposure in that bias mode. Hover axis labels for definitions.",
-    tip_drivers: "Drivers attribute what settings are pushing the overall score. Hover bars to see a definition for each driver.",
-    tip_mitigations: "Auto-generated, DoD/ICEAA-style actions you can paste into a Model Card / CARD addendum / IGCE notes.",
-    tip_scenarios: "Save a few configurations, then compare them here. Great for micro-pilots and leadership demos.",
-    legend_scores: "Banding guide: Low/Moderate/High is based on simple thresholds for training. Use labels/hover text for exact interpretation."
+  ,scenarioSelect: "Choose a saved scenario to load into the inputs. Use this to show before/after controls.",
+  saveScenario: "Save the current settings to your browser so you can compare scenarios during a briefing or pilot.",
+  loadScenario: "Load the selected scenario into the Inputs (overwrites current settings).",
+  deleteScenario: "Delete the selected saved scenario from your browser.",
+  copySummary: "Copies a paste-ready Model Card / CARD addendum summary of this scenario to your clipboard.",
+  reset: "Resets inputs back to the default baseline scenario.",
+  tip_inputs: "Start here. Use the tabs to move from Use Case → Data → Prompt → Evaluation → Governance.",
+  tip_outputs: "These scores update instantly. Hover over KPI labels for definitions and what higher/lower means.",
+  tip_radar: "Radar axes are bias types (0–100). Higher = more exposure in that bias mode. Hover over axis labels for definitions.",
+  tip_drivers: "Drivers attribute what settings are pushing the overall score. Hover over bars to see a definition for each driver.",
+  tip_mitigations: "Auto-generated, DoD/ICEAA-style actions you can paste into a Model Card / CARD addendum / IGCE notes.",
+  tip_scenarios: "Save a few configurations, then compare them here. Great for micro-pilots and leadership demos.",
+  legend_scores: "Banding guide: Low/Moderate/High is based on simple thresholds for training. Use labels and hover text for exact interpretation."
 
   };
 
@@ -710,12 +732,12 @@ const cssVar = (name) => getComputedStyle(document.documentElement).getPropertyV
 const hexToRgb = (hex) => {
   const h = (hex || "").replace("#","").trim();
   if(h.length === 3){
-    const r = parseInt(h[0]+h[0],16), g = parseInt(h[1]+h[1],16), b = parseInt(h[2]+h[2],16);
-    return {r,g,b};
+  const r = parseInt(h[0]+h[0],16), g = parseInt(h[1]+h[1],16), b = parseInt(h[2]+h[2],16);
+  return {r,g,b};
   }
   if(h.length === 6){
-    const r = parseInt(h.slice(0,2),16), g = parseInt(h.slice(2,4),16), b = parseInt(h.slice(4,6),16);
-    return {r,g,b};
+  const r = parseInt(h.slice(0,2),16), g = parseInt(h.slice(2,4),16), b = parseInt(h.slice(4,6),16);
+  return {r,g,b};
   }
   return null;
 };
@@ -727,9 +749,9 @@ const rgbaFromHex = (hex, a) => {
 
 const THEME = {
   accent: cssVar("--accent") || "#7aa2ff",
-  text:   cssVar("--text")   || "#e8ecff",
+  text:  cssVar("--text")  || "#e8ecff",
   muted:  cssVar("--muted")  || "#aab4e6",
-  line:   cssVar("--line")   || "rgba(255,255,255,0.08)",
+  line:  cssVar("--line")  || "rgba(255,255,255,0.08)",
   panel:  cssVar("--panel")  || "#111a33",
 };
 const ACCENT = (a)=>rgbaFromHex(THEME.accent, a);
@@ -746,245 +768,245 @@ if (typeof Chart !== "undefined") {
   const TIP = { el:null, visible:false, source:null, html:"" };
 
   const escapeHTML = (s) => String(s)
-    .replaceAll("&","&amp;")
-    .replaceAll("<","&lt;")
-    .replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;")
-    .replaceAll("'","&#039;");
+  .replaceAll("&","&amp;")
+  .replaceAll("<","&lt;")
+  .replaceAll(">","&gt;")
+  .replaceAll('"',"&quot;")
+  .replaceAll("'","&#039;");
 
   function initTooltip(){
-    TIP.el = document.getElementById("tooltip");
+  TIP.el = document.getElementById("tooltip");
   }
   function positionTooltip(clientX, clientY){
-    if(!TIP.el) return;
-    const t = TIP.el;
-    // first place
-    let x = clientX + 12;
-    let y = clientY + 12;
-    t.style.left = x + "px";
-    t.style.top  = y + "px";
-    // then clamp into viewport
-    const r = t.getBoundingClientRect();
-    const pad = 10;
-    if(r.right > window.innerWidth - pad) x -= (r.right - (window.innerWidth - pad));
-    if(r.bottom > window.innerHeight - pad) y -= (r.bottom - (window.innerHeight - pad));
-    if(x < pad) x = pad;
-    if(y < pad) y = pad;
-    t.style.left = x + "px";
-    t.style.top  = y + "px";
+  if(!TIP.el) return;
+  const t = TIP.el;
+  // first place
+  let x = clientX + 12;
+  let y = clientY + 12;
+  t.style.left = x + "px";
+  t.style.top  = y + "px";
+  // then clamp into viewport
+  const r = t.getBoundingClientRect();
+  const pad = 10;
+  if(r.right > window.innerWidth - pad) x -= (r.right - (window.innerWidth - pad));
+  if(r.bottom > window.innerHeight - pad) y -= (r.bottom - (window.innerHeight - pad));
+  if(x < pad) x = pad;
+  if(y < pad) y = pad;
+  t.style.left = x + "px";
+  t.style.top  = y + "px";
   }
   function showTooltip(html, clientX, clientY, source="ui"){
-    if(!TIP.el || !html) return;
-    TIP.el.innerHTML = html;
-    TIP.el.classList.remove("hidden");
-    TIP.el.setAttribute("aria-hidden","false");
-    TIP.visible = true;
-    TIP.source = source;
-    TIP.html = html;
-    positionTooltip(clientX, clientY);
+  if(!TIP.el || !html) return;
+  TIP.el.innerHTML = html;
+  TIP.el.classList.remove("hidden");
+  TIP.el.setAttribute("aria-hidden","false");
+  TIP.visible = true;
+  TIP.source = source;
+  TIP.html = html;
+  positionTooltip(clientX, clientY);
   }
   function hideTooltip(source=null){
-    if(!TIP.el) return;
-    if(source && TIP.source !== source) return;
-    TIP.el.classList.add("hidden");
-    TIP.el.setAttribute("aria-hidden","true");
-    TIP.visible = false;
-    TIP.source = null;
-    TIP.html = "";
+  if(!TIP.el) return;
+  if(source && TIP.source !== source) return;
+  TIP.el.classList.add("hidden");
+  TIP.el.setAttribute("aria-hidden","true");
+  TIP.visible = false;
+  TIP.source = null;
+  TIP.html = "";
   }
   function bindTip(el, tipText, source="ui", underline=false){
-    if(!el || el.dataset.tipBound === "1") return;
-    const html = escapeHTML(tipText).replace(/\n/g,"<br>");
-    el.dataset.tip = html;
-    el.dataset.tipBound = "1";
-    if(underline) el.classList.add("tip-underline");
-    el.addEventListener("mouseenter",(e)=>showTooltip(el.dataset.tip, e.clientX, e.clientY, source));
-    el.addEventListener("mousemove",(e)=>{
-      if(TIP.visible && TIP.source===source && TIP.html===el.dataset.tip){
-        positionTooltip(e.clientX, e.clientY);
-      }
-    });
-    el.addEventListener("mouseleave",()=>hideTooltip(source));
+  if(!el || el.dataset.tipBound === "1") return;
+  const html = escapeHTML(tipText).replace(/\n/g,"<br>");
+  el.dataset.tip = html;
+  el.dataset.tipBound = "1";
+  if(underline) el.classList.add("tip-underline");
+  el.addEventListener("mouseenter",(e)=>showTooltip(el.dataset.tip, e.clientX, e.clientY, source));
+  el.addEventListener("mousemove",(e)=>{
+  if(TIP.visible && TIP.source===source && TIP.html===el.dataset.tip){
+  positionTooltip(e.clientX, e.clientY);
+  }
+  });
+  el.addEventListener("mouseleave",()=>hideTooltip(source));
   }
 
   function applyUITips(){
-    initTooltip();
+  initTooltip();
 
-    Object.entries(UI_TIPS).forEach(([id, tip])=>{
-      const el = document.getElementById(id);
-      if(!el) return;
+  Object.entries(UI_TIPS).forEach(([id, tip])=>{
+  const el = document.getElementById(id);
+  if(!el) return;
 
-      // Tooltip on the control itself
-      bindTip(el, tip, "ui", false);
+  // Tooltip on the control itself
+  bindTip(el, tip, "ui", false);
 
-      // Tooltip on the label text (first span in the field label)
-      const field = el.closest(".field");
-      if(field){
-        const labelSpan = field.querySelector("label span:first-child");
-        if(labelSpan) bindTip(labelSpan, tip, "ui", true);
-      }
+  // Tooltip on the label text (first span in the field label)
+  const field = el.closest(".field");
+  if(field){
+  const labelSpan = field.querySelector("label span:first-child");
+  if(labelSpan) bindTip(labelSpan, tip, "ui", true);
+  }
 
-      // Tooltip on the pill wrapper when applicable (checkbox "chips")
-      const pillWrap = el.closest(".pill");
-      if(pillWrap) bindTip(pillWrap, tip, "ui", true);
-    });
+  // Tooltip on the pill wrapper when applicable (checkbox "chips")
+  const pillWrap = el.closest(".pill");
+  if(pillWrap) bindTip(pillWrap, tip, "ui", true);
+  });
   }
 
   
 
   // ===== Extra tips for outputs, tabs, scenario headers, and actions =====
   const KPI_TIPS = {
-    kpi_bias: "AI Bias Exposure Score (0–100). Higher means more exposure if used 'as-is' for this task/stakes. It is a rules-based training score, not a statistical fairness metric.",
-    kpi_rel:  "Reliability score (0–100). Higher is better: fewer hallucinations + better traceability/verification. Hover the label to see what influences it.",
-    kpi_gov:  "Governance readiness (0–100). Higher is better: documentation, auditability, human review, and controls are in place.",
-    kpi_mode: "Likely failure mode: the most probable way this configuration goes wrong in practice (based on your settings)."
+  kpi_bias: "AI Bias Exposure Score (0–100). Higher means more exposure if used 'as-is' for this task/stakes. It is a rules-based training score, not a statistical fairness metric.",
+  kpi_rel:  "Reliability score (0–100). Higher is better: fewer hallucinations + better traceability/verification. Hover over the label to see what influences it.",
+  kpi_gov:  "Governance readiness (0–100). Higher is better: documentation, auditability, human review, and controls are in place.",
+  kpi_mode: "Likely failure mode: the most probable way this configuration goes wrong in practice (based on your settings)."
   };
 
   const KPI_SUB_TIPS = {
-    kpi_band:    "Exposure band (low/moderate/high) based on the Exposure score. Use as a quick briefing cue.",
-    kpi_relBand: "Reliability risk band (computed as 100 − Reliability). Lower risk is better.",
-    kpi_govBand: "Governance gaps band (computed as 100 − Governance). Lower gaps is better."
+  kpi_band:  "Exposure band (low/moderate/high) based on the Exposure score. Use as a quick briefing cue.",
+  kpi_relBand: "Reliability risk band (computed as 100 − Reliability). Lower risk is better.",
+  kpi_govBand: "Governance gaps band (computed as 100 − Governance). Lower gaps is better."
   };
 
   const CHIP_TIPS = {
-    chip_top:     "The single highest bias type for this configuration (matches the tallest radar axis).",
-    chip_dir:     "A plain-English impact statement tuned to your selected stakes + overall exposure.",
-    chip_control: "A simple count of enabled controls (grounding, eval rigor, HITL, docs, guardrails). Higher is better."
+  chip_top:  "The single highest bias type for this configuration (matches the tallest radar axis).",
+  chip_dir:  "A plain-English impact statement tuned to your selected stakes + overall exposure.",
+  chip_control: "A simple count of enabled controls (grounding, eval rigor, HITL, docs, guardrails). Higher is better."
   };
 
   const TAB_TIPS = {
-    usecase: "Use Case: what the AI is doing + how high the stakes are. This sets the baseline exposure multiplier.",
-    data:    "Data & Training: representativeness, recency, label quality, leakage/sensitive posture — big drivers of bias risk.",
-    prompt:  "Prompt & Context: prompt discipline, grounding (RAG/tools), temperature, persuasive tone, anchors/must-fit constraints.",
-    eval:    "Evaluation & Monitoring: how you test (benchmarks/red-team), bias test coverage, drift monitoring.",
-    gov:     "Governance & Use: HITL, environment, documentation, automation level, incentives, and guardrails."
+  usecase: "Use Case: what the AI is doing + how high the stakes are. This sets the baseline exposure multiplier.",
+  data:  "Data & Training: representativeness, recency, label quality, leakage/sensitive posture — big drivers of bias risk.",
+  prompt:  "Prompt & Context: prompt discipline, grounding (RAG/tools), temperature, persuasive tone, anchors/must-fit constraints.",
+  eval:  "Evaluation & Monitoring: how you test (benchmarks/red-team), bias test coverage, drift monitoring.",
+  gov:  "Governance & Use: HITL, environment, documentation, automation level, incentives, and guardrails."
   };
 
   const TABLE_HEADER_TIPS = {
-    Name: "Scenario name (stored in your browser). Use short compare-friendly names.",
-    Bias: "Exposure score snapshot for each saved scenario (0–100).",
-    Reliability: "Reliability snapshot (0–100). Higher is better.",
-    Gov: "Governance readiness snapshot (0–100). Higher is better.",
-    "Top Bias": "Highest bias axis for that scenario (from the radar).",
-    "Failure Mode": "Most likely way the scenario fails (based on the rules)."
+  Name: "Scenario name (stored in your browser). Use short compare-friendly names.",
+  Bias: "Exposure score snapshot for each saved scenario (0–100).",
+  Reliability: "Reliability snapshot (0–100). Higher is better.",
+  Gov: "Governance readiness snapshot (0–100). Higher is better.",
+  "Top Bias": "Highest bias axis for that scenario (from the radar).",
+  "Failure Mode": "Most likely way the scenario fails (based on the rules)."
   };
 
   function applyOutputTips(){
-    // KPI label/value/sub tips
-    Object.entries(KPI_TIPS).forEach(([id, tip])=>{
-      const valueEl = document.getElementById(id);
-      if(!valueEl) return;
-      bindTip(valueEl, tip, "ui", false);
-      const kpi = valueEl.closest(".kpi");
-      if(kpi){
-        const labelEl = kpi.querySelector(".label");
-        if(labelEl) bindTip(labelEl, tip, "ui", true);
-      }
-    });
-    Object.entries(KPI_SUB_TIPS).forEach(([id, tip])=>{
-      const el = document.getElementById(id);
-      if(el) bindTip(el, tip, "ui", true);
-    });
+  // KPI label/value/sub tips
+  Object.entries(KPI_TIPS).forEach(([id, tip])=>{
+  const valueEl = document.getElementById(id);
+  if(!valueEl) return;
+  bindTip(valueEl, tip, "ui", false);
+  const kpi = valueEl.closest(".kpi");
+  if(kpi){
+  const labelEl = kpi.querySelector(".label");
+  if(labelEl) bindTip(labelEl, tip, "ui", true);
+  }
+  });
+  Object.entries(KPI_SUB_TIPS).forEach(([id, tip])=>{
+  const el = document.getElementById(id);
+  if(el) bindTip(el, tip, "ui", true);
+  });
 
-    // Chips
-    Object.entries(CHIP_TIPS).forEach(([id, tip])=>{
-      const el = document.getElementById(id);
-      if(el) bindTip(el, tip, "ui", true);
-    });
+  // Chips
+  Object.entries(CHIP_TIPS).forEach(([id, tip])=>{
+  const el = document.getElementById(id);
+  if(el) bindTip(el, tip, "ui", true);
+  });
 
-    // Chart section pills / labels
-    const topPill = document.getElementById("topBiasPill");
-    if(topPill) bindTip(topPill, "Shows the current top bias (highest radar axis). Hover radar axis labels for definitions.", "ui", true);
+  // Chart section pills / labels
+  const topPill = document.getElementById("topBiasPill");
+  if(topPill) bindTip(topPill, "Shows the current top bias (highest radar axis). Hover over radar axis labels for definitions.", "ui", true);
   }
 
   function applyTabTips(){
-    const tabs = document.querySelectorAll("#domainTabs .tab");
-    tabs.forEach(t=>{
-      const key = t.dataset.tab;
-      if(!key || !TAB_TIPS[key]) return;
-      bindTip(t, TAB_TIPS[key], "ui", false);
-    });
+  const tabs = document.querySelectorAll("#domainTabs .tab");
+  tabs.forEach(t=>{
+  const key = t.dataset.tab;
+  if(!key || !TAB_TIPS[key]) return;
+  bindTip(t, TAB_TIPS[key], "ui", false);
+  });
   }
 
   function applyScenarioHeaderTips(){
-    const ths = document.querySelectorAll("#scenarioTable thead th");
-    ths.forEach(th=>{
-      const key = (th.textContent || "").trim();
-      const tip = TABLE_HEADER_TIPS[key];
-      if(tip) bindTip(th, tip, "ui", true);
-    });
+  const ths = document.querySelectorAll("#scenarioTable thead th");
+  ths.forEach(th=>{
+  const key = (th.textContent || "").trim();
+  const tip = TABLE_HEADER_TIPS[key];
+  if(tip) bindTip(th, tip, "ui", true);
+  });
   }
 
 function attachRadarLabelTooltips(){
-    const canvas = document.getElementById("radar");
-    if(!canvas) return;
+  const canvas = document.getElementById("radar");
+  if(!canvas) return;
 
-    const hitTest = (x, y) => {
-      if(!radarChart) return null;
-      const scale = radarChart.scales?.r;
-      if(!scale) return null;
+  const hitTest = (x, y) => {
+  if(!radarChart) return null;
+  const scale = radarChart.scales?.r;
+  if(!scale) return null;
 
-      // If Chart.js exposes point label items (preferred), use their bounds.
-      const items = scale._pointLabelItems;
-      if(Array.isArray(items) && items.length === biasTypes.length){
-        const pad = 6;
-        for(let i=0;i<items.length;i++){
-          const it = items[i];
-          const left = (it.left ?? it.x ?? 0) - pad;
-          const right = (it.right ?? it.x ?? 0) + pad;
-          const top = (it.top ?? it.y ?? 0) - pad;
-          const bottom = (it.bottom ?? it.y ?? 0) + pad;
-          if(x>=left && x<=right && y>=top && y<=bottom) return biasTypes[i];
-        }
-      }
+  // If Chart.js exposes point label items (preferred), use their bounds.
+  const items = scale._pointLabelItems;
+  if(Array.isArray(items) && items.length === biasTypes.length){
+  const pad = 6;
+  for(let i=0;i<items.length;i++){
+  const it = items[i];
+  const left = (it.left ?? it.x ?? 0) - pad;
+  const right = (it.right ?? it.x ?? 0) + pad;
+  const top = (it.top ?? it.y ?? 0) - pad;
+  const bottom = (it.bottom ?? it.y ?? 0) + pad;
+  if(x>=left && x<=right && y>=top && y<=bottom) return biasTypes[i];
+  }
+  }
 
-      // Fallback: approximate bounds around each label center.
-      const ctx = radarChart.ctx;
-      const pad = 8;
-      for(let i=0;i<biasTypes.length;i++){
-        const label = biasTypes[i];
-        if(typeof scale.getPointLabelPosition !== "function") break;
-        const pos = scale.getPointLabelPosition(i);
-        const w = (ctx?.measureText ? ctx.measureText(label).width : 80);
-        const h = 12;
-        const left = pos.x - w/2 - pad;
-        const right = pos.x + w/2 + pad;
-        const top = pos.y - h/2 - pad;
-        const bottom = pos.y + h/2 + pad;
-        if(x>=left && x<=right && y>=top && y<=bottom) return label;
-      }
-      return null;
-    };
+  // Fallback: approximate bounds around each label center.
+  const ctx = radarChart.ctx;
+  const pad = 8;
+  for(let i=0;i<biasTypes.length;i++){
+  const label = biasTypes[i];
+  if(typeof scale.getPointLabelPosition !== "function") break;
+  const pos = scale.getPointLabelPosition(i);
+  const w = (ctx?.measureText ? ctx.measureText(label).width : 80);
+  const h = 12;
+  const left = pos.x - w/2 - pad;
+  const right = pos.x + w/2 + pad;
+  const top = pos.y - h/2 - pad;
+  const bottom = pos.y + h/2 + pad;
+  if(x>=left && x<=right && y>=top && y<=bottom) return label;
+  }
+  return null;
+  };
 
-    canvas.addEventListener("mousemove",(e)=>{
-      if(!radarChart) return;
-      const rect = canvas.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
+  canvas.addEventListener("mousemove",(e)=>{
+  if(!radarChart) return;
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
 
-      const label = hitTest(x,y);
-      if(label){
-        canvas.style.cursor = "help";
-        const def = BIAS_DEFS[label] || "";
-        const html = `<b>${escapeHTML(label)}</b><br>${escapeHTML(def)}`;
-        showTooltip(html, e.clientX, e.clientY, "radar");
-      }else{
-        canvas.style.cursor = "default";
-        hideTooltip("radar");
-      }
-    });
-    canvas.addEventListener("mouseleave",()=>{
-      canvas.style.cursor = "default";
-      hideTooltip("radar");
-    });
+  const label = hitTest(x,y);
+  if(label){
+  canvas.style.cursor = "help";
+  const def = BIAS_DEFS[label] || "";
+  const html = `<b>${escapeHTML(label)}</b><br>${escapeHTML(def)}`;
+  showTooltip(html, e.clientX, e.clientY, "radar");
+  }else{
+  canvas.style.cursor = "default";
+  hideTooltip("radar");
+  }
+  });
+  canvas.addEventListener("mouseleave",()=>{
+  canvas.style.cursor = "default";
+  hideTooltip("radar");
+  });
   }
 
   const defaults = {
-    task:"sow", outputStyle:"bullet", stakes:"med",
-    provenance:"closed", repr:55, recency:45, labelq:55, leak:"med", sensitive:"controlled",
-    promptDisc:"strict", grounding:"none", temp:25, persuade:55, hasAnchor:false, mustFit:false,
-    eval:"basic", biastest:35, hctrl:"prompts", drift:"manual", hitl:"required",
-    env:"public", docs:"some", auto:35, incent:45, guard_noNumbers:false, guard_cite:true, guard_log:false
+  task:"sow", outputStyle:"bullet", stakes:"med",
+  provenance:"closed", repr:55, recency:45, labelq:55, leak:"med", sensitive:"controlled",
+  promptDisc:"strict", grounding:"none", temp:25, persuade:55, hasAnchor:false, mustFit:false,
+  eval:"basic", biastest:35, hctrl:"prompts", drift:"manual", hitl:"required",
+  env:"public", docs:"some", auto:35, incent:45, guard_noNumbers:false, guard_cite:true, guard_log:false
   };
   let state = structuredClone(defaults);
 
@@ -994,172 +1016,172 @@ function attachRadarLabelTooltips(){
   const bandLabel=x=>x<30?"Low":(x<60?"Moderate":"High");
 
   function baseProfile(task){
-    const m={
-      sow:{Hallucination:30,Confirmation:22,Anchoring:18,Overconfidence:18,"Automation Bias":18,"Selection / Coverage":16,Representation:14,"Measurement / Label":12},
-      wbs:{Hallucination:32,Confirmation:18,Anchoring:14,Overconfidence:18,"Automation Bias":20,"Selection / Coverage":18,Representation:16,"Measurement / Label":12},
-      estimate:{Hallucination:36,Confirmation:26,Anchoring:20,Overconfidence:22,"Automation Bias":24,"Selection / Coverage":16,Representation:14,"Measurement / Label":12},
-      rates:{Hallucination:28,Confirmation:18,Anchoring:18,Overconfidence:18,"Automation Bias":18,"Selection / Coverage":22,Representation:18,"Measurement / Label":16},
-      risk:{Hallucination:24,Confirmation:18,Anchoring:14,Overconfidence:16,"Automation Bias":16,"Selection / Coverage":14,Representation:12,"Measurement / Label":12},
-      anomaly:{Hallucination:18,Confirmation:12,Anchoring:10,Overconfidence:14,"Automation Bias":14,"Selection / Coverage":12,Representation:12,"Measurement / Label":20},
-    };
-    const base={}; biasTypes.forEach(k=>base[k]=0);
-    const src=m[task]||m.sow; Object.keys(src).forEach(k=>base[k]=src[k]);
-    return base;
+  const m={
+  sow:{Hallucination:30,Confirmation:22,Anchoring:18,Overconfidence:18,"Automation Bias":18,"Selection / Coverage":16,Representation:14,"Measurement / Label":12},
+  wbs:{Hallucination:32,Confirmation:18,Anchoring:14,Overconfidence:18,"Automation Bias":20,"Selection / Coverage":18,Representation:16,"Measurement / Label":12},
+  estimate:{Hallucination:36,Confirmation:26,Anchoring:20,Overconfidence:22,"Automation Bias":24,"Selection / Coverage":16,Representation:14,"Measurement / Label":12},
+  rates:{Hallucination:28,Confirmation:18,Anchoring:18,Overconfidence:18,"Automation Bias":18,"Selection / Coverage":22,Representation:18,"Measurement / Label":16},
+  risk:{Hallucination:24,Confirmation:18,Anchoring:14,Overconfidence:16,"Automation Bias":16,"Selection / Coverage":14,Representation:12,"Measurement / Label":12},
+  anomaly:{Hallucination:18,Confirmation:12,Anchoring:10,Overconfidence:14,"Automation Bias":14,"Selection / Coverage":12,Representation:12,"Measurement / Label":20},
+  };
+  const base={}; biasTypes.forEach(k=>base[k]=0);
+  const src=m[task]||m.sow; Object.keys(src).forEach(k=>base[k]=src[k]);
+  return base;
   }
 
   function computeScores(){
-    const scores=baseProfile(state.task);
-    const stakeMult=state.stakes==="low"?0.85:(state.stakes==="high"?1.18:1.0);
+  const scores=baseProfile(state.task);
+  const stakeMult=state.stakes==="low"?0.85:(state.stakes==="high"?1.18:1.0);
 
-    if(state.outputStyle==="narrative"){scores["Automation Bias"]+=6;scores["Overconfidence"]+=6;}
-    if(state.outputStyle==="tables"){scores["Overconfidence"]+=8;scores["Automation Bias"]+=4;}
+  if(state.outputStyle==="narrative"){scores["Automation Bias"]+=6;scores["Overconfidence"]+=6;}
+  if(state.outputStyle==="tables"){scores["Overconfidence"]+=8;scores["Automation Bias"]+=4;}
 
-    const repr=state.repr/100, rec=state.recency/100, lab=state.labelq/100;
-    scores["Representation"]+=30*(1-repr);
-    scores["Selection / Coverage"]+=20*(1-repr);
-    scores["Hallucination"]+=10*(1-rec);
-    scores["Measurement / Label"]+=28*(1-lab);
+  const repr=state.repr/100, rec=state.recency/100, lab=state.labelq/100;
+  scores["Representation"]+=30*(1-repr);
+  scores["Selection / Coverage"]+=20*(1-repr);
+  scores["Hallucination"]+=10*(1-rec);
+  scores["Measurement / Label"]+=28*(1-lab);
 
-    if(state.leak==="med"){scores["Overconfidence"]+=6;scores["Hallucination"]+=3;}
-    if(state.leak==="high"){scores["Overconfidence"]+=12;scores["Hallucination"]+=6;scores["Confirmation"]+=4;}
+  if(state.leak==="med"){scores["Overconfidence"]+=6;scores["Hallucination"]+=3;}
+  if(state.leak==="high"){scores["Overconfidence"]+=12;scores["Hallucination"]+=6;scores["Confirmation"]+=4;}
 
-    if(state.sensitive==="mixed"){scores["Automation Bias"]+=4;}
-    if(state.sensitive==="risky"){scores["Automation Bias"]+=8;scores["Overconfidence"]+=6;}
+  if(state.sensitive==="mixed"){scores["Automation Bias"]+=4;}
+  if(state.sensitive==="risky"){scores["Automation Bias"]+=8;scores["Overconfidence"]+=6;}
 
-    if(state.provenance==="closed"){scores["Representation"]+=8;scores["Selection / Coverage"]+=8;scores["Hallucination"]+=6;}
-    if(state.provenance==="fine"){scores["Confirmation"]+=6;scores["Selection / Coverage"]+=4;}
-    if(state.provenance==="rag"){scores["Hallucination"]-=10;scores["Overconfidence"]-=4;}
-    if(state.provenance==="gov"){scores["Representation"]-=4;scores["Selection / Coverage"]-=4;scores["Hallucination"]-=6;}
+  if(state.provenance==="closed"){scores["Representation"]+=8;scores["Selection / Coverage"]+=8;scores["Hallucination"]+=6;}
+  if(state.provenance==="fine"){scores["Confirmation"]+=6;scores["Selection / Coverage"]+=4;}
+  if(state.provenance==="rag"){scores["Hallucination"]-=10;scores["Overconfidence"]-=4;}
+  if(state.provenance==="gov"){scores["Representation"]-=4;scores["Selection / Coverage"]-=4;scores["Hallucination"]-=6;}
 
-    if(state.promptDisc==="normal"){scores["Hallucination"]+=6;scores["Overconfidence"]+=4;}
-    if(state.promptDisc==="loose"){scores["Hallucination"]+=14;scores["Overconfidence"]+=10;scores["Confirmation"]+=6;}
+  if(state.promptDisc==="normal"){scores["Hallucination"]+=6;scores["Overconfidence"]+=4;}
+  if(state.promptDisc==="loose"){scores["Hallucination"]+=14;scores["Overconfidence"]+=10;scores["Confirmation"]+=6;}
 
-    if(state.grounding==="none"){scores["Hallucination"]+=14;scores["Overconfidence"]+=6;}
-    if(state.grounding==="rag"){scores["Hallucination"]-=12;scores["Overconfidence"]-=4;}
-    if(state.grounding==="docs"){scores["Hallucination"]-=10;}
-    if(state.grounding==="tools"){scores["Hallucination"]-=14;scores["Overconfidence"]-=6;}
+  if(state.grounding==="none"){scores["Hallucination"]+=14;scores["Overconfidence"]+=6;}
+  if(state.grounding==="rag"){scores["Hallucination"]-=12;scores["Overconfidence"]-=4;}
+  if(state.grounding==="docs"){scores["Hallucination"]-=10;}
+  if(state.grounding==="tools"){scores["Hallucination"]-=14;scores["Overconfidence"]-=6;}
 
-    const temp=state.temp/100;
-    scores["Hallucination"]+=18*temp; scores["Overconfidence"]+=8*temp;
+  const temp=state.temp/100;
+  scores["Hallucination"]+=18*temp; scores["Overconfidence"]+=8*temp;
 
-    const persuade=state.persuade/100;
-    scores["Automation Bias"]+=16*persuade; scores["Overconfidence"]+=10*persuade;
+  const persuade=state.persuade/100;
+  scores["Automation Bias"]+=16*persuade; scores["Overconfidence"]+=10*persuade;
 
-    if(state.hasAnchor){scores["Anchoring"]+=30;scores["Confirmation"]+=8;}
-    if(state.mustFit){scores["Confirmation"]+=22;scores["Anchoring"]+=8;scores["Automation Bias"]+=6;}
+  if(state.hasAnchor){scores["Anchoring"]+=30;scores["Confirmation"]+=8;}
+  if(state.mustFit){scores["Confirmation"]+=22;scores["Anchoring"]+=8;scores["Automation Bias"]+=6;}
 
-    if(state.eval==="none"){scores["Overconfidence"]+=12;scores["Hallucination"]+=8;}
-    if(state.eval==="basic"){scores["Overconfidence"]+=6;}
-    if(state.eval==="bench"){scores["Overconfidence"]-=6;scores["Hallucination"]-=4;}
-    if(state.eval==="red"){scores["Overconfidence"]-=10;scores["Hallucination"]-=6;scores["Confirmation"]-=4;}
+  if(state.eval==="none"){scores["Overconfidence"]+=12;scores["Hallucination"]+=8;}
+  if(state.eval==="basic"){scores["Overconfidence"]+=6;}
+  if(state.eval==="bench"){scores["Overconfidence"]-=6;scores["Hallucination"]-=4;}
+  if(state.eval==="red"){scores["Overconfidence"]-=10;scores["Hallucination"]-=6;scores["Confirmation"]-=4;}
 
-    const bt=state.biastest/100;
-    scores["Representation"]-=10*bt; scores["Selection / Coverage"]-=8*bt; scores["Measurement / Label"]-=8*bt;
+  const bt=state.biastest/100;
+  scores["Representation"]-=10*bt; scores["Selection / Coverage"]-=8*bt; scores["Measurement / Label"]-=8*bt;
 
-    if(state.hctrl==="none"){scores["Hallucination"]+=12;}
-    if(state.hctrl==="prompts"){scores["Hallucination"]+=4;}
-    if(state.hctrl==="verify"){scores["Hallucination"]-=8;scores["Overconfidence"]-=4;}
-    if(state.hctrl==="gated"){scores["Hallucination"]-=12;scores["Automation Bias"]-=4;}
+  if(state.hctrl==="none"){scores["Hallucination"]+=12;}
+  if(state.hctrl==="prompts"){scores["Hallucination"]+=4;}
+  if(state.hctrl==="verify"){scores["Hallucination"]-=8;scores["Overconfidence"]-=4;}
+  if(state.hctrl==="gated"){scores["Hallucination"]-=12;scores["Automation Bias"]-=4;}
 
-    if(state.drift==="none"){scores["Selection / Coverage"]+=6;scores["Hallucination"]+=4;}
-    if(state.drift==="auto"){scores["Selection / Coverage"]-=4;}
-    if(state.drift==="auto+alert"){scores["Selection / Coverage"]-=8;scores["Hallucination"]-=2;}
+  if(state.drift==="none"){scores["Selection / Coverage"]+=6;scores["Hallucination"]+=4;}
+  if(state.drift==="auto"){scores["Selection / Coverage"]-=4;}
+  if(state.drift==="auto+alert"){scores["Selection / Coverage"]-=8;scores["Hallucination"]-=2;}
 
-    if(state.hitl==="recommended"){scores["Automation Bias"]+=6;}
-    if(state.hitl==="none"){scores["Automation Bias"]+=18;scores["Overconfidence"]+=8;}
+  if(state.hitl==="recommended"){scores["Automation Bias"]+=6;}
+  if(state.hitl==="none"){scores["Automation Bias"]+=18;scores["Overconfidence"]+=8;}
 
-    if(state.env==="public"){scores["Automation Bias"]+=6;scores["Overconfidence"]+=4;}
-    if(state.env==="enterprise"){scores["Automation Bias"]+=2;}
-    if(state.env==="gov"){scores["Automation Bias"]-=4;scores["Overconfidence"]-=2;}
+  if(state.env==="public"){scores["Automation Bias"]+=6;scores["Overconfidence"]+=4;}
+  if(state.env==="enterprise"){scores["Automation Bias"]+=2;}
+  if(state.env==="gov"){scores["Automation Bias"]-=4;scores["Overconfidence"]-=2;}
 
-    if(state.docs==="none"){scores["Overconfidence"]+=10;}
-    if(state.docs==="modelcard"){scores["Overconfidence"]-=6;scores["Confirmation"]-=2;}
-    if(state.docs==="full"){scores["Overconfidence"]-=10;scores["Confirmation"]-=4;scores["Automation Bias"]-=2;}
+  if(state.docs==="none"){scores["Overconfidence"]+=10;}
+  if(state.docs==="modelcard"){scores["Overconfidence"]-=6;scores["Confirmation"]-=2;}
+  if(state.docs==="full"){scores["Overconfidence"]-=10;scores["Confirmation"]-=4;scores["Automation Bias"]-=2;}
 
-    const auto=state.auto/100;
-    scores["Automation Bias"]+=26*auto; scores["Overconfidence"]+=10*auto;
+  const auto=state.auto/100;
+  scores["Automation Bias"]+=26*auto; scores["Overconfidence"]+=10*auto;
 
-    const incent=state.incent/100;
-    scores["Confirmation"]+=20*incent; scores["Anchoring"]+=6*incent;
+  const incent=state.incent/100;
+  scores["Confirmation"]+=20*incent; scores["Anchoring"]+=6*incent;
 
-    if(state.guard_noNumbers){scores["Hallucination"]-=6;scores["Overconfidence"]-=4;}
-    if(state.guard_cite){scores["Hallucination"]-=6;scores["Overconfidence"]-=3;}
-    if(state.guard_log){scores["Automation Bias"]-=3;scores["Overconfidence"]-=2;}
+  if(state.guard_noNumbers){scores["Hallucination"]-=6;scores["Overconfidence"]-=4;}
+  if(state.guard_cite){scores["Hallucination"]-=6;scores["Overconfidence"]-=3;}
+  if(state.guard_log){scores["Automation Bias"]-=3;scores["Overconfidence"]-=2;}
 
-    biasTypes.forEach(k=>scores[k]=Math.round(clamp(scores[k]*stakeMult,0,100)));
+  biasTypes.forEach(k=>scores[k]=Math.round(clamp(scores[k]*stakeMult,0,100)));
 
-    const w={"Representation":1.05,"Selection / Coverage":1.1,"Measurement / Label":1.05,"Anchoring":1.1,"Confirmation":1.15,"Automation Bias":1.15,"Hallucination":1.2,"Overconfidence":1.15};
-    let total=0,wsum=0; biasTypes.forEach(k=>{total+=scores[k]*w[k];wsum+=w[k];});
-    const overall=Math.round(total/wsum);
+  const w={"Representation":1.05,"Selection / Coverage":1.1,"Measurement / Label":1.05,"Anchoring":1.1,"Confirmation":1.15,"Automation Bias":1.15,"Hallucination":1.2,"Overconfidence":1.15};
+  let total=0,wsum=0; biasTypes.forEach(k=>{total+=scores[k]*w[k];wsum+=w[k];});
+  const overall=Math.round(total/wsum);
 
-    let reliability=65;
-    if(state.grounding==="none") reliability-=18;
-    if(state.grounding==="rag") reliability+=10;
-    if(state.grounding==="tools") reliability+=14;
-    if(state.eval==="none") reliability-=16;
-    if(state.eval==="bench") reliability+=6;
-    if(state.eval==="red") reliability+=10;
-    if(state.hctrl==="none") reliability-=12;
-    if(state.hctrl==="verify") reliability+=8;
-    if(state.hctrl==="gated") reliability+=12;
-    reliability-=10*(state.temp/100); reliability-=8*(state.persuade/100);
-    reliability=Math.round(clamp(reliability,0,100));
+  let reliability=65;
+  if(state.grounding==="none") reliability-=18;
+  if(state.grounding==="rag") reliability+=10;
+  if(state.grounding==="tools") reliability+=14;
+  if(state.eval==="none") reliability-=16;
+  if(state.eval==="bench") reliability+=6;
+  if(state.eval==="red") reliability+=10;
+  if(state.hctrl==="none") reliability-=12;
+  if(state.hctrl==="verify") reliability+=8;
+  if(state.hctrl==="gated") reliability+=12;
+  reliability-=10*(state.temp/100); reliability-=8*(state.persuade/100);
+  reliability=Math.round(clamp(reliability,0,100));
 
-    let gov=50;
-    if(state.env==="enterprise") gov+=10;
-    if(state.env==="gov") gov+=16;
-    if(state.docs==="none") gov-=18;
-    if(state.docs==="some") gov-=6;
-    if(state.docs==="modelcard") gov+=10;
-    if(state.docs==="full") gov+=18;
-    if(state.hitl==="required") gov+=10;
-    if(state.hitl==="none") gov-=12;
-    if(state.drift==="none") gov-=10;
-    if(state.drift==="auto") gov+=6;
-    if(state.drift==="auto+alert") gov+=12;
-    if(state.guard_log) gov+=8;
-    if(state.guard_cite) gov+=4;
-    gov=Math.round(clamp(gov,0,100));
+  let gov=50;
+  if(state.env==="enterprise") gov+=10;
+  if(state.env==="gov") gov+=16;
+  if(state.docs==="none") gov-=18;
+  if(state.docs==="some") gov-=6;
+  if(state.docs==="modelcard") gov+=10;
+  if(state.docs==="full") gov+=18;
+  if(state.hitl==="required") gov+=10;
+  if(state.hitl==="none") gov-=12;
+  if(state.drift==="none") gov-=10;
+  if(state.drift==="auto") gov+=6;
+  if(state.drift==="auto+alert") gov+=12;
+  if(state.guard_log) gov+=8;
+  if(state.guard_cite) gov+=4;
+  gov=Math.round(clamp(gov,0,100));
 
-    const sorted=biasTypes.map(k=>[k,scores[k]]).sort((a,b)=>b[1]-a[1]);
-    const topBias=sorted[0][0];
+  const sorted=biasTypes.map(k=>[k,scores[k]]).sort((a,b)=>b[1]-a[1]);
+  const topBias=sorted[0][0];
 
-    let mode="Inconsistent output";
-    if(scores["Hallucination"]>=65 && reliability<55) mode="Hallucinated facts / fabricated citations";
-    else if(scores["Automation Bias"]>=65 && state.hitl!=="required") mode="Over-trust / auto-use without skepticism";
-    else if(scores["Confirmation"]>=65 || state.mustFit) mode="Cherry-picked evidence supporting a narrative";
-    else if(scores["Anchoring"]>=65 || state.hasAnchor) mode="Anchored to prior value / target";
-    else if(scores["Representation"]>=65 || scores["Selection / Coverage"]>=65) mode="Wrong analogies / coverage gaps";
-    else if(scores["Measurement / Label"]>=65) mode="Bad labels / wrong definitions driving output";
+  let mode="Inconsistent output";
+  if(scores["Hallucination"]>=65 && reliability<55) mode="Hallucinated facts / fabricated citations";
+  else if(scores["Automation Bias"]>=65 && state.hitl!=="required") mode="Over-trust / auto-use without skepticism";
+  else if(scores["Confirmation"]>=65 || state.mustFit) mode="Cherry-picked evidence supporting a narrative";
+  else if(scores["Anchoring"]>=65 || state.hasAnchor) mode="Anchored to prior value / target";
+  else if(scores["Representation"]>=65 || scores["Selection / Coverage"]>=65) mode="Wrong analogies / coverage gaps";
+  else if(scores["Measurement / Label"]>=65) mode="Bad labels / wrong definitions driving output";
 
-    const drivers=[];
-    drivers.push(["Low representativeness", Math.round(28*(1-repr))]);
-    drivers.push(["Low recency", Math.round(22*(1-rec))]);
-    drivers.push(["Loose prompts / high temp", Math.round(18*(state.temp/100) + (state.promptDisc==="loose"?10:0))]);
-    drivers.push(["No grounding", state.grounding==="none"?18:(state.grounding==="rag"?4:6)]);
-    drivers.push(["Low eval rigor", state.eval==="none"?18:(state.eval==="basic"?10:(state.eval==="bench"?6:4))]);
-    drivers.push(["Automation level", Math.round(26*(state.auto/100))]);
-    if(state.hasAnchor) drivers.push(["Anchor provided", 18]);
-    if(state.mustFit) drivers.push(["Must-fit constraint", 20]);
-    if(state.hitl==="none") drivers.push(["No human review", 18]);
-    if(state.docs==="none") drivers.push(["No documentation", 16]);
-    if(state.leak==="high") drivers.push(["Leakage risk", 14]);
-    drivers.sort((a,b)=>b[1]-a[1]);
-    const topDrivers=drivers.slice(0,6);
+  const drivers=[];
+  drivers.push(["Low representativeness", Math.round(28*(1-repr))]);
+  drivers.push(["Low recency", Math.round(22*(1-rec))]);
+  drivers.push(["Loose prompts / high temp", Math.round(18*(state.temp/100) + (state.promptDisc==="loose"?10:0))]);
+  drivers.push(["No grounding", state.grounding==="none"?18:(state.grounding==="rag"?4:6)]);
+  drivers.push(["Low eval rigor", state.eval==="none"?18:(state.eval==="basic"?10:(state.eval==="bench"?6:4))]);
+  drivers.push(["Automation level", Math.round(26*(state.auto/100))]);
+  if(state.hasAnchor) drivers.push(["Anchor provided", 18]);
+  if(state.mustFit) drivers.push(["Must-fit constraint", 20]);
+  if(state.hitl==="none") drivers.push(["No human review", 18]);
+  if(state.docs==="none") drivers.push(["No documentation", 16]);
+  if(state.leak==="high") drivers.push(["Leakage risk", 14]);
+  drivers.sort((a,b)=>b[1]-a[1]);
+  const topDrivers=drivers.slice(0,6);
 
-    const mitigations=[];
-    const add=(t,d)=>mitigations.push({title:t,detail:d});
-    if(scores["Hallucination"]>=55) add("Ground the response","Use RAG/tools; require citations and flag uncertainty for non-sourced claims.");
-    if(state.temp>35) add("Reduce variability","Lower temperature for analytical tasks; enforce structured outputs + checks.");
-    if(state.hasAnchor || scores["Anchoring"]>=55) add("Anchor control","Run a blind pass without prior values; compare deltas; document in the CARD addendum.");
-    if(state.mustFit || scores["Confirmation"]>=55) add("Narrative pressure check","Predefine disconfirming evidence; keep should-cost vs will-cost separated.");
-    if(scores["Automation Bias"]>=55) add("Human-in-the-loop","Require reviewer sign-off for any output affecting dollars/schedule/decisions.");
-    if(scores["Representation"]>=55 || scores["Selection / Coverage"]>=55) add("Coverage & analog integrity","Audit for missing mission types, security tiers, program phases; expand examples.");
-    if(scores["Measurement / Label"]>=55) add("Define terms & mappings","Standardize definitions (units, WBS mappings, rate categories) and validate labels.");
-    if(gov<60) add("Documentation package","Create a Model Card + Prompt SOP + change log; record inputs/outputs for auditability.");
-    if(state.eval==="none" || state.eval==="basic") add("Evaluation uplift","Add holdout tests and red-team cases relevant to estimating tasks; track failure rates.");
+  const mitigations=[];
+  const add=(t,d)=>mitigations.push({title:t,detail:d});
+  if(scores["Hallucination"]>=55) add("Ground the response","Use RAG/tools; require citations and flag uncertainty for non-sourced claims.");
+  if(state.temp>35) add("Reduce variability","Lower temperature for analytical tasks; enforce structured outputs + checks.");
+  if(state.hasAnchor || scores["Anchoring"]>=55) add("Anchor control","Run a blind pass without prior values; compare deltas; document in the CARD addendum.");
+  if(state.mustFit || scores["Confirmation"]>=55) add("Narrative pressure check","Predefine disconfirming evidence; keep should-cost vs will-cost separated.");
+  if(scores["Automation Bias"]>=55) add("Human-in-the-loop","Require reviewer sign-off for any output affecting dollars/schedule/decisions.");
+  if(scores["Representation"]>=55 || scores["Selection / Coverage"]>=55) add("Coverage & analog integrity","Audit for missing mission types, security tiers, program phases; expand examples.");
+  if(scores["Measurement / Label"]>=55) add("Define terms & mappings","Standardize definitions (units, WBS mappings, rate categories) and validate labels.");
+  if(gov<60) add("Documentation package","Create a Model Card + Prompt SOP + change log; record inputs/outputs for auditability.");
+  if(state.eval==="none" || state.eval==="basic") add("Evaluation uplift","Add holdout tests and red-team cases relevant to estimating tasks; track failure rates.");
 
-    return {scores,overall,reliability,gov,topBias,mode,topDrivers,mitigations:mitigations.slice(0,8)};
+  return {scores,overall,reliability,gov,topBias,mode,topDrivers,mitigations:mitigations.slice(0,8)};
   }
 
   let radarChart, driversChart;
@@ -1167,668 +1189,668 @@ function attachRadarLabelTooltips(){
 function initCharts(){
   // Radar chart (bias star)
   radarChart = new Chart(document.getElementById("radar"),{
-    type:"radar",
-    data:{
-      labels:biasTypes,
-      datasets:[{
-        label:"Bias",
-        data:biasTypes.map(_=>0),
-        fill:true,
-        borderWidth:2,
-        borderColor: ACCENT(0.85),
-        backgroundColor: ACCENT(0.18),
-        pointRadius:2,
-        pointHoverRadius:4,
-        pointBackgroundColor: ACCENT(0.95),
-        pointBorderColor: ACCENT(0.95),
-      }]
-    },
-    options:{
-      responsive:true,
-      animation:{duration:250},
-      plugins:{
-        legend:{display:false},
-        tooltip:{
-          displayColors:false,
-          backgroundColor: PANEL(0.96),
-          borderColor: "rgba(255,255,255,0.12)",
-          borderWidth: 1,
-          titleColor: THEME.text,
-          bodyColor: THEME.text,
-          callbacks:{
-            title:(items)=>{
-              const it = items && items[0] ? items[0] : null;
-              if(!it) return "";
-              const lab = it.label ?? "";
-              const v = it.raw ?? "";
-              return `${lab}: ${v}`;
-            },
-            afterBody:(items)=>{
-              const it = items && items[0] ? items[0] : null;
-              const lab = it ? (it.label ?? "") : "";
-              return (lab && BIAS_DEFS[lab]) ? BIAS_DEFS[lab] : "";
-            }
-          }
-        }
-      },
-      scales:{
-        r:{
-          min:0, max:100,
-          ticks:{display:false},
-          grid:{color: THEME.line},
-          angleLines:{color: THEME.line},
-          pointLabels:{color: THEME.text, font:{size:12, weight:"600"}},
-        }
-      }
-    }
+  type:"radar",
+  data:{
+  labels:biasTypes,
+  datasets:[{
+  label:"Bias",
+  data:biasTypes.map(_=>0),
+  fill:true,
+  borderWidth:2,
+  borderColor: ACCENT(0.85),
+  backgroundColor: ACCENT(0.18),
+  pointRadius:2,
+  pointHoverRadius:4,
+  pointBackgroundColor: ACCENT(0.95),
+  pointBorderColor: ACCENT(0.95),
+  }]
+  },
+  options:{
+  responsive:true,
+  animation:{duration:250},
+  plugins:{
+  legend:{display:false},
+  tooltip:{
+  displayColors:false,
+  backgroundColor: PANEL(0.96),
+  borderColor: "rgba(255,255,255,0.12)",
+  borderWidth: 1,
+  titleColor: THEME.text,
+  bodyColor: THEME.text,
+  callbacks:{
+  title:(items)=>{
+  const it = items && items[0] ? items[0] : null;
+  if(!it) return "";
+  const lab = it.label ?? "";
+  const v = it.raw ?? "";
+  return `${lab}: ${v}`;
+  },
+  afterBody:(items)=>{
+  const it = items && items[0] ? items[0] : null;
+  const lab = it ? (it.label ?? "") : "";
+  return (lab && BIAS_DEFS[lab]) ? BIAS_DEFS[lab] : "";
+  }
+  }
+  }
+  },
+  scales:{
+  r:{
+  min:0, max:100,
+  ticks:{display:false},
+  grid:{color: THEME.line},
+  angleLines:{color: THEME.line},
+  pointLabels:{color: THEME.text, font:{size:12, weight:"600"}},
+  }
+  }
+  }
   });
 
   // Drivers chart
   driversChart = new Chart(document.getElementById("drivers"),{
-    type:"bar",
-    data:{
-      labels:["—"],
-      datasets:[{
-        label:"Contribution",
-        data:[0],
-        backgroundColor: ACCENT(0.30),
-        borderColor: ACCENT(0.75),
-        borderWidth:1,
-        borderRadius:8,
-        maxBarThickness:28,
-      }]
-    },
-    options:{
-      responsive:true,
-      animation:{duration:250},
-      plugins:{
-        legend:{display:false},
-        tooltip:{
-          displayColors:false,
-          backgroundColor: PANEL(0.96),
-          borderColor: "rgba(255,255,255,0.12)",
-          borderWidth: 1,
-          titleColor: THEME.text,
-          bodyColor: THEME.text,
-          callbacks:{
-            label:(ctx)=>`Contribution: ${ctx.raw}`,
-            afterLabel:(ctx)=> DRIVER_DEFS[ctx.label] ? DRIVER_DEFS[ctx.label] : ""
-          }
-        }
-      },
-      scales:{
-        x:{
-          grid:{display:false},
-          ticks:{color: THEME.muted, font:{size:11}}
-        },
-        y:{
-          min:0, max:40,
-          grid:{color: THEME.line},
-          ticks:{color: THEME.muted, font:{size:11}}
-        }
-      }
-    }
+  type:"bar",
+  data:{
+  labels:["—"],
+  datasets:[{
+  label:"Contribution",
+  data:[0],
+  backgroundColor: ACCENT(0.30),
+  borderColor: ACCENT(0.75),
+  borderWidth:1,
+  borderRadius:8,
+  maxBarThickness:28,
+  }]
+  },
+  options:{
+  responsive:true,
+  animation:{duration:250},
+  plugins:{
+  legend:{display:false},
+  tooltip:{
+  displayColors:false,
+  backgroundColor: PANEL(0.96),
+  borderColor: "rgba(255,255,255,0.12)",
+  borderWidth: 1,
+  titleColor: THEME.text,
+  bodyColor: THEME.text,
+  callbacks:{
+  label:(ctx)=>`Contribution: ${ctx.raw}`,
+  afterLabel:(ctx)=> DRIVER_DEFS[ctx.label] ? DRIVER_DEFS[ctx.label] : ""
+  }
+  }
+  },
+  scales:{
+  x:{
+  grid:{display:false},
+  ticks:{color: THEME.muted, font:{size:11}}
+  },
+  y:{
+  min:0, max:40,
+  grid:{color: THEME.line},
+  ticks:{color: THEME.muted, font:{size:11}}
+  }
+  }
+  }
   });
 }
 
   function updateCharts(res){
-    radarChart.data.datasets[0].data=biasTypes.map(k=>res.scores[k]); radarChart.update();
-    driversChart.data.labels=res.topDrivers.map(d=>d[0]);
-    driversChart.data.datasets[0].data=res.topDrivers.map(d=>d[1]);
-    driversChart.options.scales.y.max=Math.max(30,...res.topDrivers.map(d=>d[1]))+6;
-    driversChart.update();
+  radarChart.data.datasets[0].data=biasTypes.map(k=>res.scores[k]); radarChart.update();
+  driversChart.data.labels=res.topDrivers.map(d=>d[0]);
+  driversChart.data.datasets[0].data=res.topDrivers.map(d=>d[1]);
+  driversChart.options.scales.y.max=Math.max(30,...res.topDrivers.map(d=>d[1]))+6;
+  driversChart.update();
   }
 
   const panels={usecase:document.getElementById("panel-usecase"),data:document.getElementById("panel-data"),
-    prompt:document.getElementById("panel-prompt"),eval:document.getElementById("panel-eval"),gov:document.getElementById("panel-gov")};
+  prompt:document.getElementById("panel-prompt"),eval:document.getElementById("panel-eval"),gov:document.getElementById("panel-gov")};
   document.getElementById("domainTabs").addEventListener("click",(e)=>{
-    const tab=e.target.closest(".tab"); if(!tab) return;
-    const key=tab.dataset.tab;
-    document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active")); tab.classList.add("active");
-    Object.keys(panels).forEach(k=>panels[k].style.display=(k===key)?"block":"none");
+  const tab=e.target.closest(".tab"); if(!tab) return;
+  const key=tab.dataset.tab;
+  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active")); tab.classList.add("active");
+  Object.keys(panels).forEach(k=>panels[k].style.display=(k===key)?"block":"none");
   });
 
   const bind=(id,key,type="value")=>{
-    const el=document.getElementById(id);
-    el.addEventListener("input",()=>{
-      if(type==="checked") state[key]=el.checked;
-      else if(el.type==="range"||el.type==="number") state[key]=Number(el.value);
-      else state[key]=el.value;
-      update();
-    });
+  const el=document.getElementById(id);
+  el.addEventListener("input",()=>{
+  if(type==="checked") state[key]=el.checked;
+  else if(el.type==="range"||el.type==="number") state[key]=Number(el.value);
+  else state[key]=el.value;
+  update();
+  });
   };
 
   function updatePills(){
-    pill("val_task", document.getElementById("task").selectedOptions[0].textContent);
-    pill("val_outputStyle", document.getElementById("outputStyle").selectedOptions[0].textContent);
-    pill("val_stakes", document.getElementById("stakes").selectedOptions[0].textContent);
-    pill("val_provenance", document.getElementById("provenance").selectedOptions[0].textContent);
-    pill("val_leak", document.getElementById("leak").selectedOptions[0].textContent);
-    pill("val_sensitive", document.getElementById("sensitive").selectedOptions[0].textContent);
-    pill("val_promptDisc", document.getElementById("promptDisc").selectedOptions[0].textContent);
-    pill("val_grounding", document.getElementById("grounding").selectedOptions[0].textContent);
-    pill("val_eval", document.getElementById("eval").selectedOptions[0].textContent);
-    pill("val_hctrl", document.getElementById("hctrl").selectedOptions[0].textContent);
-    pill("val_drift", document.getElementById("drift").selectedOptions[0].textContent);
-    pill("val_hitl", document.getElementById("hitl").selectedOptions[0].textContent);
-    pill("val_env", document.getElementById("env").selectedOptions[0].textContent);
-    pill("val_docs", document.getElementById("docs").selectedOptions[0].textContent);
-    pill("val_anchor", [state.hasAnchor?"Anchor":"No anchor", state.mustFit?"Must-fit":"No must-fit"].join(" • "));
+  pill("val_task", document.getElementById("task").selectedOptions[0].textContent);
+  pill("val_outputStyle", document.getElementById("outputStyle").selectedOptions[0].textContent);
+  pill("val_stakes", document.getElementById("stakes").selectedOptions[0].textContent);
+  pill("val_provenance", document.getElementById("provenance").selectedOptions[0].textContent);
+  pill("val_leak", document.getElementById("leak").selectedOptions[0].textContent);
+  pill("val_sensitive", document.getElementById("sensitive").selectedOptions[0].textContent);
+  pill("val_promptDisc", document.getElementById("promptDisc").selectedOptions[0].textContent);
+  pill("val_grounding", document.getElementById("grounding").selectedOptions[0].textContent);
+  pill("val_eval", document.getElementById("eval").selectedOptions[0].textContent);
+  pill("val_hctrl", document.getElementById("hctrl").selectedOptions[0].textContent);
+  pill("val_drift", document.getElementById("drift").selectedOptions[0].textContent);
+  pill("val_hitl", document.getElementById("hitl").selectedOptions[0].textContent);
+  pill("val_env", document.getElementById("env").selectedOptions[0].textContent);
+  pill("val_docs", document.getElementById("docs").selectedOptions[0].textContent);
+  pill("val_anchor", [state.hasAnchor?"Anchor":"No anchor", state.mustFit?"Must-fit":"No must-fit"].join(" • "));
   }
 
   // ===== Micro-Pilot Scenario Templates (added on-demand; not preloaded) =====
   const DEFAULT_SCENARIOS = [
-    // S1 — BOE drafting
-    {
-      name: "S1-High Risk (HR) (BOE Drafting)",
-      values: {
-        task: "Draft cost narrative / estimating approach (BOE support)",
-        outputStyle: "Narrative prose (more persuasive)",
-        decisionImpact: "High (directly influences dollars / decisions)",
-        trainingProvenance: "Closed model (unknown training mix)",
-        domainRepresentativeness: 35,
-        recency: 40,
-        labelQuality: 40,
-        dataLeakageRisk: "High (unknown overlap / copied examples)",
-        sensitiveExposure: "Mixed (ad-hoc redaction)",
-        promptDiscipline: "Loose (\"just answer\")",
-        groundingMethod: "None (pure model response)",
-        temperature: 65,
-        persuasionRisk: 85,
-        anchorPriorEstimate: true,
-        anchorMustFit: true,
-        evalRigor: "None",
-        biasTestingCoverage: 10,
-        hallucinationControls: "None",
-        monitoring: "None",
-        hitl: "None (auto-use allowed)",
-        accessEnv: "Public SaaS",
-        documentation: "None",
-        automationLevel: 85,
-        incentivePressure: 85,
-        guardNoUnauditedNumbers: false,
-        guardCitationsRequired: false,
-        guardLoggingEnabled: false
-      }
-    },
-    {
-      name: "S1-Control (CTL) (BOE Drafting)",
-      values: {
-        task: "Draft cost narrative / estimating approach (BOE support)",
-        outputStyle: "Bullets with sources + confidence tags",
-        decisionImpact: "High (directly influences dollars / decisions)",
-        trainingProvenance: "RAG over curated internal corpus",
-        domainRepresentativeness: 80,
-        recency: 80,
-        labelQuality: 70,
-        dataLeakageRisk: "Low (segregated datasets)",
-        sensitiveExposure: "Controlled (approved handling)",
-        promptDiscipline: "Strict (role, scope, constraints, cite sources)",
-        groundingMethod: "Tools + verification steps",
-        temperature: 15,
-        persuasionRisk: 25,
-        anchorPriorEstimate: false,
-        anchorMustFit: false,
-        evalRigor: "Basic spot checks",
-        biasTestingCoverage: 55,
-        hallucinationControls: "Gated release + human approval",
-        monitoring: "Manual review cadence",
-        hitl: "Required (review + sign-off)",
-        accessEnv: "Enterprise tenant controls",
-        documentation: "Full package (SOP + audit trail)",
-        automationLevel: 20,
-        incentivePressure: 30,
-        guardNoUnauditedNumbers: true,
-        guardCitationsRequired: true,
-        guardLoggingEnabled: true
-      }
-    },
+  // S1 — BOE drafting
+  {
+  name: "S1-High Risk (HR) (BOE Drafting)",
+  values: {
+  task: "Draft cost narrative / estimating approach (BOE support)",
+  outputStyle: "Narrative prose (more persuasive)",
+  decisionImpact: "High (directly influences dollars / decisions)",
+  trainingProvenance: "Closed model (unknown training mix)",
+  domainRepresentativeness: 35,
+  recency: 40,
+  labelQuality: 40,
+  dataLeakageRisk: "High (unknown overlap / copied examples)",
+  sensitiveExposure: "Mixed (ad-hoc redaction)",
+  promptDiscipline: "Loose (\"just answer\")",
+  groundingMethod: "None (pure model response)",
+  temperature: 65,
+  persuasionRisk: 85,
+  anchorPriorEstimate: true,
+  anchorMustFit: true,
+  evalRigor: "None",
+  biasTestingCoverage: 10,
+  hallucinationControls: "None",
+  monitoring: "None",
+  hitl: "None (auto-use allowed)",
+  accessEnv: "Public SaaS",
+  documentation: "None",
+  automationLevel: 85,
+  incentivePressure: 85,
+  guardNoUnauditedNumbers: false,
+  guardCitationsRequired: false,
+  guardLoggingEnabled: false
+  }
+  },
+  {
+  name: "S1-Control (CTL) (BOE Drafting)",
+  values: {
+  task: "Draft cost narrative / estimating approach (BOE support)",
+  outputStyle: "Bullets with sources + confidence tags",
+  decisionImpact: "High (directly influences dollars / decisions)",
+  trainingProvenance: "RAG over curated internal corpus",
+  domainRepresentativeness: 80,
+  recency: 80,
+  labelQuality: 70,
+  dataLeakageRisk: "Low (segregated datasets)",
+  sensitiveExposure: "Controlled (approved handling)",
+  promptDiscipline: "Strict (role, scope, constraints, cite sources)",
+  groundingMethod: "Tools + verification steps",
+  temperature: 15,
+  persuasionRisk: 25,
+  anchorPriorEstimate: false,
+  anchorMustFit: false,
+  evalRigor: "Basic spot checks",
+  biasTestingCoverage: 55,
+  hallucinationControls: "Gated release + human approval",
+  monitoring: "Manual review cadence",
+  hitl: "Required (review + sign-off)",
+  accessEnv: "Enterprise tenant controls",
+  documentation: "Full package (SOP + audit trail)",
+  automationLevel: 20,
+  incentivePressure: 30,
+  guardNoUnauditedNumbers: true,
+  guardCitationsRequired: true,
+  guardLoggingEnabled: true
+  }
+  },
 
-    // S2 — Market scan / labor rates
-    {
-      name: "S2-HR (Labor Rate Assistance)",
-      values: {
-        task: "Labor rate banding / market scan assistance",
-        outputStyle: "Narrative prose (more persuasive)",
-        decisionImpact: "High (directly influences dollars / decisions)",
-        trainingProvenance: "Closed model (unknown training mix)",
-        domainRepresentativeness: 30,
-        recency: 35,
-        labelQuality: 35,
-        dataLeakageRisk: "High (unknown overlap / copied examples)",
-        sensitiveExposure: "Mixed (ad-hoc redaction)",
-        promptDiscipline: "Loose (\"just answer\")",
-        groundingMethod: "None (pure model response)",
-        temperature: 55,
-        persuasionRisk: 70,
-        anchorPriorEstimate: true,
-        anchorMustFit: true,
-        evalRigor: "None",
-        biasTestingCoverage: 10,
-        hallucinationControls: "None",
-        monitoring: "None",
-        hitl: "None (auto-use allowed)",
-        accessEnv: "Public SaaS",
-        documentation: "None",
-        automationLevel: 70,
-        incentivePressure: 80,
-        guardNoUnauditedNumbers: false,
-        guardCitationsRequired: false,
-        guardLoggingEnabled: false
-      }
-    },
-    {
-      name: "S2-CTL (Labor Rate Assistance)",
-      values: {
-        task: "Labor rate banding / market scan assistance",
-        outputStyle: "Tables/structured output (looks \"precise\")",
-        decisionImpact: "High (directly influences dollars / decisions)",
-        trainingProvenance: "RAG over curated internal corpus",
-        domainRepresentativeness: 60,
-        recency: 85,
-        labelQuality: 55,
-        dataLeakageRisk: "Low (segregated datasets)",
-        sensitiveExposure: "Controlled (approved handling)",
-        promptDiscipline: "Strict (role, scope, constraints, cite sources)",
-        groundingMethod: "RAG (retrieval with citations)",
-        temperature: 20,
-        persuasionRisk: 30,
-        anchorPriorEstimate: false,
-        anchorMustFit: false,
-        evalRigor: "Benchmarks + holdout set",
-        biasTestingCoverage: 60,
-        hallucinationControls: "Verification step",
-        monitoring: "Manual review cadence",
-        hitl: "Required (review + sign-off)",
-        accessEnv: "Enterprise tenant controls",
-        documentation: "Model card + data sheet + change log",
-        automationLevel: 25,
-        incentivePressure: 25,
-        guardNoUnauditedNumbers: true,
-        guardCitationsRequired: true,
-        guardLoggingEnabled: true
-      }
-    },
+  // S2 — Market scan / labor rates
+  {
+  name: "S2-HR (Labor Rate Assistance)",
+  values: {
+  task: "Labor rate banding / market scan assistance",
+  outputStyle: "Narrative prose (more persuasive)",
+  decisionImpact: "High (directly influences dollars / decisions)",
+  trainingProvenance: "Closed model (unknown training mix)",
+  domainRepresentativeness: 30,
+  recency: 35,
+  labelQuality: 35,
+  dataLeakageRisk: "High (unknown overlap / copied examples)",
+  sensitiveExposure: "Mixed (ad-hoc redaction)",
+  promptDiscipline: "Loose (\"just answer\")",
+  groundingMethod: "None (pure model response)",
+  temperature: 55,
+  persuasionRisk: 70,
+  anchorPriorEstimate: true,
+  anchorMustFit: true,
+  evalRigor: "None",
+  biasTestingCoverage: 10,
+  hallucinationControls: "None",
+  monitoring: "None",
+  hitl: "None (auto-use allowed)",
+  accessEnv: "Public SaaS",
+  documentation: "None",
+  automationLevel: 70,
+  incentivePressure: 80,
+  guardNoUnauditedNumbers: false,
+  guardCitationsRequired: false,
+  guardLoggingEnabled: false
+  }
+  },
+  {
+  name: "S2-CTL (Labor Rate Assistance)",
+  values: {
+  task: "Labor rate banding / market scan assistance",
+  outputStyle: "Tables/structured output (looks \"precise\")",
+  decisionImpact: "High (directly influences dollars / decisions)",
+  trainingProvenance: "RAG over curated internal corpus",
+  domainRepresentativeness: 60,
+  recency: 85,
+  labelQuality: 55,
+  dataLeakageRisk: "Low (segregated datasets)",
+  sensitiveExposure: "Controlled (approved handling)",
+  promptDiscipline: "Strict (role, scope, constraints, cite sources)",
+  groundingMethod: "RAG (retrieval with citations)",
+  temperature: 20,
+  persuasionRisk: 30,
+  anchorPriorEstimate: false,
+  anchorMustFit: false,
+  evalRigor: "Benchmarks + holdout set",
+  biasTestingCoverage: 60,
+  hallucinationControls: "Verification step",
+  monitoring: "Manual review cadence",
+  hitl: "Required (review + sign-off)",
+  accessEnv: "Enterprise tenant controls",
+  documentation: "Model card + data sheet + change log",
+  automationLevel: 25,
+  incentivePressure: 25,
+  guardNoUnauditedNumbers: true,
+  guardCitationsRequired: true,
+  guardLoggingEnabled: true
+  }
+  },
 
-    // S3 — Anomaly detection
-    {
-      name: "S3-HR (Anomaly Detection)",
-      values: {
-        task: "Anomaly detection / data QA suggestions",
-        outputStyle: "Tables/structured output (looks \"precise\")",
-        decisionImpact: "Medium (inputs to an estimate)",
-        trainingProvenance: "Closed model (unknown training mix)",
-        domainRepresentativeness: 45,
-        recency: 45,
-        labelQuality: 30,
-        dataLeakageRisk: "High (unknown overlap / copied examples)",
-        sensitiveExposure: "Risky (unsafe inputs)",
-        promptDiscipline: "Normal",
-        groundingMethod: "None (pure model response)",
-        temperature: 40,
-        persuasionRisk: 60,
-        anchorPriorEstimate: false,
-        anchorMustFit: false,
-        evalRigor: "None",
-        biasTestingCoverage: 10,
-        hallucinationControls: "None",
-        monitoring: "None",
-        hitl: "None (auto-use allowed)",
-        accessEnv: "Public SaaS",
-        documentation: "None",
-        automationLevel: 75,
-        incentivePressure: 60,
-        guardNoUnauditedNumbers: false,
-        guardCitationsRequired: false,
-        guardLoggingEnabled: false
-      }
-    },
-    {
-      name: "S3-CTL (Anomaly Detection)",
-      values: {
-        task: "Anomaly detection / data QA suggestions",
-        outputStyle: "Bullets with sources + confidence tags",
-        decisionImpact: "Medium (inputs to an estimate)",
-        trainingProvenance: "Fine-tuned on internal data",
-        domainRepresentativeness: 75,
-        recency: 70,
-        labelQuality: 70,
-        dataLeakageRisk: "Low (segregated datasets)",
-        sensitiveExposure: "Controlled (approved handling)",
-        promptDiscipline: "Strict (role, scope, constraints, cite sources)",
-        groundingMethod: "Tools + verification steps",
-        temperature: 15,
-        persuasionRisk: 25,
-        anchorPriorEstimate: false,
-        anchorMustFit: false,
-        evalRigor: "Benchmarks + holdout set",
-        biasTestingCoverage: 55,
-        hallucinationControls: "Verification step",
-        monitoring: "Manual review cadence",
-        hitl: "Required (review + sign-off)",
-        accessEnv: "Enterprise tenant controls",
-        documentation: "Model card + data sheet + change log",
-        automationLevel: 25,
-        incentivePressure: 25,
-        guardNoUnauditedNumbers: true,
-        guardCitationsRequired: true,
-        guardLoggingEnabled: true
-      }
-    }
+  // S3 — Anomaly detection
+  {
+  name: "S3-HR (Anomaly Detection)",
+  values: {
+  task: "Anomaly detection / data QA suggestions",
+  outputStyle: "Tables/structured output (looks \"precise\")",
+  decisionImpact: "Medium (inputs to an estimate)",
+  trainingProvenance: "Closed model (unknown training mix)",
+  domainRepresentativeness: 45,
+  recency: 45,
+  labelQuality: 30,
+  dataLeakageRisk: "High (unknown overlap / copied examples)",
+  sensitiveExposure: "Risky (unsafe inputs)",
+  promptDiscipline: "Normal",
+  groundingMethod: "None (pure model response)",
+  temperature: 40,
+  persuasionRisk: 60,
+  anchorPriorEstimate: false,
+  anchorMustFit: false,
+  evalRigor: "None",
+  biasTestingCoverage: 10,
+  hallucinationControls: "None",
+  monitoring: "None",
+  hitl: "None (auto-use allowed)",
+  accessEnv: "Public SaaS",
+  documentation: "None",
+  automationLevel: 75,
+  incentivePressure: 60,
+  guardNoUnauditedNumbers: false,
+  guardCitationsRequired: false,
+  guardLoggingEnabled: false
+  }
+  },
+  {
+  name: "S3-CTL (Anomaly Detection)",
+  values: {
+  task: "Anomaly detection / data QA suggestions",
+  outputStyle: "Bullets with sources + confidence tags",
+  decisionImpact: "Medium (inputs to an estimate)",
+  trainingProvenance: "Fine-tuned on internal data",
+  domainRepresentativeness: 75,
+  recency: 70,
+  labelQuality: 70,
+  dataLeakageRisk: "Low (segregated datasets)",
+  sensitiveExposure: "Controlled (approved handling)",
+  promptDiscipline: "Strict (role, scope, constraints, cite sources)",
+  groundingMethod: "Tools + verification steps",
+  temperature: 15,
+  persuasionRisk: 25,
+  anchorPriorEstimate: false,
+  anchorMustFit: false,
+  evalRigor: "Benchmarks + holdout set",
+  biasTestingCoverage: 55,
+  hallucinationControls: "Verification step",
+  monitoring: "Manual review cadence",
+  hitl: "Required (review + sign-off)",
+  accessEnv: "Enterprise tenant controls",
+  documentation: "Model card + data sheet + change log",
+  automationLevel: 25,
+  incentivePressure: 25,
+  guardNoUnauditedNumbers: true,
+  guardCitationsRequired: true,
+  guardLoggingEnabled: true
+  }
+  }
   ];
 
   function mapScenarioToInternal(scenario) {
-    const v = scenario.values;
-    const mapDecisionImpact = (val) => {
-      if (val.includes("High")) return "high";
-      if (val.includes("Medium")) return "med";
-      return "low";
-    };
-    const mapProvenance = (val) => {
-      if (val.includes("Closed model")) return "closed";
-      if (val.includes("Fine-tuned")) return "fine";
-      if (val.includes("RAG")) return "rag";
-      return "gov";
-    };
-    const mapOutputStyle = (val) => {
-      if (val.includes("Narrative")) return "narrative";
-      if (val.includes("Tables")) return "tables";
-      return "bullet";
-    };
-    const mapLeak = (val) => {
-      if (val.includes("High")) return "high";
-      if (val.includes("Low")) return "low";
-      return "med";
-    };
-    const mapSensitive = (val) => {
-      if (val.includes("Risky")) return "risky";
-      if (val.includes("Mixed")) return "mixed";
-      return "controlled";
-    };
-    const mapPromptDisc = (val) => {
-      if (val.includes("Loose")) return "loose";
-      if (val.includes("Strict")) return "strict";
-      return "normal";
-    };
-    const mapGrounding = (val) => {
-      if (val.includes("None")) return "none";
-      if (val.includes("RAG")) return "rag";
-      if (val.includes("Tools")) return "tools";
-      return "docs";
-    };
-    const mapEval = (val) => {
-      if (val === "None") return "none";
-      if (val.includes("Basic")) return "basic";
-      if (val.includes("Benchmarks")) return "bench";
-      return "red";
-    };
-    const mapHctrl = (val) => {
-      if (val === "None") return "none";
-      if (val.includes("Gated")) return "gated";
-      if (val.includes("Verification")) return "verify";
-      return "prompts";
-    };
-    const mapMonitoring = (val) => {
-      if (val === "None") return "none";
-      if (val.includes("Manual")) return "manual";
-      if (val.includes("Auto monitoring + alerts")) return "auto+alert";
-      return "auto";
-    };
-    const mapHitl = (val) => {
-      if (val.includes("None")) return "none";
-      if (val.includes("Required")) return "required";
-      return "recommended";
-    };
-    const mapEnv = (val) => {
-      if (val.includes("Public")) return "public";
-      if (val.includes("Enterprise")) return "enterprise";
-      return "gov";
-    };
-    const mapDocs = (val) => {
-      if (val === "None") return "none";
-      if (val.includes("Full package")) return "full";
-      if (val.includes("Model card")) return "modelcard";
-      return "some";
-    };
-    const mapTask = (val) => {
-      if (val.includes("Draft cost narrative")) return "estimate";
-      if (val.includes("Labor rate")) return "rates";
-      if (val.includes("Anomaly")) return "anomaly";
-      if (val.includes("SOW")) return "sow";
-      if (val.includes("WBS")) return "wbs";
-      return "risk";
-    };
+  const v = scenario.values;
+  const mapDecisionImpact = (val) => {
+  if (val.includes("High")) return "high";
+  if (val.includes("Medium")) return "med";
+  return "low";
+  };
+  const mapProvenance = (val) => {
+  if (val.includes("Closed model")) return "closed";
+  if (val.includes("Fine-tuned")) return "fine";
+  if (val.includes("RAG")) return "rag";
+  return "gov";
+  };
+  const mapOutputStyle = (val) => {
+  if (val.includes("Narrative")) return "narrative";
+  if (val.includes("Tables")) return "tables";
+  return "bullet";
+  };
+  const mapLeak = (val) => {
+  if (val.includes("High")) return "high";
+  if (val.includes("Low")) return "low";
+  return "med";
+  };
+  const mapSensitive = (val) => {
+  if (val.includes("Risky")) return "risky";
+  if (val.includes("Mixed")) return "mixed";
+  return "controlled";
+  };
+  const mapPromptDisc = (val) => {
+  if (val.includes("Loose")) return "loose";
+  if (val.includes("Strict")) return "strict";
+  return "normal";
+  };
+  const mapGrounding = (val) => {
+  if (val.includes("None")) return "none";
+  if (val.includes("RAG")) return "rag";
+  if (val.includes("Tools")) return "tools";
+  return "docs";
+  };
+  const mapEval = (val) => {
+  if (val === "None") return "none";
+  if (val.includes("Basic")) return "basic";
+  if (val.includes("Benchmarks")) return "bench";
+  return "red";
+  };
+  const mapHctrl = (val) => {
+  if (val === "None") return "none";
+  if (val.includes("Gated")) return "gated";
+  if (val.includes("Verification")) return "verify";
+  return "prompts";
+  };
+  const mapMonitoring = (val) => {
+  if (val === "None") return "none";
+  if (val.includes("Manual")) return "manual";
+  if (val.includes("Auto monitoring + alerts")) return "auto+alert";
+  return "auto";
+  };
+  const mapHitl = (val) => {
+  if (val.includes("None")) return "none";
+  if (val.includes("Required")) return "required";
+  return "recommended";
+  };
+  const mapEnv = (val) => {
+  if (val.includes("Public")) return "public";
+  if (val.includes("Enterprise")) return "enterprise";
+  return "gov";
+  };
+  const mapDocs = (val) => {
+  if (val === "None") return "none";
+  if (val.includes("Full package")) return "full";
+  if (val.includes("Model card")) return "modelcard";
+  return "some";
+  };
+  const mapTask = (val) => {
+  if (val.includes("Draft cost narrative")) return "estimate";
+  if (val.includes("Labor rate")) return "rates";
+  if (val.includes("Anomaly")) return "anomaly";
+  if (val.includes("SOW")) return "sow";
+  if (val.includes("WBS")) return "wbs";
+  return "risk";
+  };
 
-    return {
-      name: scenario.name,
-      created: new Date().toISOString(),
-      payload: {
-        task: mapTask(v.task),
-        outputStyle: mapOutputStyle(v.outputStyle),
-        stakes: mapDecisionImpact(v.decisionImpact),
-        provenance: mapProvenance(v.trainingProvenance),
-        repr: v.domainRepresentativeness,
-        recency: v.recency,
-        labelq: v.labelQuality,
-        leak: mapLeak(v.dataLeakageRisk),
-        sensitive: mapSensitive(v.sensitiveExposure),
-        promptDisc: mapPromptDisc(v.promptDiscipline),
-        grounding: mapGrounding(v.groundingMethod),
-        temp: v.temperature,
-        persuade: v.persuasionRisk,
-        hasAnchor: v.anchorPriorEstimate,
-        mustFit: v.anchorMustFit,
-        eval: mapEval(v.evalRigor),
-        biastest: v.biasTestingCoverage,
-        hctrl: mapHctrl(v.hallucinationControls),
-        drift: mapMonitoring(v.monitoring),
-        hitl: mapHitl(v.hitl),
-        env: mapEnv(v.accessEnv),
-        docs: mapDocs(v.documentation),
-        auto: v.automationLevel,
-        incent: v.incentivePressure,
-        guard_noNumbers: v.guardNoUnauditedNumbers,
-        guard_cite: v.guardCitationsRequired,
-        guard_log: v.guardLoggingEnabled
-      }
-    };
+  return {
+  name: scenario.name,
+  created: new Date().toISOString(),
+  payload: {
+  task: mapTask(v.task),
+  outputStyle: mapOutputStyle(v.outputStyle),
+  stakes: mapDecisionImpact(v.decisionImpact),
+  provenance: mapProvenance(v.trainingProvenance),
+  repr: v.domainRepresentativeness,
+  recency: v.recency,
+  labelq: v.labelQuality,
+  leak: mapLeak(v.dataLeakageRisk),
+  sensitive: mapSensitive(v.sensitiveExposure),
+  promptDisc: mapPromptDisc(v.promptDiscipline),
+  grounding: mapGrounding(v.groundingMethod),
+  temp: v.temperature,
+  persuade: v.persuasionRisk,
+  hasAnchor: v.anchorPriorEstimate,
+  mustFit: v.anchorMustFit,
+  eval: mapEval(v.evalRigor),
+  biastest: v.biasTestingCoverage,
+  hctrl: mapHctrl(v.hallucinationControls),
+  drift: mapMonitoring(v.monitoring),
+  hitl: mapHitl(v.hitl),
+  env: mapEnv(v.accessEnv),
+  docs: mapDocs(v.documentation),
+  auto: v.automationLevel,
+  incent: v.incentivePressure,
+  guard_noNumbers: v.guardNoUnauditedNumbers,
+  guard_cite: v.guardCitationsRequired,
+  guard_log: v.guardLoggingEnabled
+  }
+  };
   }
 
   function seedDefaultScenariosOnce(){
-    const existing = getScenarios();
-    const existingNames = new Set(existing.map(s => s.name));
-    const defaults = DEFAULT_SCENARIOS.map(mapScenarioToInternal);
-    const toAdd = defaults.filter(s => !existingNames.has(s.name));
-    if (toAdd.length === 0) {
-      alert("All micro-pilot scenarios are already loaded.");
-      return;
-    }
-    const updated = [...existing, ...toAdd];
-    setScenarios(updated);
-    renderScenarioTable();
-    alert(`Loaded ${toAdd.length} micro-pilot scenario${toAdd.length > 1 ? 's' : ''}: ${toAdd.map(s => s.name).join(', ')}`);
+  const existing = getScenarios();
+  const existingNames = new Set(existing.map(s => s.name));
+  const defaults = DEFAULT_SCENARIOS.map(mapScenarioToInternal);
+  const toAdd = defaults.filter(s => !existingNames.has(s.name));
+  if (toAdd.length === 0) {
+  alert("All micro-pilot scenarios are already loaded.");
+  return;
+  }
+  const updated = [...existing, ...toAdd];
+  setScenarios(updated);
+  renderScenarioTable();
+  alert(`Loaded ${toAdd.length} micro-pilot scenario${toAdd.length > 1 ? 's' : ''}: ${toAdd.map(s => s.name).join(', ')}`);
   }
 
 
 const LS_KEY="ai_bias_sandbox_scenarios_v1";
   const getScenarios=()=>{
-    try{
-      const stored = localStorage.getItem(LS_KEY);
-      if (!stored || stored === "[]") {
-        return [];
-      }
-      return JSON.parse(stored);
-    }catch{
-      return [];
-    }
+  try{
+  const stored = localStorage.getItem(LS_KEY);
+  if (!stored || stored === "[]") {
+  return [];
+  }
+  return JSON.parse(stored);
+  }catch{
+  return [];
+  }
   };
   const setScenarios=(arr)=>{localStorage.setItem(LS_KEY,JSON.stringify(arr)); refreshScenarioSelect();};
 
   function summary(payload){
-    const old=state; state=structuredClone(payload); const r=computeScores(); state=old; return r;
+  const old=state; state=structuredClone(payload); const r=computeScores(); state=old; return r;
   }
   function refreshScenarioSelect(){
-    const sel=document.getElementById("scenarioSelect");
-    const sc=getScenarios();
-    sel.innerHTML="";
-    const opt0=document.createElement("option");
-    opt0.value=""; opt0.textContent=sc.length?"Select a saved scenario…":"No saved scenarios yet";
-    sel.appendChild(opt0);
-    sc.forEach((s,idx)=>{const opt=document.createElement("option"); opt.value=String(idx); opt.textContent=s.name; sel.appendChild(opt);});
+  const sel=document.getElementById("scenarioSelect");
+  const sc=getScenarios();
+  sel.innerHTML="";
+  const opt0=document.createElement("option");
+  opt0.value=""; opt0.textContent=sc.length?"Select a saved scenario…":"No saved scenarios yet";
+  sel.appendChild(opt0);
+  sc.forEach((s,idx)=>{const opt=document.createElement("option"); opt.value=String(idx); opt.textContent=s.name; sel.appendChild(opt);});
   }
   function renderScenarioTable(){
-    const tbody=document.querySelector("#scenarioTable tbody");
-    const sc=getScenarios();
-    tbody.innerHTML="";
-    sc.forEach(s=>{
-      const r=summary(s.payload);
-      const tr=document.createElement("tr");
-      tr.innerHTML=`<td>${s.name}</td><td>${r.overall}</td><td>${r.reliability}</td><td>${r.gov}</td><td>${r.topBias}</td><td>${r.mode}</td>`;
-      tbody.appendChild(tr);
-    });
+  const tbody=document.querySelector("#scenarioTable tbody");
+  const sc=getScenarios();
+  tbody.innerHTML="";
+  sc.forEach(s=>{
+  const r=summary(s.payload);
+  const tr=document.createElement("tr");
+  tr.innerHTML=`<td>${s.name}</td><td>${r.overall}</td><td>${r.reliability}</td><td>${r.gov}</td><td>${r.topBias}</td><td>${r.mode}</td>`;
+  tbody.appendChild(tr);
+  });
   }
 
   function update(){
-    pill("val_repr", `${state.repr}%`);
-    pill("val_recency", `${state.recency}%`);
-    pill("val_labelq", `${state.labelq}%`);
-    pill("val_temp", `${state.temp}%`);
-    pill("val_persuade", `${state.persuade}%`);
-    pill("val_biastest", `${state.biastest}%`);
-    pill("val_auto", `${state.auto}%`);
-    pill("val_incent", `${state.incent}%`);
-    pill("val_guard", [state.guard_noNumbers?"No unaudited numbers":null, state.guard_cite?"Citations required":null, state.guard_log?"Logging/audit":null].filter(Boolean).join(" • ")||"None");
-    updatePills();
+  pill("val_repr", `${state.repr}%`);
+  pill("val_recency", `${state.recency}%`);
+  pill("val_labelq", `${state.labelq}%`);
+  pill("val_temp", `${state.temp}%`);
+  pill("val_persuade", `${state.persuade}%`);
+  pill("val_biastest", `${state.biastest}%`);
+  pill("val_auto", `${state.auto}%`);
+  pill("val_incent", `${state.incent}%`);
+  pill("val_guard", [state.guard_noNumbers?"No unaudited numbers":null, state.guard_cite?"Citations required":null, state.guard_log?"Logging/audit":null].filter(Boolean).join(" • ")||"None");
+  updatePills();
 
-    const res=computeScores();
-    document.getElementById("kpi_bias").textContent=`${res.overall}`;
-    document.getElementById("kpi_band").textContent=`${bandLabel(res.overall)} exposure`;
+  const res=computeScores();
+  document.getElementById("kpi_bias").textContent=`${res.overall}`;
+  document.getElementById("kpi_band").textContent=`${bandLabel(res.overall)} exposure`;
 
-    document.getElementById("kpi_rel").textContent=`${res.reliability}`;
-    document.getElementById("kpi_relBand").textContent=`${bandLabel(100-res.reliability)} reliability risk`;
+  document.getElementById("kpi_rel").textContent=`${res.reliability}`;
+  document.getElementById("kpi_relBand").textContent=`${bandLabel(100-res.reliability)} reliability risk`;
 
-    document.getElementById("kpi_gov").textContent=`${res.gov}`;
-    document.getElementById("kpi_govBand").textContent=`${bandLabel(100-res.gov)} governance gaps`;
+  document.getElementById("kpi_gov").textContent=`${res.gov}`;
+  document.getElementById("kpi_govBand").textContent=`${bandLabel(100-res.gov)} governance gaps`;
 
-    document.getElementById("kpi_mode").textContent=res.mode;
+  document.getElementById("kpi_mode").textContent=res.mode;
 
-    const chipTop=document.getElementById("chip_top");
-    chipTop.textContent=`Top bias: ${res.topBias}`;
-    chipTop.className="chip "+(res.overall<30?"good":(res.overall<60?"warn":"bad"));
+  const chipTop=document.getElementById("chip_top");
+  chipTop.textContent=`Top bias: ${res.topBias}`;
+  chipTop.className="chip "+(res.overall<30?"good":(res.overall<60?"warn":"bad"));
 
-    const chipDir=document.getElementById("chip_dir");
-    let impact="Draft-quality risk";
-    if(state.stakes==="high" && res.overall>=60) impact="High decision risk";
-    else if(state.stakes!=="low" && res.overall>=60) impact="Material estimate risk";
-    else if(res.overall>=30) impact="Review recommended";
-    chipDir.textContent=`Impact: ${impact}`;
-    chipDir.className="chip "+(res.overall<30?"good":(res.overall<60?"warn":"bad"));
+  const chipDir=document.getElementById("chip_dir");
+  let impact="Draft-quality risk";
+  if(state.stakes==="high" && res.overall>=60) impact="High decision risk";
+  else if(state.stakes!=="low" && res.overall>=60) impact="Material estimate risk";
+  else if(res.overall>=30) impact="Review recommended";
+  chipDir.textContent=`Impact: ${impact}`;
+  chipDir.className="chip "+(res.overall<30?"good":(res.overall<60?"warn":"bad"));
 
-    const chipCtrl=document.getElementById("chip_control");
-    const ctrlCount=
-      (state.grounding!=="none")+
-      (state.eval==="bench"||state.eval==="red")+
-      (state.hctrl==="verify"||state.hctrl==="gated")+
-      (state.hitl==="required")+
-      (state.docs==="modelcard"||state.docs==="full")+
-      (state.guard_cite?1:0)+
-      (state.guard_log?1:0)+
-      (state.guard_noNumbers?1:0);
-    chipCtrl.textContent=`Controls: ${ctrlCount}/8`;
-    chipCtrl.className="chip "+(ctrlCount>=6?"good":(ctrlCount>=3?"warn":"bad"));
+  const chipCtrl=document.getElementById("chip_control");
+  const ctrlCount=
+  (state.grounding!=="none")+
+  (state.eval==="bench"||state.eval==="red")+
+  (state.hctrl==="verify"||state.hctrl==="gated")+
+  (state.hitl==="required")+
+  (state.docs==="modelcard"||state.docs==="full")+
+  (state.guard_cite?1:0)+
+  (state.guard_log?1:0)+
+  (state.guard_noNumbers?1:0);
+  chipCtrl.textContent=`Controls: ${ctrlCount}/8`;
+  chipCtrl.className="chip "+(ctrlCount>=6?"good":(ctrlCount>=3?"warn":"bad"));
 
-    document.getElementById("topBiasPill").textContent=`Top bias: ${res.topBias}`;
+  document.getElementById("topBiasPill").textContent=`Top bias: ${res.topBias}`;
 
-    const ul=document.getElementById("mitigations"); ul.innerHTML="";
-    res.mitigations.forEach(m=>{
-      const li=document.createElement("li");
-      li.style.borderBottom="1px solid rgba(255,255,255,0.08)";
-      li.style.padding="10px 6px";
-      li.innerHTML=`<div style="color: var(--text); font-weight:650; margin-bottom:4px;">${m.title}</div>
-                    <div style="color: var(--muted); line-height:1.45;">${m.detail}</div>`;
-      ul.appendChild(li);
-    });
+  const ul=document.getElementById("mitigations"); ul.innerHTML="";
+  res.mitigations.forEach(m=>{
+  const li=document.createElement("li");
+  li.style.borderBottom="1px solid rgba(255,255,255,0.08)";
+  li.style.padding="10px 6px";
+  li.innerHTML=`<div style="color: var(--text); font-weight:650; margin-bottom:4px;">${m.title}</div>
+  <div style="color: var(--muted); line-height:1.45;">${m.detail}</div>`;
+  ul.appendChild(li);
+  });
 
-    updateCharts(res);
-    renderScenarioTable();
+  updateCharts(res);
+  renderScenarioTable();
   }
 
   document.getElementById("saveScenario").addEventListener("click",()=>{
-    const name=prompt("Scenario name (e.g., 'Loose prompt / no eval' or 'RAG + red-team + HITL'):");
-    if(!name) return;
-    const sc=getScenarios();
-    sc.unshift({name,created:new Date().toISOString(),payload: structuredClone(state)});
-    setScenarios(sc.slice(0,12));
-    update();
+  const name=prompt("Scenario name (e.g., 'Loose prompt / no eval' or 'RAG + red-team + HITL'):");
+  if(!name) return;
+  const sc=getScenarios();
+  sc.unshift({name,created:new Date().toISOString(),payload: structuredClone(state)});
+  setScenarios(sc.slice(0,12));
+  update();
   });
   document.getElementById("loadScenario").addEventListener("click",()=>{
-    const idx=document.getElementById("scenarioSelect").value; if(idx==="") return;
-    const sc=getScenarios(); const s=sc[Number(idx)]; if(!s) return;
-    state=structuredClone(s.payload);
-    for(const k of Object.keys(defaults)){
-      const el=document.getElementById(k); if(!el) continue;
-      if(el.type==="checkbox") el.checked=state[k]; else el.value=state[k];
-    }
-    update();
+  const idx=document.getElementById("scenarioSelect").value; if(idx==="") return;
+  const sc=getScenarios(); const s=sc[Number(idx)]; if(!s) return;
+  state=structuredClone(s.payload);
+  for(const k of Object.keys(defaults)){
+  const el=document.getElementById(k); if(!el) continue;
+  if(el.type==="checkbox") el.checked=state[k]; else el.value=state[k];
+  }
+  update();
   });
   document.getElementById("deleteScenario").addEventListener("click",()=>{
-    const idx=document.getElementById("scenarioSelect").value; if(idx==="") return;
-    const sc=getScenarios(); sc.splice(Number(idx),1); setScenarios(sc); update();
+  const idx=document.getElementById("scenarioSelect").value; if(idx==="") return;
+  const sc=getScenarios(); sc.splice(Number(idx),1); setScenarios(sc); update();
   });
 
   const mpBtn=document.getElementById("loadMicroPilot");
   if(mpBtn) mpBtn.addEventListener("click", seedDefaultScenariosOnce);
   document.getElementById("reset").addEventListener("click",()=>{
-    state=structuredClone(defaults);
-    for(const k of Object.keys(defaults)){
-      const el=document.getElementById(k); if(!el) continue;
-      if(el.type==="checkbox") el.checked=state[k]; else el.value=state[k];
-    }
-    update();
+  state=structuredClone(defaults);
+  for(const k of Object.keys(defaults)){
+  const el=document.getElementById(k); if(!el) continue;
+  if(el.type==="checkbox") el.checked=state[k]; else el.value=state[k];
+  }
+  update();
   });
 
   document.getElementById("copySummary").addEventListener("click", async ()=>{
-    const r=computeScores();
-    const lines=[];
-    lines.push("=== AI Model Card / CARD Addendum (AI Bias Sandbox) ===");
-    lines.push(`Task: ${document.getElementById("task").selectedOptions[0].textContent}`);
-    lines.push(`Stakes: ${document.getElementById("stakes").selectedOptions[0].textContent}`);
-    lines.push(`Bias Exposure: ${r.overall} (Top: ${r.topBias}) | Reliability: ${r.reliability} | Governance: ${r.gov}`);
-    lines.push(`Likely failure mode: ${r.mode}`);
-    lines.push("");
-    lines.push("Data & Training:");
-    lines.push(`- Provenance: ${document.getElementById("provenance").selectedOptions[0].textContent}`);
-    lines.push(`- Representativeness: ${state.repr}% | Recency: ${state.recency}% | Label quality: ${state.labelq}%`);
-    lines.push(`- Leakage risk: ${document.getElementById("leak").selectedOptions[0].textContent}`);
-    lines.push(`- Sensitive posture: ${document.getElementById("sensitive").selectedOptions[0].textContent}`);
-    lines.push("");
-    lines.push("Prompt & Context:");
-    lines.push(`- Prompt discipline: ${document.getElementById("promptDisc").selectedOptions[0].textContent}`);
-    lines.push(`- Grounding: ${document.getElementById("grounding").selectedOptions[0].textContent}`);
-    lines.push(`- Temperature: ${state.temp}% | Persuasion risk: ${state.persuade}%`);
-    lines.push(`- Anchors: ${state.hasAnchor?"Present":"None"} | Must-fit: ${state.mustFit?"Yes":"No"}`);
-    lines.push("");
-    lines.push("Evaluation & Monitoring:");
-    lines.push(`- Eval rigor: ${document.getElementById("eval").selectedOptions[0].textContent}`);
-    lines.push(`- Bias test coverage: ${state.biastest}%`);
-    lines.push(`- Hallucination controls: ${document.getElementById("hctrl").selectedOptions[0].textContent}`);
-    lines.push(`- Drift monitoring: ${document.getElementById("drift").selectedOptions[0].textContent}`);
-    lines.push(`- Human-in-loop: ${document.getElementById("hitl").selectedOptions[0].textContent}`);
-    lines.push("");
-    lines.push("Governance & Use:");
-    lines.push(`- Environment: ${document.getElementById("env").selectedOptions[0].textContent}`);
-    lines.push(`- Documentation: ${document.getElementById("docs").selectedOptions[0].textContent}`);
-    lines.push(`- Automation level: ${state.auto}% | Incentive pressure: ${state.incent}%`);
-    lines.push(`- Guardrails: ${[state.guard_noNumbers?"No unaudited numbers":null,state.guard_cite?"Citations required":null,state.guard_log?"Logging/audit":null].filter(Boolean).join(", ")||"None"}`);
-    lines.push("");
-    lines.push("Mitigations (top):");
-    r.mitigations.slice(0,5).forEach(m=>lines.push(`- ${m.title}: ${m.detail}`));
-    const text=lines.join("\n");
-    try{ await navigator.clipboard.writeText(text); alert("Copied to clipboard."); }
-    catch{
-      const ta=document.createElement("textarea"); ta.value=text; document.body.appendChild(ta); ta.select();
-      document.execCommand("copy"); ta.remove(); alert("Copied to clipboard (fallback).");
-    }
+  const r=computeScores();
+  const lines=[];
+  lines.push("=== AI Model Card / CARD Addendum (AI Bias Sandbox) ===");
+  lines.push(`Task: ${document.getElementById("task").selectedOptions[0].textContent}`);
+  lines.push(`Stakes: ${document.getElementById("stakes").selectedOptions[0].textContent}`);
+  lines.push(`Bias Exposure: ${r.overall} (Top: ${r.topBias}) | Reliability: ${r.reliability} | Governance: ${r.gov}`);
+  lines.push(`Likely failure mode: ${r.mode}`);
+  lines.push("");
+  lines.push("Data & Training:");
+  lines.push(`- Provenance: ${document.getElementById("provenance").selectedOptions[0].textContent}`);
+  lines.push(`- Representativeness: ${state.repr}% | Recency: ${state.recency}% | Label quality: ${state.labelq}%`);
+  lines.push(`- Leakage risk: ${document.getElementById("leak").selectedOptions[0].textContent}`);
+  lines.push(`- Sensitive posture: ${document.getElementById("sensitive").selectedOptions[0].textContent}`);
+  lines.push("");
+  lines.push("Prompt & Context:");
+  lines.push(`- Prompt discipline: ${document.getElementById("promptDisc").selectedOptions[0].textContent}`);
+  lines.push(`- Grounding: ${document.getElementById("grounding").selectedOptions[0].textContent}`);
+  lines.push(`- Temperature: ${state.temp}% | Persuasion risk: ${state.persuade}%`);
+  lines.push(`- Anchors: ${state.hasAnchor?"Present":"None"} | Must-fit: ${state.mustFit?"Yes":"No"}`);
+  lines.push("");
+  lines.push("Evaluation & Monitoring:");
+  lines.push(`- Eval rigor: ${document.getElementById("eval").selectedOptions[0].textContent}`);
+  lines.push(`- Bias test coverage: ${state.biastest}%`);
+  lines.push(`- Hallucination controls: ${document.getElementById("hctrl").selectedOptions[0].textContent}`);
+  lines.push(`- Drift monitoring: ${document.getElementById("drift").selectedOptions[0].textContent}`);
+  lines.push(`- Human-in-loop: ${document.getElementById("hitl").selectedOptions[0].textContent}`);
+  lines.push("");
+  lines.push("Governance & Use:");
+  lines.push(`- Environment: ${document.getElementById("env").selectedOptions[0].textContent}`);
+  lines.push(`- Documentation: ${document.getElementById("docs").selectedOptions[0].textContent}`);
+  lines.push(`- Automation level: ${state.auto}% | Incentive pressure: ${state.incent}%`);
+  lines.push(`- Guardrails: ${[state.guard_noNumbers?"No unaudited numbers":null,state.guard_cite?"Citations required":null,state.guard_log?"Logging/audit":null].filter(Boolean).join(", ")||"None"}`);
+  lines.push("");
+  lines.push("Mitigations (top):");
+  r.mitigations.slice(0,5).forEach(m=>lines.push(`- ${m.title}: ${m.detail}`));
+  const text=lines.join("\n");
+  try{ await navigator.clipboard.writeText(text); alert("Copied to clipboard."); }
+  catch{
+  const ta=document.createElement("textarea"); ta.value=text; document.body.appendChild(ta); ta.select();
+  document.execCommand("copy"); ta.remove(); alert("Copied to clipboard (fallback).");
+  }
   });
 
   bind("task","task"); bind("outputStyle","outputStyle"); bind("stakes","stakes");
@@ -1850,303 +1872,303 @@ const LS_KEY="ai_bias_sandbox_scenarios_v1";
 
   // ===== Walkthrough / Tour (additive) =====
   (function(){
-    function initTour(){
-      const startBtn = document.getElementById("startTourBtn");
-      const overlay = document.getElementById("tourOverlay");
-      if(!startBtn || !overlay) return;
+  function initTour(){
+  const startBtn = document.getElementById("startTourBtn");
+  const overlay = document.getElementById("tourOverlay");
+  if(!startBtn || !overlay) return;
 
-      const highlight = overlay.querySelector(".tour-highlight");
-      const dialog = overlay.querySelector(".tour-dialog");
-      const elTitle = document.getElementById("tourTitle");
-      const elBody  = document.getElementById("tourBody");
-      const elStep  = document.getElementById("tourStep");
+  const highlight = overlay.querySelector(".tour-highlight");
+  const dialog = overlay.querySelector(".tour-dialog");
+  const elTitle = document.getElementById("tourTitle");
+  const elBody  = document.getElementById("tourBody");
+  const elStep  = document.getElementById("tourStep");
 
-      const btnBack  = document.getElementById("tourBack");
-      const btnNext  = document.getElementById("tourNext");
-      const btnSkip  = document.getElementById("tourSkip");
-      const btnClose = document.getElementById("tourClose");
+  const btnBack  = document.getElementById("tourBack");
+  const btnNext  = document.getElementById("tourNext");
+  const btnSkip  = document.getElementById("tourSkip");
+  const btnClose = document.getElementById("tourClose");
 
-      const TOUR_SEEN_KEY = "ai_bias_sandbox_tourSeen_v1";
-      let stepIndex = 0;
-      let isOpen = false;
-      let renderToken = 0;
-      let activeTarget = null;
-      let rafId = null;
+  const TOUR_SEEN_KEY = "ai_bias_sandbox_tourSeen_v1";
+  let stepIndex = 0;
+  let isOpen = false;
+  let renderToken = 0;
+  let activeTarget = null;
+  let rafId = null;
 
-      const prefersReducedMotion = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
-      const isCoarsePointer = !!(window.matchMedia && window.matchMedia("(pointer: coarse)").matches);
-
-
-      const steps = [
-        {
-          title: "1) Pick a Use Case",
-          body: "Start with a realistic use case and stakes. This sets the lens for interpreting risk (training aid, not a fairness metric).",
-          selector: '#panel-usecase',
-          tab: "usecase"
-        },
-        {
-          title: "2) Move left-to-right across tabs",
-          body: "Use these tabs to walk through the lifecycle: Data → Prompt → Evaluation → Governance. Hover labels for definitions.",
-          selector: '#domainTabs',
-          tab: "usecase"
-        },
-        {
-          title: "3) Data & Training quality",
-          body: "Representativeness, recency, and label quality strongly influence bias exposure. Low-quality data will dominate downstream controls.",
-          selector: '#panel-data',
-          tab: "data"
-        },
-        {
-          title: "4) Prompt & Context controls",
-          body: "Grounding (RAG/docs), prompt discipline, and anchoring reduce hallucination and bias amplification. Try toggling grounding and anchors.",
-          selector: '#panel-prompt',
-          tab: "prompt"
-        },
-        {
-          title: "5) Evaluation & Monitoring",
-          body: "Benchmarks + red-team coverage + HITL are your fastest levers to increase reliability. Drift monitoring matters once deployed.",
-          selector: '#panel-eval',
-          tab: "eval"
-        },
-        {
-          title: "6) Read the Outputs",
-          body: "These KPIs update instantly. Use the bands to translate scores into decision language (low / medium / high exposure).",
-          selector: '.kpis',
-          tab: null
-        },
-        {
-          title: "7) Bias radar (the star chart)",
-          body: "Each axis is a bias family. Hover labels for definitions. Look for spikes — they show what type of bias is most likely under current settings.",
-          selector: '#radar',
-          tab: null
-        },
-        {
-          title: "8) Drivers + Scenarios",
-          body: "Drivers show what’s pushing risk. Save a scenario, then compare versions here to communicate tradeoffs and mitigations.",
-          selector: '#scenarioTable',
-          tab: null
-        }
-      ];
-
-      function activateTab(key){
-        if(!key) return;
-        const tab = document.querySelector(`#domainTabs .tab[data-tab="${key}"]`);
-        if(tab && !tab.classList.contains("active")) tab.click();
-      }
-
-      function isVisible(el){
-        if(!el) return false;
-        // hidden panels use display:none, which makes offsetParent null (except fixed)
-        if(el.getClientRects().length === 0) return false;
-        const style = window.getComputedStyle(el);
-        return style.display !== "none" && style.visibility !== "hidden" && style.opacity !== "0";
-      }
-
-      function clamp(v, min, max){ return Math.max(min, Math.min(max, v)); }
-
-      function positionUI(target){
-        if(!target || !highlight){
-          if(highlight) highlight.style.display = "none";
-          return;
-        }
-        const r = target.getBoundingClientRect();
-        const pad = 10;
-        const top  = clamp(r.top - pad, 8, window.innerHeight - 16);
-        const left = clamp(r.left - pad, 8, window.innerWidth - 16);
-        const w = clamp(r.width + pad*2, 40, window.innerWidth - left - 8);
-        const h = clamp(r.height + pad*2, 32, window.innerHeight - top - 8);
-
-        highlight.style.display = "block";
-        highlight.style.top = `${top}px`;
-        highlight.style.left = `${left}px`;
-        highlight.style.width = `${w}px`;
-        highlight.style.height = `${h}px`;
-
-        // keep dialog away from the highlighted region when possible
-        const preferTop = r.bottom > (window.innerHeight * 0.62);
-        dialog.classList.toggle("at-top", preferTop);
-      }
-
-      function nextFrame(){ return new Promise(r=>requestAnimationFrame(()=>r())); }
-      function sleep(ms){ return new Promise(r=>setTimeout(r, ms)); }
-
-      async function resolveTargetForStep(s){
-        if(!s) return null;
-        if(s.tab) activateTab(s.tab);
-
-        // wait briefly for tab/panel transitions and DOM to settle (mobile friendly)
-        for(let i=0;i<24;i++){
-          const el = s.selector ? document.querySelector(s.selector) : null;
-          if(el && isVisible(el)) return el;
-          await nextFrame();
-        }
-        const el = s.selector ? document.querySelector(s.selector) : null;
-        return (el && isVisible(el)) ? el : null;
-      }
-
-      function updateHighlight(){
-        if(!isOpen) return;
-        if(activeTarget && isVisible(activeTarget)){
-          positionUI(activeTarget);
-        }
-      }
-
-      function onAnyScroll(){
-        if(!isOpen) return;
-        // throttle highlight re-measure to animation frames
-        if(rafId) return;
-        rafId = requestAnimationFrame(()=>{
-          rafId = null;
-          updateHighlight();
-        });
-      }
-
-      async function scrollIntoView(target){
-        if(!target) return;
-        const behavior = (prefersReducedMotion || isCoarsePointer) ? "auto" : "smooth";
-        const inline = isCoarsePointer ? "nearest" : "center";
-        try{
-          target.scrollIntoView({behavior, block:"center", inline});
-        }catch(e){
-          target.scrollIntoView();
-        }
-        // allow scroll/layout to settle (mobile needs longer)
-        await nextFrame(); await nextFrame();
-        await sleep(isCoarsePointer ? 140 : 80);
-      }
+  const prefersReducedMotion = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  const isCoarsePointer = !!(window.matchMedia && window.matchMedia("(pointer: coarse)").matches);
 
 
-      async function renderStep(){
-        if(!isOpen) return;
-        const token = ++renderToken;
+  const steps = [
+  {
+  title: "1) Pick a Use Case",
+  body: "Start with a realistic use case and stakes. This sets the lens for interpreting risk (training aid, not a fairness metric).",
+  selector: '#panel-usecase',
+  tab: "usecase"
+  },
+  {
+  title: "2) Move left-to-right across tabs",
+  body: "Use these tabs to walk through the lifecycle: Data → Prompt → Evaluation → Governance. Hover over labels for definitions.",
+  selector: '#domainTabs',
+  tab: "usecase"
+  },
+  {
+  title: "3) Data & Training quality",
+  body: "Representativeness, recency, and label quality strongly influence bias exposure. Low-quality data will dominate downstream controls.",
+  selector: '#panel-data',
+  tab: "data"
+  },
+  {
+  title: "4) Prompt & Context controls",
+  body: "Grounding (RAG/docs), prompt discipline, and anchoring reduce hallucination and bias amplification. Try toggling grounding and anchors.",
+  selector: '#panel-prompt',
+  tab: "prompt"
+  },
+  {
+  title: "5) Evaluation & Monitoring",
+  body: "Benchmarks + red-team coverage + HITL are your fastest levers to increase reliability. Drift monitoring matters once deployed.",
+  selector: '#panel-eval',
+  tab: "eval"
+  },
+  {
+  title: "6) Read the Outputs",
+  body: "These KPIs update instantly. Use the bands to translate scores into decision language (low / medium / high exposure).",
+  selector: '.kpis',
+  tab: null
+  },
+  {
+  title: "7) Bias radar (the star chart)",
+  body: "Each axis is a bias family. Hover over labels for definitions. Look for spikes — they show what type of bias is most likely under current settings.",
+  selector: '#radar',
+  tab: null
+  },
+  {
+  title: "8) Drivers + Scenarios",
+  body: "Drivers show what’s pushing risk. Save a scenario, then compare versions here to communicate tradeoffs and mitigations.",
+  selector: '#scenarioTable',
+  tab: null
+  }
+  ];
 
-        let guard = 0;
-        while(guard < steps.length){
-          const s = steps[stepIndex];
-          const target = await resolveTargetForStep(s);
+  function activateTab(key){
+  if(!key) return;
+  const tab = document.querySelector(`#domainTabs .tab[data-tab="${key}"]`);
+  if(tab && !tab.classList.contains("active")) tab.click();
+  }
 
-          // abandon if a newer render started
-          if(!isOpen || token !== renderToken) return;
+  function isVisible(el){
+  if(!el) return false;
+  // hidden panels use display:none, which makes offsetParent null (except fixed)
+  if(el.getClientRects().length === 0) return false;
+  const style = window.getComputedStyle(el);
+  return style.display !== "none" && style.visibility !== "hidden" && style.opacity !== "0";
+  }
 
-          if(target){
-            activeTarget = target;
+  function clamp(v, min, max){ return Math.max(min, Math.min(max, v)); }
 
-            elTitle.textContent = s.title;
-            elBody.textContent  = s.body;
-            elStep.textContent  = `Step ${stepIndex + 1} / ${steps.length}`;
+  function positionUI(target){
+  if(!target || !highlight){
+  if(highlight) highlight.style.display = "none";
+  return;
+  }
+  const r = target.getBoundingClientRect();
+  const pad = 10;
+  const top  = clamp(r.top - pad, 8, window.innerHeight - 16);
+  const left = clamp(r.left - pad, 8, window.innerWidth - 16);
+  const w = clamp(r.width + pad*2, 40, window.innerWidth - left - 8);
+  const h = clamp(r.height + pad*2, 32, window.innerHeight - top - 8);
 
-            btnBack.disabled = (stepIndex === 0);
-            btnNext.textContent = (stepIndex === steps.length - 1) ? "Done" : "Next";
+  highlight.style.display = "block";
+  highlight.style.top = `${top}px`;
+  highlight.style.left = `${left}px`;
+  highlight.style.width = `${w}px`;
+  highlight.style.height = `${h}px`;
 
-            await scrollIntoView(target);
-            if(!isOpen || token !== renderToken) return;
+  // keep dialog away from the highlighted region when possible
+  const preferTop = r.bottom > (window.innerHeight * 0.62);
+  dialog.classList.toggle("at-top", preferTop);
+  }
 
-            // measure multiple times (helps mobile address bar / viewport settling)
-            positionUI(target);
-            setTimeout(()=>{ if(isOpen && token === renderToken) positionUI(target); }, 120);
-            setTimeout(()=>{ if(isOpen && token === renderToken) positionUI(target); }, 300);
-            return;
-          }
+  function nextFrame(){ return new Promise(r=>requestAnimationFrame(()=>r())); }
+  function sleep(ms){ return new Promise(r=>setTimeout(r, ms)); }
 
-          // If target isn't found/visible, skip forward (graceful)
-          stepIndex = Math.min(steps.length - 1, stepIndex + 1);
-          guard++;
-        }
+  async function resolveTargetForStep(s){
+  if(!s) return null;
+  if(s.tab) activateTab(s.tab);
 
-        // fallback: show dialog without highlight
-        activeTarget = null;
-        elTitle.textContent = "Tour";
-        elBody.textContent  = "Use the Start tour button anytime to revisit this walkthrough.";
-        elStep.textContent  = "";
-        if(highlight) highlight.style.display = "none";
-      }
+  // wait briefly for tab/panel transitions and DOM to settle (mobile friendly)
+  for(let i=0;i<24;i++){
+  const el = s.selector ? document.querySelector(s.selector) : null;
+  if(el && isVisible(el)) return el;
+  await nextFrame();
+  }
+  const el = s.selector ? document.querySelector(s.selector) : null;
+  return (el && isVisible(el)) ? el : null;
+  }
 
-      function openTour(){
-        isOpen = true;
-        stepIndex = 0;
-        overlay.classList.remove("hidden");
-        document.body.classList.add("tour-noscroll");
-        // focus the dialog for keyboard users
-        setTimeout(()=>dialog && dialog.focus(), 0);
-        window.addEventListener("resize", onResize, {passive:true});
-        document.addEventListener("keydown", onKeydown);
-        // keep highlight accurate while scrolling (includes scrollable containers)
-        document.addEventListener("scroll", onAnyScroll, true);
-        if(window.visualViewport){
-          window.visualViewport.addEventListener("scroll", onAnyScroll, {passive:true});
-          window.visualViewport.addEventListener("resize", onAnyScroll, {passive:true});
-        }
-        renderStep();
-      }
+  function updateHighlight(){
+  if(!isOpen) return;
+  if(activeTarget && isVisible(activeTarget)){
+  positionUI(activeTarget);
+  }
+  }
 
-      function cleanupTour(){
-        if(!isOpen) return;
-        isOpen = false;
-        overlay.classList.add("hidden");
-        document.body.classList.remove("tour-noscroll");
-        if(highlight) highlight.style.display = "none";
-        window.removeEventListener("resize", onResize);
-        document.removeEventListener("keydown", onKeydown);
-        document.removeEventListener("scroll", onAnyScroll, true);
-        if(window.visualViewport){
-          window.visualViewport.removeEventListener("scroll", onAnyScroll);
-          window.visualViewport.removeEventListener("resize", onAnyScroll);
-        }
-        if(rafId){ cancelAnimationFrame(rafId); rafId = null; }
-        activeTarget = null;
-        dialog.classList.remove("at-top");
-      }
+  function onAnyScroll(){
+  if(!isOpen) return;
+  // throttle highlight re-measure to animation frames
+  if(rafId) return;
+  rafId = requestAnimationFrame(()=>{
+  rafId = null;
+  updateHighlight();
+  });
+  }
 
-      function finishTour(){
-        try{ localStorage.setItem(TOUR_SEEN_KEY, "true"); }catch(e){}
-        cleanupTour();
-        startBtn.classList.remove("tour-attn");
-      }
+  async function scrollIntoView(target){
+  if(!target) return;
+  const behavior = (prefersReducedMotion || isCoarsePointer) ? "auto" : "smooth";
+  const inline = isCoarsePointer ? "nearest" : "center";
+  try{
+  target.scrollIntoView({behavior, block:"center", inline});
+  }catch(e){
+  target.scrollIntoView();
+  }
+  // allow scroll/layout to settle (mobile needs longer)
+  await nextFrame(); await nextFrame();
+  await sleep(isCoarsePointer ? 140 : 80);
+  }
 
-      function onResize(){
-        if(!isOpen) return;
-        updateHighlight();
-      }
 
-      function onKeydown(e){
-        if(!isOpen) return;
-        if(e.key === "Escape"){
-          e.preventDefault();
-          cleanupTour();
-        }
-      }
+  async function renderStep(){
+  if(!isOpen) return;
+  const token = ++renderToken;
 
-      // Event bindings
-      startBtn.addEventListener("click", openTour);
-      btnClose.addEventListener("click", cleanupTour);
-      btnSkip.addEventListener("click", finishTour);
-      btnBack.addEventListener("click", ()=>{
-        stepIndex = Math.max(0, stepIndex - 1);
-        renderStep();
-      });
-      btnNext.addEventListener("click", ()=>{
-        if(stepIndex >= steps.length - 1){
-          finishTour();
-        }else{
-          stepIndex = Math.min(steps.length - 1, stepIndex + 1);
-          renderStep();
-        }
-      });
+  let guard = 0;
+  while(guard < steps.length){
+  const s = steps[stepIndex];
+  const target = await resolveTargetForStep(s);
 
-      // First-time nudge (non-blocking)
-      try{
-        if(!localStorage.getItem(TOUR_SEEN_KEY)){
-          startBtn.classList.add("tour-attn");
-          startBtn.setAttribute("aria-label","Start tour (recommended for first-time users)");
-        }
-      }catch(e){}
-    }
+  // abandon if a newer render started
+  if(!isOpen || token !== renderToken) return;
 
-    if(document.readyState === "loading"){
-      document.addEventListener("DOMContentLoaded", initTour, {once:true});
-    } else {
-      initTour();
-    }
+  if(target){
+  activeTarget = target;
+
+  elTitle.textContent = s.title;
+  elBody.textContent  = s.body;
+  elStep.textContent  = `Step ${stepIndex + 1} / ${steps.length}`;
+
+  btnBack.disabled = (stepIndex === 0);
+  btnNext.textContent = (stepIndex === steps.length - 1) ? "Done" : "Next";
+
+  await scrollIntoView(target);
+  if(!isOpen || token !== renderToken) return;
+
+  // measure multiple times (helps mobile address bar / viewport settling)
+  positionUI(target);
+  setTimeout(()=>{ if(isOpen && token === renderToken) positionUI(target); }, 120);
+  setTimeout(()=>{ if(isOpen && token === renderToken) positionUI(target); }, 300);
+  return;
+  }
+
+  // If target isn't found/visible, skip forward (graceful)
+  stepIndex = Math.min(steps.length - 1, stepIndex + 1);
+  guard++;
+  }
+
+  // fallback: show dialog without highlight
+  activeTarget = null;
+  elTitle.textContent = "Tour";
+  elBody.textContent  = "Use the Start tour button anytime to revisit this walkthrough.";
+  elStep.textContent  = "";
+  if(highlight) highlight.style.display = "none";
+  }
+
+  function openTour(){
+  isOpen = true;
+  stepIndex = 0;
+  overlay.classList.remove("hidden");
+  document.body.classList.add("tour-noscroll");
+  // focus the dialog for keyboard users
+  setTimeout(()=>dialog && dialog.focus(), 0);
+  window.addEventListener("resize", onResize, {passive:true});
+  document.addEventListener("keydown", onKeydown);
+  // keep highlight accurate while scrolling (includes scrollable containers)
+  document.addEventListener("scroll", onAnyScroll, true);
+  if(window.visualViewport){
+  window.visualViewport.addEventListener("scroll", onAnyScroll, {passive:true});
+  window.visualViewport.addEventListener("resize", onAnyScroll, {passive:true});
+  }
+  renderStep();
+  }
+
+  function cleanupTour(){
+  if(!isOpen) return;
+  isOpen = false;
+  overlay.classList.add("hidden");
+  document.body.classList.remove("tour-noscroll");
+  if(highlight) highlight.style.display = "none";
+  window.removeEventListener("resize", onResize);
+  document.removeEventListener("keydown", onKeydown);
+  document.removeEventListener("scroll", onAnyScroll, true);
+  if(window.visualViewport){
+  window.visualViewport.removeEventListener("scroll", onAnyScroll);
+  window.visualViewport.removeEventListener("resize", onAnyScroll);
+  }
+  if(rafId){ cancelAnimationFrame(rafId); rafId = null; }
+  activeTarget = null;
+  dialog.classList.remove("at-top");
+  }
+
+  function finishTour(){
+  try{ localStorage.setItem(TOUR_SEEN_KEY, "true"); }catch(e){}
+  cleanupTour();
+  startBtn.classList.remove("tour-attn");
+  }
+
+  function onResize(){
+  if(!isOpen) return;
+  updateHighlight();
+  }
+
+  function onKeydown(e){
+  if(!isOpen) return;
+  if(e.key === "Escape"){
+  e.preventDefault();
+  cleanupTour();
+  }
+  }
+
+  // Event bindings
+  startBtn.addEventListener("click", openTour);
+  btnClose.addEventListener("click", cleanupTour);
+  btnSkip.addEventListener("click", finishTour);
+  btnBack.addEventListener("click", ()=>{
+  stepIndex = Math.max(0, stepIndex - 1);
+  renderStep();
+  });
+  btnNext.addEventListener("click", ()=>{
+  if(stepIndex >= steps.length - 1){
+  finishTour();
+  }else{
+  stepIndex = Math.min(steps.length - 1, stepIndex + 1);
+  renderStep();
+  }
+  });
+
+  // First-time nudge (non-blocking)
+  try{
+  if(!localStorage.getItem(TOUR_SEEN_KEY)){
+  startBtn.classList.add("tour-attn");
+  startBtn.setAttribute("aria-label","Start tour (recommended for first-time users)");
+  }
+  }catch(e){}
+  }
+
+  if(document.readyState === "loading"){
+  document.addEventListener("DOMContentLoaded", initTour, {once:true});
+  } else {
+  initTour();
+  }
   })();
 
 </script>
@@ -2155,18 +2177,18 @@ const LS_KEY="ai_bias_sandbox_scenarios_v1";
 <div class="tour-overlay hidden" id="tourOverlay" role="dialog" aria-modal="true" aria-labelledby="tourTitle" aria-describedby="tourBody">
   <div class="tour-highlight" aria-hidden="true"></div>
   <div class="tour-dialog" tabindex="-1">
-    <div class="tour-top">
-      <div class="tour-step" id="tourStep">Step</div>
-      <button class="tour-close" id="tourClose" type="button" aria-label="Close tour">×</button>
-    </div>
-    <div class="tour-title" id="tourTitle">Tour</div>
-    <div class="tour-body" id="tourBody"></div>
-    <div class="tour-actions">
-      <button class="btn secondary" id="tourBack" type="button">Back</button>
-      <div class="spacer"></div>
-      <button class="btn secondary" id="tourSkip" type="button">Skip</button>
-      <button class="btn" id="tourNext" type="button">Next</button>
-    </div>
+  <div class="tour-top">
+  <div class="tour-step" id="tourStep">Step</div>
+  <button class="tour-close" id="tourClose" type="button" aria-label="Close tour">×</button>
+  </div>
+  <div class="tour-title" id="tourTitle">Tour</div>
+  <div class="tour-body" id="tourBody"></div>
+  <div class="tour-actions">
+  <button class="btn secondary" id="tourBack" type="button">Back</button>
+  <div class="spacer"></div>
+  <button class="btn secondary" id="tourSkip" type="button">Skip</button>
+  <button class="btn" id="tourNext" type="button">Next</button>
+  </div>
   </div>
 </div>
 
