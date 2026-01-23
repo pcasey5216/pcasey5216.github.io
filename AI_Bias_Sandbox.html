@@ -1,24 +1,33 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <meta name="theme-color" content="#0b1020"/>
-  <title>AI Bias Sandbox — DoD/ICEAA (Cost Analysis)</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-  <style>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="#0b1020" name="theme-color"/>
+<title>AI Bias Sandbox — DoD/ICEAA (Cost Analysis)</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
     :root{
       --bg:#0b1020; --panel:#111a33; --text:#e8ecff; --muted:#aab4e6;
       --line:rgba(255,255,255,0.08); --accent:#7aa2ff;
       --good:#39d98a; --warn:#ffcc66; --bad:#ff6b6b;
       --shadow: 0 10px 30px rgba(0,0,0,0.35); --radius: 16px;
+      --fz-base: clamp(14px, 1.05vw, 16px);
+      --fz-title: clamp(16px, 1.6vw, 20px);
+      --fz-label: clamp(12px, 0.95vw, 13px);
+      --fz-small: clamp(11px, 0.9vw, 12px);
+      --tap: 44px;
     }
     *{box-sizing:border-box}
     body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      font-size:var(--fz-base); line-height:1.45;
+      -webkit-tap-highlight-color: transparent;
       background:radial-gradient(1200px 800px at 15% 15%, #182656 0%, var(--bg) 55%);color:var(--text);}
     header{padding:18px 22px;border-bottom:1px solid var(--line);backdrop-filter: blur(10px);
       position:sticky; top:0; z-index:10;background: rgba(11,16,32,0.75);}
     header .title{display:flex; gap:12px; align-items:center; flex-wrap:wrap;}
+    .app-name{font-weight:800; font-size:var(--fz-title); letter-spacing:0.2px; white-space:nowrap;}
+
     .badge{font-size:12px; padding:4px 10px; border:1px solid var(--line); border-radius:999px;
       color:var(--muted); background: rgba(255,255,255,0.04);}
     .container{max-width:1350px;margin:0;padding:18px 18px 26px;}
@@ -28,7 +37,7 @@
       border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);}
     .card .card-h{padding:14px 14px 10px;border-bottom:1px solid var(--line);
       display:flex;align-items:center;justify-content:space-between;gap:12px;}
-    .card .card-h h2{margin:0;font-size:14px;letter-spacing:0.4px;text-transform:uppercase;color:var(--muted);}
+    .card .card-h h2{margin:0;font-size:13px;letter-spacing:0.4px;text-transform:uppercase;color:var(--muted);}
     .card .card-b{padding:14px}
     .tabs{display:flex;gap:8px;flex-wrap:wrap;overflow-x:auto;-webkit-overflow-scrolling: touch;
       scrollbar-width: thin;padding-bottom:6px;}
@@ -51,7 +60,7 @@
     .chip.warn{border-color: rgba(255,204,102,0.4); background: rgba(255,204,102,0.12); color: var(--text)}
     .chip.bad{border-color: rgba(255,107,107,0.4); background: rgba(255,107,107,0.12); color: var(--text)}
     .field{margin-bottom:12px;padding:12px;border:1px solid var(--line);border-radius:14px;background: rgba(255,255,255,0.02);}
-    .field label{display:flex;justify-content:space-between;gap:10px;font-size:12px;color:var(--muted);margin-bottom:8px;}
+    .field label{display:flex;justify-content:space-between;gap:10px;font-size:var(--fz-label);color:var(--muted);margin-bottom:8px;}
     .field input[type="range"]{width:100%;height:28px}
     input[type="checkbox"]{width:16px;height:16px}
     .field select,.field input[type="number"],.field input[type="text"],.field textarea{
@@ -59,367 +68,913 @@
     .mini{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;}
     .pill{font-size:12px;padding:4px 8px;border-radius:999px;border:1px solid var(--line);background: rgba(255,255,255,0.03);color:var(--muted);}
     .btn{cursor:pointer;border:1px solid var(--line);background: rgba(122,162,255,0.14);color:var(--text);
-      padding:10px 12px;border-radius:12px;font-weight:600;font-size:13px;}
+      padding:10px 12px;border-radius:12px;font-weight:600;font-size:13px;
+      min-height:42px; display:inline-flex; align-items:center; justify-content:center; gap:8px;
+      touch-action: manipulation;}
     .btn.secondary{background: rgba(255,255,255,0.03);color:var(--muted)}
     .btn:active{transform: translateY(1px)}
     .note{font-size:12px;color:var(--muted);line-height:1.45}
     .divider{height:1px;background: var(--line);margin:12px 0}
-    canvas{max-height:320px}
+    canvas{max-height:320px; width:100% !important}
     .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
     @media (max-width:1100px){.two{grid-template-columns:1fr}}
     .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
     .table{width:100%;min-width:540px;border-collapse:collapse;font-size:12px;color:var(--muted)}
     .table th,.table td{border-bottom:1px solid var(--line);padding:8px 6px;text-align:left}
     .table th{color:var(--text);font-weight:650}
-    .footer{margin-top:14px;font-size:11px;color: rgba(232,236,255,0.55);line-height:1.45}
-  </style>
+    .footer{margin-top:14px;font-size:var(--fz-small);color: rgba(232,236,255,0.55);line-height:1.45}
+  
+    /* ===== Hover tooltips (labels + inputs) ===== */
+    .tooltip{
+      position:fixed;
+      z-index:9999;
+      max-width:340px;
+      background: rgba(17,26,51,0.96);
+      border:1px solid rgba(255,255,255,0.12);
+      color: var(--text);
+      padding:10px 12px;
+      border-radius:12px;
+      box-shadow:var(--shadow);
+      font-size:12px;
+      line-height:1.35;
+      pointer-events:none;
+      transform: translate(10px, 12px);
+    }
+    .tooltip.hidden{display:none}
+    [data-tip]{cursor:help}
+    .tip-underline{
+      border-bottom: 1px dashed rgba(170,180,230,0.65);
+      padding-bottom:1px;
+    }
+
+
+
+/* ===== Consistent control styling (non-.field selects/inputs) ===== */
+.card-h select,
+.mini select{
+  padding:10px;
+  border-radius:12px;
+  border:1px solid var(--line);
+  background: rgba(15,23,48,0.7);
+  color:var(--text);
+  outline:none;
+  min-height:42px;
+}
+.card-h select{min-height:36px; padding:8px 10px}
+
+
+/* ===== Intuition helpers ===== */
+.help{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:18px;height:18px;
+  border-radius:999px;
+  border:1px solid var(--line);
+  color:var(--text);
+  font-size:12px;
+  margin-left:8px;
+  background: rgba(15,23,48,0.55);
+  cursor:help;
+  user-select:none;
+}
+.help:hover{
+  border-color: rgba(122,162,255,0.55);
+  background: rgba(122,162,255,0.10);
+}
+
+details.howto{
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:10px 12px;
+  background: rgba(15,23,48,0.45);
+  margin-bottom:12px;
+}
+details.howto summary{
+  list-style:none;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  color:var(--text);
+  font-weight:700;
+}
+details.howto summary::-webkit-details-marker{display:none}
+details.howto summary:after{
+  content:"▾";
+  margin-left:auto;
+  color:var(--muted);
+  font-weight:800;
+}
+details.howto[open] summary:after{content:"▴"}
+details.howto .howto-sub{
+  margin-top:8px;
+  color:var(--muted);
+  font-weight:500;
+  font-size:12px;
+}
+details.howto ol{
+  margin:10px 0 0 18px;
+  padding:0;
+  color:var(--muted);
+  font-size:12px;
+  line-height:1.5;
+}
+details.howto li{margin:6px 0}
+
+.legend{
+  display:flex;
+  gap:12px;
+  align-items:center;
+  flex-wrap:wrap;
+  margin-top:10px;
+  color:var(--muted);
+  font-size:12px;
+}
+.legend .dot{
+  width:10px;height:10px;border-radius:999px;display:inline-block;margin-right:6px;
+  border:1px solid rgba(255,255,255,0.18);
+}
+
+.table-wrap{
+  overflow-x:auto;
+  -webkit-overflow-scrolling:touch;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background: rgba(15,23,48,0.35);
+}
+.table thead th{
+  background: rgba(15,23,48,0.85);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+.table tbody tr:nth-child(even){
+  background: rgba(255,255,255,0.015);
+}
+.table tbody tr:hover{
+  background: rgba(122,162,255,0.08);
+}
+
+
+    /* ===== Responsive polish ===== */
+    @media (max-width: 720px){
+      header{padding:14px 14px;}
+      .container{padding:12px 12px 20px;}
+      .grid{grid-template-columns:1fr;}
+      .header-row{flex-wrap:wrap;}
+      .header-actions{width:100%; justify-content:flex-end;}
+      .badge{font-size:11px;}
+      .btn{min-height:var(--tap);}
+      .tab{padding:10px 12px;}
+      .field{padding:12px;}
+      .field select,.field input[type="number"],.field input[type="text"],.field textarea{min-height:var(--tap);}
+      input[type="checkbox"]{width:18px;height:18px}
+      .help{width:22px;height:22px}
+      canvas{max-height:260px}
+      /* scenario select should not force overflow */
+      #scenarioSelect{min-width:0 !important; width:100%;}
+    }
+    @media (max-width: 420px){
+      canvas{max-height:240px}
+      .app-name{white-space:normal}
+    }
+    @media (prefers-reduced-motion: reduce){
+      *{scroll-behavior:auto !important; transition:none !important; animation:none !important;}
+    }
+
+/* ===== Walkthrough / Tour (additive) ===== */
+.hidden{display:none !important;}
+.header-row{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:nowrap;}
+.header-row .title{flex:1; min-width:0;}
+.header-actions{margin-left:auto; display:flex; align-items:center; gap:10px;}
+.btn.ghost{background:transparent; color:var(--text);}
+.btn.tour-attn{box-shadow: 0 0 0 1px rgba(122,162,255,0.35), 0 0 18px rgba(122,162,255,0.25);}
+.tour-overlay{position:fixed; inset:0; z-index:9999;}
+.tour-highlight{
+  position:fixed; left:12px; top:12px; width:0; height:0; display:none;
+  border:2px solid rgba(122,162,255,0.95);
+  border-radius:16px;
+  box-shadow: 0 0 0 9999px rgba(0,0,0,0.58);
+  transition: top .16s ease, left .16s ease, width .16s ease, height .16s ease;
+  pointer-events:none;
+}
+.tour-dialog{
+  position:fixed; left:50%; transform:translateX(-50%);
+  bottom:16px;
+  width:min(540px, calc(100vw - 24px));
+  background: rgba(17,26,51,0.96);
+  border:1px solid rgba(255,255,255,0.10);
+  border-radius:18px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.45);
+  padding:14px 14px 12px;
+  backdrop-filter: blur(10px);
+}
+.tour-dialog.at-top{top:16px; bottom:auto;}
+.tour-top{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:6px;}
+.tour-step{font-size:12px; color:var(--muted);}
+.tour-close{
+  width:34px; height:34px; border-radius:10px;
+  border:1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.05);
+  color:var(--text);
+  cursor:pointer;
+}
+.tour-title{font-weight:800; letter-spacing:0.2px; margin:2px 0 6px; font-size:14px;}
+.tour-body{color: var(--muted); line-height:1.45; font-size:13px;}
+.tour-actions{display:flex; align-items:center; gap:10px; margin-top:12px; flex-wrap:wrap;}
+.tour-actions .btn{min-height:42px;}
+.tour-actions .spacer{flex:1;}
+body.tour-noscroll{overflow:hidden; touch-action:none;}
+@media (max-width: 520px){
+  .tour-dialog{padding:12px 12px 10px;}
+  .tour-title{font-size:13px;}
+  .tour-body{font-size:12.5px;}
+}
+
+</style>
 </head>
 <body>
 <header>
-  <div class="title">
-    <div style="font-weight:800; font-size:16px;">AI Bias Sandbox</div>
-    <span class="badge">Cost Analysis Use Cases</span>
-    <span class="badge">DoD/ICEAA language (CARD addendum • Model Card • IGCE)</span>
-    <span class="badge">Rules-based educational tool</span>
-  </div>
-</header>
+<div class="header-row">
+<div class="title">
+<div class="app-name">AI Bias Sandbox</div>
+<span class="badge">Cost Analysis Use Cases</span>
+<span class="badge">DoD/ICEAA language (CARD addendum • Model Card • IGCE)</span>
+<span class="badge">Rules-based educational tool</span>
 
-<div class="container">
-  <div class="grid">
-    <div class="card">
-      <div class="card-h">
-        <h2>Inputs</h2>
-        <div class="tabs" id="domainTabs">
-          <div class="tab active" data-tab="usecase">Use Case</div>
-          <div class="tab" data-tab="data">Data & Training</div>
-          <div class="tab" data-tab="prompt">Prompt & Context</div>
-          <div class="tab" data-tab="eval">Evaluation & Monitoring</div>
-          <div class="tab" data-tab="gov">Governance & Use</div>
-        </div>
-      </div>
-      <div class="card-b">
-
-        <div id="panel-usecase">
-          <div class="field">
-            <label><span>AI task in the cost workflow</span><span class="pill" id="val_task"></span></label>
-            <select id="task">
-              <option value="sow" selected>Summarize SOW / requirements → draft assumptions</option>
-              <option value="wbs">Generate WBS / mapping suggestions</option>
-              <option value="estimate">Draft cost narrative / estimating approach (BOE support)</option>
-              <option value="rates">Labor rate banding / market scan assistance</option>
-              <option value="risk">Risk identification / risk register drafting</option>
-              <option value="anomaly">Anomaly detection / data QA suggestions</option>
-            </select>
-            <div class="note" style="margin-top:8px;">This sets the baseline bias profile for the task.</div>
-          </div>
-
-          <div class="field">
-            <label><span>Output style</span><span class="pill" id="val_outputStyle"></span></label>
-            <select id="outputStyle">
-              <option value="bullet" selected>Bullets with sources + confidence tags</option>
-              <option value="narrative">Narrative prose (more persuasive)</option>
-              <option value="tables">Tables/structured output (looks “precise”)</option>
-            </select>
-          </div>
-
-          <div class="field">
-            <label><span>Decision impact</span><span class="pill" id="val_stakes"></span></label>
-            <select id="stakes">
-              <option value="low">Low (drafting / brainstorming)</option>
-              <option value="med" selected>Medium (inputs to an estimate)</option>
-              <option value="high">High (directly influences dollars / decisions)</option>
-            </select>
-          </div>
-        </div>
-
-        <div id="panel-data" style="display:none;">
-          <div class="field">
-            <label><span>Training data provenance</span><span class="pill" id="val_provenance"></span></label>
-            <select id="provenance">
-              <option value="closed" selected>Closed model (unknown training mix)</option>
-              <option value="fine">Fine-tuned on internal data</option>
-              <option value="rag">RAG over curated internal corpus</option>
-              <option value="gov">Gov/DoD controlled corpus + governance</option>
-            </select>
-          </div>
-
-          <div class="field">
-            <label><span>Domain representativeness</span><span class="pill" id="val_repr"></span></label>
-            <input id="repr" type="range" min="0" max="100" step="1" value="55"/>
-            <div class="note" style="margin-top:8px;">Low representativeness increases coverage/representation bias.</div>
-          </div>
-
-          <div class="field">
-            <label><span>Recency vs current guidance</span><span class="pill" id="val_recency"></span></label>
-            <input id="recency" type="range" min="0" max="100" step="1" value="45"/>
-          </div>
-
-          <div class="field">
-            <label><span>Label / ground-truth quality</span><span class="pill" id="val_labelq"></span></label>
-            <input id="labelq" type="range" min="0" max="100" step="1" value="55"/>
-          </div>
-
-          <div class="field">
-            <label><span>Data leakage risk</span><span class="pill" id="val_leak"></span></label>
-            <select id="leak">
-              <option value="low">Low (segregated datasets)</option>
-              <option value="med" selected>Medium (some overlap risk)</option>
-              <option value="high">High (unknown overlap / copied examples)</option>
-            </select>
-          </div>
-
-          <div class="field">
-            <label><span>Sensitive data exposure posture</span><span class="pill" id="val_sensitive"></span></label>
-            <select id="sensitive">
-              <option value="controlled" selected>Controlled (approved handling)</option>
-              <option value="mixed">Mixed (ad-hoc redaction)</option>
-              <option value="risky">Risky (unsafe inputs)</option>
-            </select>
-          </div>
-        </div>
-
-        <div id="panel-prompt" style="display:none;">
-          <div class="field">
-            <label><span>Prompt discipline</span><span class="pill" id="val_promptDisc"></span></label>
-            <select id="promptDisc">
-              <option value="strict" selected>Strict (role, scope, constraints, cite sources)</option>
-              <option value="normal">Normal</option>
-              <option value="loose">Loose (“just answer”)</option>
-            </select>
-          </div>
-
-          <div class="field">
-            <label><span>Grounding method</span><span class="pill" id="val_grounding"></span></label>
-            <select id="grounding">
-              <option value="none" selected>None (pure model response)</option>
-              <option value="rag">RAG (retrieval with citations)</option>
-              <option value="docs">Attached documents only</option>
-              <option value="tools">Tools + verification steps</option>
-            </select>
-          </div>
-
-          <div class="field">
-            <label><span>Temperature / creativity</span><span class="pill" id="val_temp"></span></label>
-            <input id="temp" type="range" min="0" max="100" step="1" value="25"/>
-          </div>
-
-          <div class="field">
-            <label><span>Implicit persuasion risk</span><span class="pill" id="val_persuade"></span></label>
-            <input id="persuade" type="range" min="0" max="100" step="1" value="55"/>
-          </div>
-
-          <div class="field">
-            <label><span>Anchors provided in prompt</span><span class="pill" id="val_anchor"></span></label>
-            <div class="mini" style="margin-top:6px;">
-              <label class="pill"><input id="hasAnchor" type="checkbox" style="margin-right:6px;"> Prior estimate / target shown</label>
-              <label class="pill"><input id="mustFit" type="checkbox" style="margin-right:6px;"> Must-fit constraint stated</label>
-            </div>
-          </div>
-        </div>
-
-        <div id="panel-eval" style="display:none;">
-          <div class="field">
-            <label><span>Evaluation rigor</span><span class="pill" id="val_eval"></span></label>
-            <select id="eval">
-              <option value="none">None</option>
-              <option value="basic" selected>Basic spot checks</option>
-              <option value="bench">Benchmarks + holdout set</option>
-              <option value="red">Red-teaming + adversarial tests</option>
-            </select>
-          </div>
-
-          <div class="field">
-            <label><span>Bias testing coverage</span><span class="pill" id="val_biastest"></span></label>
-            <input id="biastest" type="range" min="0" max="100" step="1" value="35"/>
-          </div>
-
-          <div class="field">
-            <label><span>Hallucination controls</span><span class="pill" id="val_hctrl"></span></label>
-            <select id="hctrl">
-              <option value="none">None</option>
-              <option value="prompts" selected>Prompt-based constraints</option>
-              <option value="verify">Verification step</option>
-              <option value="gated">Gated release + human approval</option>
-            </select>
-          </div>
-
-          <div class="field">
-            <label><span>Monitoring & drift detection</span><span class="pill" id="val_drift"></span></label>
-            <select id="drift">
-              <option value="none">None</option>
-              <option value="manual" selected>Manual review cadence</option>
-              <option value="auto">Automated monitoring</option>
-              <option value="auto+alert">Auto monitoring + alerts + rollback</option>
-            </select>
-          </div>
-
-          <div class="field">
-            <label><span>Human-in-the-loop requirement</span><span class="pill" id="val_hitl"></span></label>
-            <select id="hitl">
-              <option value="required" selected>Required (review + sign-off)</option>
-              <option value="recommended">Recommended</option>
-              <option value="none">None (auto-use allowed)</option>
-            </select>
-          </div>
-        </div>
-
-        <div id="panel-gov" style="display:none;">
-          <div class="field">
-            <label><span>Access & environment</span><span class="pill" id="val_env"></span></label>
-            <select id="env">
-              <option value="public" selected>Public SaaS</option>
-              <option value="enterprise">Enterprise tenant controls</option>
-              <option value="gov">Gov-approved enclave</option>
-            </select>
-          </div>
-
-          <div class="field">
-            <label><span>Documentation posture</span><span class="pill" id="val_docs"></span></label>
-            <select id="docs">
-              <option value="none">None</option>
-              <option value="some" selected>Some (templates/examples)</option>
-              <option value="modelcard">Model card + data sheet + change log</option>
-              <option value="full">Full package (SOP + audit trail)</option>
-            </select>
-          </div>
-
-          <div class="field">
-            <label><span>Automation level in workflow</span><span class="pill" id="val_auto"></span></label>
-            <input id="auto" type="range" min="0" max="100" step="1" value="35"/>
-          </div>
-
-          <div class="field">
-            <label><span>Incentive pressure</span><span class="pill" id="val_incent"></span></label>
-            <input id="incent" type="range" min="0" max="100" step="1" value="45"/>
-          </div>
-
-          <div class="field">
-            <label><span>Policy guardrails</span><span class="pill" id="val_guard"></span></label>
-            <div class="mini" style="margin-top:6px;">
-              <label class="pill"><input id="guard_noNumbers" type="checkbox" style="margin-right:6px;"> No unaudited numbers</label>
-              <label class="pill"><input id="guard_cite" type="checkbox" style="margin-right:6px;" checked> Citations required</label>
-              <label class="pill"><input id="guard_log" type="checkbox" style="margin-right:6px;"> Logging/audit enabled</label>
-            </div>
-          </div>
-        </div>
-
-        <div class="divider"></div>
-        <div class="mini">
-          <button class="btn" id="saveScenario">Save scenario</button>
-          <button type="button" class="btn secondary" onclick="seedDefaultScenariosOnce()">Load micro-pilot scenarios</button>
-          <button class="btn secondary" id="copySummary">Copy Model-Card / CARD addendum</button>
-          <button class="btn secondary" id="reset">Reset</button>
-        </div>
-        <div style="margin-top:12px;"><div class="note">Saved scenarios live in your browser (localStorage). Host with GitHub Pages like your other sandbox.</div></div>
-
-      </div>
-    </div>
-
-    <div>
-      <div class="card">
-        <div class="card-h">
-          <h2>Outputs</h2>
-          <div class="pill">Updates instantly</div>
-        </div>
-        <div class="card-b">
-          <div class="kpis">
-            <div class="kpi">
-              <div class="label">AI Bias Exposure Score</div>
-              <div class="value" id="kpi_bias">0</div>
-              <div class="sub" id="kpi_band">—</div>
-            </div>
-            <div class="kpi">
-              <div class="label">Reliability (hallucination/traceability)</div>
-              <div class="value" id="kpi_rel">0</div>
-              <div class="sub" id="kpi_relBand">—</div>
-            </div>
-            <div class="kpi">
-              <div class="label">Governance readiness</div>
-              <div class="value" id="kpi_gov">0</div>
-              <div class="sub" id="kpi_govBand">—</div>
-            </div>
-            <div class="kpi">
-              <div class="label">Likely failure mode</div>
-              <div class="value" id="kpi_mode">—</div>
-              <div class="sub">Most likely “how it goes wrong”</div>
-            </div>
-          </div>
-
-          <div class="chips">
-            <span class="chip" id="chip_top">Top bias: —</span>
-            <span class="chip" id="chip_dir">Impact: —</span>
-            <span class="chip" id="chip_control">Controls: —</span>
-          </div>
-
-          <div class="divider"></div>
-
-          <div class="two">
-            <div class="card" style="box-shadow:none;">
-              <div class="card-h" style="border-bottom:1px solid var(--line);">
-                <h2>Bias radar</h2>
-                <div class="pill" id="topBiasPill">Top bias: —</div>
-              </div>
-              <div class="card-b">
-                <canvas id="radar"></canvas>
-                <div class="footer">Axes are 0–100 (rules-based) for training/demos.</div>
-              </div>
-            </div>
-
-            <div class="card" style="box-shadow:none;">
-              <div class="card-h" style="border-bottom:1px solid var(--line);">
-                <h2>Drivers</h2>
-                <div class="pill">What’s pushing risk</div>
-              </div>
-              <div class="card-b">
-                <canvas id="drivers"></canvas>
-                <div class="footer">Attribution is heuristic based on your settings.</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="divider"></div>
-
-          <div class="two">
-            <div class="card" style="box-shadow:none;">
-              <div class="card-h" style="border-bottom:1px solid var(--line);">
-                <h2>Mitigation suggestions</h2>
-                <div class="pill">DoD/ICEAA phrasing</div>
-              </div>
-              <div class="card-b">
-                <ul class="table" style="list-style:none; padding-left:0; margin:0;" id="mitigations"></ul>
-              </div>
-            </div>
-
-            <div class="card" style="box-shadow:none;">
-              <div class="card-h" style="border-bottom:1px solid var(--line);">
-                <h2>Scenario compare</h2>
-                <div class="mini">
-                  <select id="scenarioSelect" style="min-width:180px;"></select>
-                  <button class="btn secondary" id="loadScenario">Load</button>
-                  <button class="btn secondary" id="deleteScenario">Delete</button>
-                </div>
-              </div>
-              <div class="card-b">
-                <div class="table-wrap">
-                  <table class="table" id="scenarioTable">
-                    <thead><tr><th>Name</th><th>Bias</th><th>Reliability</th><th>Gov</th><th>Top Bias</th><th>Failure Mode</th></tr></thead>
-                    <tbody></tbody>
-                  </table>
-                </div>
-                <div class="footer">Tip: Save “Loose prompt / no eval” vs “RAG + red-team + HITL”.</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="footer"><b>Presenter note:</b> Flip anchors/must-fit and watch confirmation/anchoring grow—even if grounded.</div>
-        </div>
-      </div>
-    </div>
-
-  </div>
 </div>
+<div class="header-actions">
+<button class="btn secondary tour-attn" id="startTourBtn" type="button">Start tour</button>
+</div>
+</div>
+</header>
+<div class="container">
+<div class="grid">
+<div class="card">
+<div class="card-h">
+<h2>Inputs <span class="help" id="tip_inputs">?</span></h2>
+<div class="tabs" id="domainTabs">
+<div class="tab active" data-tab="usecase">Use Case</div>
+<div class="tab" data-tab="data">Data &amp; Training</div>
+<div class="tab" data-tab="prompt">Prompt &amp; Context</div>
+<div class="tab" data-tab="eval">Evaluation &amp; Monitoring</div>
+<div class="tab" data-tab="gov">Governance &amp; Use</div>
+</div>
+</div>
+<div class="card-b">
+<details class="howto">
+  <summary>Quick start <span class="pill">Hover for definitions</span></summary>
+  <div class="howto-sub">This is a rules-based training sandbox (not a statistical fairness score). Use it to compare controls, document risk, and explain bias modes.</div>
+  <ol>
+    <li><b>Set the use case</b> (task + stakes). Then move through tabs left-to-right.</li>
+    <li><b>Tune controls</b> (grounding/RAG, eval rigor, HITL, documentation, guardrails).</li>
+    <li><b>Read Outputs</b>: higher <b>Exposure</b> = more risk if used “as-is”. Higher <b>Reliability</b>/<b>Gov</b> = better controls.</li>
+    <li><b>Interpret charts</b>: Radar shows <i>which bias types</i> dominate; Drivers shows <i>what settings</i> are pushing the score (hover bars).</li>
+    <li><b>Save & compare</b> scenarios (e.g., “Loose prompt / no eval” vs “RAG + red-team + HITL”).</li>
+  </ol>
+</details>
+<div class="note" style="margin:0 0 14px 0;">Tip: Hover <span class="tip-underline">underlined labels</span>, the <b>?</b> icons, and the <b>radar axis text</b> for definitions.</div>
 
+<div id="panel-usecase">
+<div class="field">
+<label><span>AI task in the cost workflow</span><span class="pill" id="val_task"></span></label>
+<select id="task">
+<option selected="" value="sow">Summarize SOW / requirements → draft assumptions</option>
+<option value="wbs">Generate WBS / mapping suggestions</option>
+<option value="estimate">Draft cost narrative / estimating approach (BOE support)</option>
+<option value="rates">Labor rate banding / market scan assistance</option>
+<option value="risk">Risk identification / risk register drafting</option>
+<option value="anomaly">Anomaly detection / data QA suggestions</option>
+</select>
+<div class="note" style="margin-top:8px;">This sets the baseline bias profile for the task.</div>
+</div>
+<div class="field">
+<label><span>Output style</span><span class="pill" id="val_outputStyle"></span></label>
+<select id="outputStyle">
+<option selected="" value="bullet">Bullets with sources + confidence tags</option>
+<option value="narrative">Narrative prose (more persuasive)</option>
+<option value="tables">Tables/structured output (looks “precise”)</option>
+</select>
+</div>
+<div class="field">
+<label><span>Decision impact</span><span class="pill" id="val_stakes"></span></label>
+<select id="stakes">
+<option value="low">Low (drafting / brainstorming)</option>
+<option selected="" value="med">Medium (inputs to an estimate)</option>
+<option value="high">High (directly influences dollars / decisions)</option>
+</select>
+</div>
+</div>
+<div id="panel-data" style="display:none;">
+<div class="field">
+<label><span>Training data provenance</span><span class="pill" id="val_provenance"></span></label>
+<select id="provenance">
+<option selected="" value="closed">Closed model (unknown training mix)</option>
+<option value="fine">Fine-tuned on internal data</option>
+<option value="rag">RAG over curated internal corpus</option>
+<option value="gov">Gov/DoD controlled corpus + governance</option>
+</select>
+</div>
+<div class="field">
+<label><span>Domain representativeness</span><span class="pill" id="val_repr"></span></label>
+<input id="repr" max="100" min="0" step="1" type="range" value="55"/>
+<div class="note" style="margin-top:8px;">Low representativeness increases coverage/representation bias.</div>
+</div>
+<div class="field">
+<label><span>Recency vs current guidance</span><span class="pill" id="val_recency"></span></label>
+<input id="recency" max="100" min="0" step="1" type="range" value="45"/>
+</div>
+<div class="field">
+<label><span>Label / ground-truth quality</span><span class="pill" id="val_labelq"></span></label>
+<input id="labelq" max="100" min="0" step="1" type="range" value="55"/>
+</div>
+<div class="field">
+<label><span>Data leakage risk</span><span class="pill" id="val_leak"></span></label>
+<select id="leak">
+<option value="low">Low (segregated datasets)</option>
+<option selected="" value="med">Medium (some overlap risk)</option>
+<option value="high">High (unknown overlap / copied examples)</option>
+</select>
+</div>
+<div class="field">
+<label><span>Sensitive data exposure posture</span><span class="pill" id="val_sensitive"></span></label>
+<select id="sensitive">
+<option selected="" value="controlled">Controlled (approved handling)</option>
+<option value="mixed">Mixed (ad-hoc redaction)</option>
+<option value="risky">Risky (unsafe inputs)</option>
+</select>
+</div>
+</div>
+<div id="panel-prompt" style="display:none;">
+<div class="field">
+<label><span>Prompt discipline</span><span class="pill" id="val_promptDisc"></span></label>
+<select id="promptDisc">
+<option selected="" value="strict">Strict (role, scope, constraints, cite sources)</option>
+<option value="normal">Normal</option>
+<option value="loose">Loose (“just answer”)</option>
+</select>
+</div>
+<div class="field">
+<label><span>Grounding method</span><span class="pill" id="val_grounding"></span></label>
+<select id="grounding">
+<option selected="" value="none">None (pure model response)</option>
+<option value="rag">RAG (retrieval with citations)</option>
+<option value="docs">Attached documents only</option>
+<option value="tools">Tools + verification steps</option>
+</select>
+</div>
+<div class="field">
+<label><span>Temperature / creativity</span><span class="pill" id="val_temp"></span></label>
+<input id="temp" max="100" min="0" step="1" type="range" value="25"/>
+</div>
+<div class="field">
+<label><span>Implicit persuasion risk</span><span class="pill" id="val_persuade"></span></label>
+<input id="persuade" max="100" min="0" step="1" type="range" value="55"/>
+</div>
+<div class="field">
+<label><span>Anchors provided in prompt</span><span class="pill" id="val_anchor"></span></label>
+<div class="mini" style="margin-top:6px;">
+<label class="pill"><input id="hasAnchor" style="margin-right:6px;" type="checkbox"/> Prior estimate / target shown</label>
+<label class="pill"><input id="mustFit" style="margin-right:6px;" type="checkbox"/> Must-fit constraint stated</label>
+</div>
+</div>
+</div>
+<div id="panel-eval" style="display:none;">
+<div class="field">
+<label><span>Evaluation rigor</span><span class="pill" id="val_eval"></span></label>
+<select id="eval">
+<option value="none">None</option>
+<option selected="" value="basic">Basic spot checks</option>
+<option value="bench">Benchmarks + holdout set</option>
+<option value="red">Red-teaming + adversarial tests</option>
+</select>
+</div>
+<div class="field">
+<label><span>Bias testing coverage</span><span class="pill" id="val_biastest"></span></label>
+<input id="biastest" max="100" min="0" step="1" type="range" value="35">
+</input></div>
+<div class="field">
+<label><span>Hallucination controls</span><span class="pill" id="val_hctrl"></span></label>
+<select id="hctrl">
+<option value="none">None</option>
+<option selected="" value="prompts">Prompt-based constraints</option>
+<option value="verify">Verification step</option>
+<option value="gated">Gated release + human approval</option>
+</select>
+</div>
+<div class="field">
+<label><span>Monitoring &amp; drift detection</span><span class="pill" id="val_drift"></span></label>
+<select id="drift">
+<option value="none">None</option>
+<option selected="" value="manual">Manual review cadence</option>
+<option value="auto">Automated monitoring</option>
+<option value="auto+alert">Auto monitoring + alerts + rollback</option>
+</select>
+</div>
+<div class="field">
+<label><span>Human-in-the-loop requirement</span><span class="pill" id="val_hitl"></span></label>
+<select id="hitl">
+<option selected="" value="required">Required (review + sign-off)</option>
+<option value="recommended">Recommended</option>
+<option value="none">None (auto-use allowed)</option>
+</select>
+</div>
+</div>
+<div id="panel-gov" style="display:none;">
+<div class="field">
+<label><span>Access &amp; environment</span><span class="pill" id="val_env"></span></label>
+<select id="env">
+<option selected="" value="public">Public SaaS</option>
+<option value="enterprise">Enterprise tenant controls</option>
+<option value="gov">Gov-approved enclave</option>
+</select>
+</div>
+<div class="field">
+<label><span>Documentation posture</span><span class="pill" id="val_docs"></span></label>
+<select id="docs">
+<option value="none">None</option>
+<option selected="" value="some">Some (templates/examples)</option>
+<option value="modelcard">Model card + data sheet + change log</option>
+<option value="full">Full package (SOP + audit trail)</option>
+</select>
+</div>
+<div class="field">
+<label><span>Automation level in workflow</span><span class="pill" id="val_auto"></span></label>
+<input id="auto" max="100" min="0" step="1" type="range" value="35">
+</input></div>
+<div class="field">
+<label><span>Incentive pressure</span><span class="pill" id="val_incent"></span></label>
+<input id="incent" max="100" min="0" step="1" type="range" value="45"/>
+</div>
+<div class="field">
+<label><span>Policy guardrails</span><span class="pill" id="val_guard"></span></label>
+<div class="mini" style="margin-top:6px;">
+<label class="pill"><input id="guard_noNumbers" style="margin-right:6px;" type="checkbox"/> No unaudited numbers</label>
+<label class="pill"><input checked="" id="guard_cite" style="margin-right:6px;" type="checkbox"/> Citations required</label>
+<label class="pill"><input id="guard_log" style="margin-right:6px;" type="checkbox"/> Logging/audit enabled</label>
+</div>
+</div>
+</div>
+<div class="divider"></div>
+<div class="mini">
+<button class="btn" id="saveScenario">Save scenario</button>
+<button class="btn secondary" id="copySummary">Copy Model-Card / CARD addendum</button>
+<button class="btn secondary" id="reset">Reset</button>
+</div>
+<div style="margin-top:12px;"><div class="note">Saved scenarios live in your browser (localStorage). Host with GitHub Pages like your other sandbox.</div></div>
+</div>
+</div>
+<div>
+<div class="card">
+<div class="card-h">
+<h2>Outputs <span class="help" id="tip_outputs">?</span></h2>
+<div class="pill">Updates instantly</div>
+</div>
+<div class="card-b">
+<div class="kpis">
+<div class="kpi">
+<div class="label">AI Bias Exposure Score</div>
+<div class="value" id="kpi_bias">0</div>
+<div class="sub" id="kpi_band">—</div>
+</div>
+<div class="kpi">
+<div class="label">Reliability (hallucination/traceability)</div>
+<div class="value" id="kpi_rel">0</div>
+<div class="sub" id="kpi_relBand">—</div>
+</div>
+<div class="kpi">
+<div class="label">Governance readiness</div>
+<div class="value" id="kpi_gov">0</div>
+<div class="sub" id="kpi_govBand">—</div>
+</div>
+<div class="kpi">
+<div class="label">Likely failure mode</div>
+<div class="value" id="kpi_mode">—</div>
+<div class="sub">Most likely “how it goes wrong”</div>
+</div>
+</div>
+<div class="chips">
+<span class="chip" id="chip_top">Top bias: —</span>
+<span class="chip" id="chip_dir">Impact: —</span>
+<span class="chip" id="chip_control">Controls: —</span>
+
+<div class="legend" id="legend_scores">
+  <span><span class="dot" style="background:var(--good)"></span>Low</span>
+  <span><span class="dot" style="background:var(--warn)"></span>Moderate</span>
+  <span><span class="dot" style="background:var(--bad)"></span>High</span>
+  <span style="opacity:.9;">(Hover the score labels for how each number is computed.)</span>
+</div>
+</div>
+<div class="divider"></div>
+<div class="two">
+<div class="card" style="box-shadow:none;">
+<div class="card-h" style="border-bottom:1px solid var(--line);">
+<h2>Bias radar <span class="help" id="tip_radar">?</span></h2>
+<div class="pill" id="topBiasPill">Top bias: —</div>
+</div>
+<div class="card-b">
+<canvas id="radar"></canvas>
+<div class="footer">Axes are 0–100 (rules-based) for training/demos.</div>
+</div>
+</div>
+<div class="card" style="box-shadow:none;">
+<div class="card-h" style="border-bottom:1px solid var(--line);">
+<h2>Drivers <span class="help" id="tip_drivers">?</span></h2>
+<div class="pill">What’s pushing risk</div>
+</div>
+<div class="card-b">
+<canvas id="drivers"></canvas>
+<div class="footer">Attribution is heuristic based on your settings.</div>
+</div>
+</div>
+</div>
+<div class="divider"></div>
+<div class="two">
+<div class="card" style="box-shadow:none;">
+<div class="card-h" style="border-bottom:1px solid var(--line);">
+<h2>Mitigation suggestions <span class="help" id="tip_mitigations">?</span></h2>
+<div class="pill">DoD/ICEAA phrasing</div>
+</div>
+<div class="card-b">
+<ul class="table" id="mitigations" style="list-style:none; padding-left:0; margin:0;"></ul>
+</div>
+</div>
+<div class="card" style="box-shadow:none;">
+<div class="card-h" style="border-bottom:1px solid var(--line);">
+<h2>Scenario compare <span class="help" id="tip_scenarios">?</span></h2>
+<div class="mini">
+<select id="scenarioSelect" style="min-width:180px;"></select>
+<button class="btn secondary" id="loadScenario">Load</button>
+<button class="btn secondary" id="deleteScenario">Delete</button>
+</div>
+</div>
+<div class="card-b">
+<div class="table-wrap">
+<table class="table" id="scenarioTable">
+<thead><tr><th>Name</th><th>Bias</th><th>Reliability</th><th>Gov</th><th>Top Bias</th><th>Failure Mode</th></tr></thead>
+<tbody></tbody>
+</table>
+</div>
+<div class="footer">Tip: Save “Loose prompt / no eval” vs “RAG + red-team + HITL”.</div>
+</div>
+</div>
+</div>
+<div class="footer"><b>Presenter note:</b> Flip anchors/must-fit and watch confirmation/anchoring grow—even if grounded.</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div aria-hidden="true" class="tooltip hidden" id="tooltip" role="tooltip"></div>
 <script>
+// ===== Hover tooltips (labels + inputs) =====
+  const BIAS_DEFS = {
+    "Representation": "Mismatch between the model’s examples and your real population (mission types, phases, security tiers, vendors, etc.). Leads to outputs that reflect the wrong baseline.",
+    "Selection / Coverage": "Blind spots or uneven source coverage (missing data slices, narrow examples, incomplete corpus). Produces gaps and skewed recommendations.",
+    "Measurement / Label": "Inconsistent definitions, units, mappings, or labels (LCATs, WBS elements, rate categories). Can teach/produce the wrong relationship.",
+    "Anchoring": "Over-weighting an initial number/assumption (prior estimate, target) even when evidence suggests a different value.",
+    "Confirmation": "Preferentially selecting or generating evidence that supports a desired narrative/constraint; downplaying disconfirming evidence.",
+    "Automation Bias": "People over-trust the AI because it looks authoritative/efficient, substituting the output for judgment or verification.",
+    "Hallucination": "Fabricated facts, citations, or details not supported by sources.",
+    "Overconfidence": "Excess certainty or “false precision” (definitive language, overly exact values) despite uncertainty."
+  };
+
+  
+
+  const DRIVER_DEFS = {
+    "Low representativeness": "Your examples don’t reflect the real population (missions, vendors, phases, security tiers). Improves when Representativeness is high.",
+    "Low recency": "Data or references are stale relative to today’s environment; policies, prices, or programs may have shifted.",
+    "Loose prompts / high temp": "Open-ended prompting + higher temperature increases variability and the chance of unsupported claims.",
+    "No grounding": "No retrieval/tools/citations to anchor outputs in authoritative sources.",
+    "Low eval rigor": "Little/no testing (holdouts, red-team cases, benchmarks) means failures go undetected.",
+    "Automation level": "More autonomy means fewer checkpoints; errors can propagate farther before being caught.",
+    "Anchor provided": "A prior value (even a guess) nudges the output toward it (anchoring effect).",
+    "Must-fit constraint": "Forcing a target range/outcome can encourage cherry-picking and confirmation behavior.",
+    "No human review": "No SME/HITL check before use; raises the chance of silent failure in edge cases.",
+    "No documentation": "Missing model card/prompt SOP/change log reduces transparency and drift detection.",
+    "Leakage risk": "Higher chance of train/test contamination or sensitive-data exposure affecting results or compliance."
+  };
+const UI_TIPS = {
+    task: "Where AI is used in the cost workflow. Different tasks create different baseline bias risks.",
+    outputStyle: "How the model presents output. Narrative/tables can look more convincing, which can increase over-trust and overconfidence.",
+    stakes: "How much this output influences decisions/dollars. Higher stakes increases the overall exposure multiplier.",
+    provenance: "How the model is built/grounded. Closed models have unknown coverage; internal fine-tuning/RAG can reduce hallucination and improve traceability.",
+    repr: "How representative the training/evidence is of your program domain. Low representativeness increases representation and coverage bias.",
+    recency: "Alignment with current guidance and up-to-date information. Low recency increases outdated assumptions and hallucination risk.",
+    labelq: "Quality of definitions/labels (units, WBS mappings, LCAT definitions, etc.). Low quality increases measurement/label bias.",
+    leak: "Risk that evaluation data overlaps training/examples. High leakage inflates apparent performance and increases overconfidence.",
+    sensitive: "How safely sensitive data is handled in prompts/outputs. Risky posture increases misuse risk and automation pressure.",
+    promptDisc: "How constrained the prompt is (role, scope, constraints, citation requirements). Loose prompts increase hallucination and overconfidence.",
+    grounding: "Whether responses are anchored to curated sources (RAG, documents, tools). Better grounding reduces hallucination and improves traceability.",
+    temp: "Randomness/creativity. Higher temperature increases variability and hallucination risk for analytical tasks.",
+    persuade: "Likelihood the model uses confident/persuasive language. Higher persuasion risk increases automation bias and overconfidence.",
+    hasAnchor: "Prior estimate/target is visible to the model/user. Can pull outputs toward the shown value (anchoring).",
+    mustFit: "Prompt implies the output must match a target/constraint. Increases confirmation/cherry-picking pressure.",
+    eval: "How thoroughly the system is evaluated. Stronger evaluation reduces overconfidence and catches failure modes.",
+    biastest: "How much bias testing is performed (slices, fairness checks, edge cases). Higher coverage reduces several bias components.",
+    hctrl: "Controls that prevent fabricated facts/citations (verification steps, gated releases, human approval).",
+    drift: "Monitoring for changes in data/requirements that shift performance over time (drift).",
+    hitl: "Human-in-the-loop review requirement before outputs affect decisions.",
+    env: "Where the tool runs (public SaaS vs enterprise vs gov enclave). Impacts control posture and risk.",
+    docs: "Documentation level (model card, SOP, change log, audit trail). More documentation improves governance and reduces overconfidence.",
+    auto: "How automated the AI step is in the workflow. More automation increases the risk of over-trust.",
+    incent: "Pressure to hit a number or tell a story. Higher pressure increases confirmation and anchoring.",
+    guard_noNumbers: "Policy guardrail: prohibit unaudited numbers. Reduces hallucination/false precision risk.",
+    guard_cite: "Policy guardrail: citations required. Improves traceability and reduces unsupported claims.",
+    guard_log: "Policy guardrail: logging/audit enabled. Improves traceability and governance, discourages over-trust."
+
+    ,scenarioSelect: "Choose a saved scenario to load into the inputs. Use this to show before/after controls.",
+    saveScenario: "Save the current settings to your browser so you can compare scenarios during a briefing or pilot.",
+    loadScenario: "Load the selected scenario into the Inputs (overwrites current settings).",
+    deleteScenario: "Delete the selected saved scenario from your browser.",
+    copySummary: "Copies a paste-ready Model Card / CARD addendum summary of this scenario to your clipboard.",
+    reset: "Resets inputs back to the default baseline scenario.",
+    tip_inputs: "Start here. Use the tabs to move from Use Case → Data → Prompt → Evaluation → Governance.",
+    tip_outputs: "These scores update instantly. Hover KPI labels for definitions and what higher/lower means.",
+    tip_radar: "Radar axes are bias types (0–100). Higher = more exposure in that bias mode. Hover axis labels for definitions.",
+    tip_drivers: "Drivers attribute what settings are pushing the overall score. Hover bars to see a definition for each driver.",
+    tip_mitigations: "Auto-generated, DoD/ICEAA-style actions you can paste into a Model Card / CARD addendum / IGCE notes.",
+    tip_scenarios: "Save a few configurations, then compare them here. Great for micro-pilots and leadership demos.",
+    legend_scores: "Banding guide: Low/Moderate/High is based on simple thresholds for training. Use labels/hover text for exact interpretation."
+
+  };
+
+
+// ===== Theme-aware colors for charts/tooltips =====
+const cssVar = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+const hexToRgb = (hex) => {
+  const h = (hex || "").replace("#","").trim();
+  if(h.length === 3){
+    const r = parseInt(h[0]+h[0],16), g = parseInt(h[1]+h[1],16), b = parseInt(h[2]+h[2],16);
+    return {r,g,b};
+  }
+  if(h.length === 6){
+    const r = parseInt(h.slice(0,2),16), g = parseInt(h.slice(2,4),16), b = parseInt(h.slice(4,6),16);
+    return {r,g,b};
+  }
+  return null;
+};
+const rgbaFromHex = (hex, a) => {
+  const rgb = hexToRgb(hex);
+  if(!rgb) return hex; // fall back
+  return `rgba(${rgb.r},${rgb.g},${rgb.b},${a})`;
+};
+
+const THEME = {
+  accent: cssVar("--accent") || "#7aa2ff",
+  text:   cssVar("--text")   || "#e8ecff",
+  muted:  cssVar("--muted")  || "#aab4e6",
+  line:   cssVar("--line")   || "rgba(255,255,255,0.08)",
+  panel:  cssVar("--panel")  || "#111a33",
+};
+const ACCENT = (a)=>rgbaFromHex(THEME.accent, a);
+const PANEL  = (a)=>rgbaFromHex(THEME.panel, a);
+
+// Chart.js global defaults (keeps visuals consistent with the UI theme)
+if (typeof Chart !== "undefined") {
+  Chart.defaults.color = THEME.muted;
+  Chart.defaults.borderColor = THEME.line;
+  Chart.defaults.font.family = getComputedStyle(document.body).fontFamily;
+}
+
+
+  const TIP = { el:null, visible:false, source:null, html:"" };
+
+  const escapeHTML = (s) => String(s)
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+
+  function initTooltip(){
+    TIP.el = document.getElementById("tooltip");
+  }
+  function positionTooltip(clientX, clientY){
+    if(!TIP.el) return;
+    const t = TIP.el;
+    // first place
+    let x = clientX + 12;
+    let y = clientY + 12;
+    t.style.left = x + "px";
+    t.style.top  = y + "px";
+    // then clamp into viewport
+    const r = t.getBoundingClientRect();
+    const pad = 10;
+    if(r.right > window.innerWidth - pad) x -= (r.right - (window.innerWidth - pad));
+    if(r.bottom > window.innerHeight - pad) y -= (r.bottom - (window.innerHeight - pad));
+    if(x < pad) x = pad;
+    if(y < pad) y = pad;
+    t.style.left = x + "px";
+    t.style.top  = y + "px";
+  }
+  function showTooltip(html, clientX, clientY, source="ui"){
+    if(!TIP.el || !html) return;
+    TIP.el.innerHTML = html;
+    TIP.el.classList.remove("hidden");
+    TIP.el.setAttribute("aria-hidden","false");
+    TIP.visible = true;
+    TIP.source = source;
+    TIP.html = html;
+    positionTooltip(clientX, clientY);
+  }
+  function hideTooltip(source=null){
+    if(!TIP.el) return;
+    if(source && TIP.source !== source) return;
+    TIP.el.classList.add("hidden");
+    TIP.el.setAttribute("aria-hidden","true");
+    TIP.visible = false;
+    TIP.source = null;
+    TIP.html = "";
+  }
+  function bindTip(el, tipText, source="ui", underline=false){
+    if(!el || el.dataset.tipBound === "1") return;
+    const html = escapeHTML(tipText).replace(/\n/g,"<br>");
+    el.dataset.tip = html;
+    el.dataset.tipBound = "1";
+    if(underline) el.classList.add("tip-underline");
+    el.addEventListener("mouseenter",(e)=>showTooltip(el.dataset.tip, e.clientX, e.clientY, source));
+    el.addEventListener("mousemove",(e)=>{
+      if(TIP.visible && TIP.source===source && TIP.html===el.dataset.tip){
+        positionTooltip(e.clientX, e.clientY);
+      }
+    });
+    el.addEventListener("mouseleave",()=>hideTooltip(source));
+  }
+
+  function applyUITips(){
+    initTooltip();
+
+    Object.entries(UI_TIPS).forEach(([id, tip])=>{
+      const el = document.getElementById(id);
+      if(!el) return;
+
+      // Tooltip on the control itself
+      bindTip(el, tip, "ui", false);
+
+      // Tooltip on the label text (first span in the field label)
+      const field = el.closest(".field");
+      if(field){
+        const labelSpan = field.querySelector("label span:first-child");
+        if(labelSpan) bindTip(labelSpan, tip, "ui", true);
+      }
+
+      // Tooltip on the pill wrapper when applicable (checkbox "chips")
+      const pillWrap = el.closest(".pill");
+      if(pillWrap) bindTip(pillWrap, tip, "ui", true);
+    });
+  }
+
+  
+
+  // ===== Extra tips for outputs, tabs, scenario headers, and actions =====
+  const KPI_TIPS = {
+    kpi_bias: "AI Bias Exposure Score (0–100). Higher means more exposure if used 'as-is' for this task/stakes. It is a rules-based training score, not a statistical fairness metric.",
+    kpi_rel:  "Reliability score (0–100). Higher is better: fewer hallucinations + better traceability/verification. Hover the label to see what influences it.",
+    kpi_gov:  "Governance readiness (0–100). Higher is better: documentation, auditability, human review, and controls are in place.",
+    kpi_mode: "Likely failure mode: the most probable way this configuration goes wrong in practice (based on your settings)."
+  };
+
+  const KPI_SUB_TIPS = {
+    kpi_band:    "Exposure band (low/moderate/high) based on the Exposure score. Use as a quick briefing cue.",
+    kpi_relBand: "Reliability risk band (computed as 100 − Reliability). Lower risk is better.",
+    kpi_govBand: "Governance gaps band (computed as 100 − Governance). Lower gaps is better."
+  };
+
+  const CHIP_TIPS = {
+    chip_top:     "The single highest bias type for this configuration (matches the tallest radar axis).",
+    chip_dir:     "A plain-English impact statement tuned to your selected stakes + overall exposure.",
+    chip_control: "A simple count of enabled controls (grounding, eval rigor, HITL, docs, guardrails). Higher is better."
+  };
+
+  const TAB_TIPS = {
+    usecase: "Use Case: what the AI is doing + how high the stakes are. This sets the baseline exposure multiplier.",
+    data:    "Data & Training: representativeness, recency, label quality, leakage/sensitive posture — big drivers of bias risk.",
+    prompt:  "Prompt & Context: prompt discipline, grounding (RAG/tools), temperature, persuasive tone, anchors/must-fit constraints.",
+    eval:    "Evaluation & Monitoring: how you test (benchmarks/red-team), bias test coverage, drift monitoring.",
+    gov:     "Governance & Use: HITL, environment, documentation, automation level, incentives, and guardrails."
+  };
+
+  const TABLE_HEADER_TIPS = {
+    Name: "Scenario name (stored in your browser). Use short compare-friendly names.",
+    Bias: "Exposure score snapshot for each saved scenario (0–100).",
+    Reliability: "Reliability snapshot (0–100). Higher is better.",
+    Gov: "Governance readiness snapshot (0–100). Higher is better.",
+    "Top Bias": "Highest bias axis for that scenario (from the radar).",
+    "Failure Mode": "Most likely way the scenario fails (based on the rules)."
+  };
+
+  function applyOutputTips(){
+    // KPI label/value/sub tips
+    Object.entries(KPI_TIPS).forEach(([id, tip])=>{
+      const valueEl = document.getElementById(id);
+      if(!valueEl) return;
+      bindTip(valueEl, tip, "ui", false);
+      const kpi = valueEl.closest(".kpi");
+      if(kpi){
+        const labelEl = kpi.querySelector(".label");
+        if(labelEl) bindTip(labelEl, tip, "ui", true);
+      }
+    });
+    Object.entries(KPI_SUB_TIPS).forEach(([id, tip])=>{
+      const el = document.getElementById(id);
+      if(el) bindTip(el, tip, "ui", true);
+    });
+
+    // Chips
+    Object.entries(CHIP_TIPS).forEach(([id, tip])=>{
+      const el = document.getElementById(id);
+      if(el) bindTip(el, tip, "ui", true);
+    });
+
+    // Chart section pills / labels
+    const topPill = document.getElementById("topBiasPill");
+    if(topPill) bindTip(topPill, "Shows the current top bias (highest radar axis). Hover radar axis labels for definitions.", "ui", true);
+  }
+
+  function applyTabTips(){
+    const tabs = document.querySelectorAll("#domainTabs .tab");
+    tabs.forEach(t=>{
+      const key = t.dataset.tab;
+      if(!key || !TAB_TIPS[key]) return;
+      bindTip(t, TAB_TIPS[key], "ui", false);
+    });
+  }
+
+  function applyScenarioHeaderTips(){
+    const ths = document.querySelectorAll("#scenarioTable thead th");
+    ths.forEach(th=>{
+      const key = (th.textContent || "").trim();
+      const tip = TABLE_HEADER_TIPS[key];
+      if(tip) bindTip(th, tip, "ui", true);
+    });
+  }
+
+function attachRadarLabelTooltips(){
+    const canvas = document.getElementById("radar");
+    if(!canvas) return;
+
+    const hitTest = (x, y) => {
+      if(!radarChart) return null;
+      const scale = radarChart.scales?.r;
+      if(!scale) return null;
+
+      // If Chart.js exposes point label items (preferred), use their bounds.
+      const items = scale._pointLabelItems;
+      if(Array.isArray(items) && items.length === biasTypes.length){
+        const pad = 6;
+        for(let i=0;i<items.length;i++){
+          const it = items[i];
+          const left = (it.left ?? it.x ?? 0) - pad;
+          const right = (it.right ?? it.x ?? 0) + pad;
+          const top = (it.top ?? it.y ?? 0) - pad;
+          const bottom = (it.bottom ?? it.y ?? 0) + pad;
+          if(x>=left && x<=right && y>=top && y<=bottom) return biasTypes[i];
+        }
+      }
+
+      // Fallback: approximate bounds around each label center.
+      const ctx = radarChart.ctx;
+      const pad = 8;
+      for(let i=0;i<biasTypes.length;i++){
+        const label = biasTypes[i];
+        if(typeof scale.getPointLabelPosition !== "function") break;
+        const pos = scale.getPointLabelPosition(i);
+        const w = (ctx?.measureText ? ctx.measureText(label).width : 80);
+        const h = 12;
+        const left = pos.x - w/2 - pad;
+        const right = pos.x + w/2 + pad;
+        const top = pos.y - h/2 - pad;
+        const bottom = pos.y + h/2 + pad;
+        if(x>=left && x<=right && y>=top && y<=bottom) return label;
+      }
+      return null;
+    };
+
+    canvas.addEventListener("mousemove",(e)=>{
+      if(!radarChart) return;
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+
+      const label = hitTest(x,y);
+      if(label){
+        canvas.style.cursor = "help";
+        const def = BIAS_DEFS[label] || "";
+        const html = `<b>${escapeHTML(label)}</b><br>${escapeHTML(def)}`;
+        showTooltip(html, e.clientX, e.clientY, "radar");
+      }else{
+        canvas.style.cursor = "default";
+        hideTooltip("radar");
+      }
+    });
+    canvas.addEventListener("mouseleave",()=>{
+      canvas.style.cursor = "default";
+      hideTooltip("radar");
+    });
+  }
+
   const defaults = {
     task:"sow", outputStyle:"bullet", stakes:"med",
     provenance:"closed", repr:55, recency:45, labelq:55, leak:"med", sensitive:"controlled",
@@ -604,18 +1159,114 @@
   }
 
   let radarChart, driversChart;
-  function initCharts(){
-    radarChart=new Chart(document.getElementById("radar"),{
-      type:"radar",
-      data:{labels:biasTypes,datasets:[{label:"Bias",data:biasTypes.map(_=>0),fill:true}]},
-      options:{responsive:true,animation:{duration:250},plugins:{legend:{display:false}},scales:{r:{min:0,max:100,ticks:{display:false}}}}
-    });
-    driversChart=new Chart(document.getElementById("drivers"),{
-      type:"bar",
-      data:{labels:["—"],datasets:[{label:"Contribution",data:[0]}]},
-      options:{responsive:true,animation:{duration:250},plugins:{legend:{display:false}},scales:{y:{min:0,max:40}}}
-    });
-  }
+  
+function initCharts(){
+  // Radar chart (bias star)
+  radarChart = new Chart(document.getElementById("radar"),{
+    type:"radar",
+    data:{
+      labels:biasTypes,
+      datasets:[{
+        label:"Bias",
+        data:biasTypes.map(_=>0),
+        fill:true,
+        borderWidth:2,
+        borderColor: ACCENT(0.85),
+        backgroundColor: ACCENT(0.18),
+        pointRadius:2,
+        pointHoverRadius:4,
+        pointBackgroundColor: ACCENT(0.95),
+        pointBorderColor: ACCENT(0.95),
+      }]
+    },
+    options:{
+      responsive:true,
+      animation:{duration:250},
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          displayColors:false,
+          backgroundColor: PANEL(0.96),
+          borderColor: "rgba(255,255,255,0.12)",
+          borderWidth: 1,
+          titleColor: THEME.text,
+          bodyColor: THEME.text,
+          callbacks:{
+            title:(items)=>{
+              const it = items && items[0] ? items[0] : null;
+              if(!it) return "";
+              const lab = it.label ?? "";
+              const v = it.raw ?? "";
+              return `${lab}: ${v}`;
+            },
+            afterBody:(items)=>{
+              const it = items && items[0] ? items[0] : null;
+              const lab = it ? (it.label ?? "") : "";
+              return (lab && BIAS_DEFS[lab]) ? BIAS_DEFS[lab] : "";
+            }
+          }
+        }
+      },
+      scales:{
+        r:{
+          min:0, max:100,
+          ticks:{display:false},
+          grid:{color: THEME.line},
+          angleLines:{color: THEME.line},
+          pointLabels:{color: THEME.text, font:{size:12, weight:"600"}},
+        }
+      }
+    }
+  });
+
+  // Drivers chart
+  driversChart = new Chart(document.getElementById("drivers"),{
+    type:"bar",
+    data:{
+      labels:["—"],
+      datasets:[{
+        label:"Contribution",
+        data:[0],
+        backgroundColor: ACCENT(0.30),
+        borderColor: ACCENT(0.75),
+        borderWidth:1,
+        borderRadius:8,
+        maxBarThickness:28,
+      }]
+    },
+    options:{
+      responsive:true,
+      animation:{duration:250},
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          displayColors:false,
+          backgroundColor: PANEL(0.96),
+          borderColor: "rgba(255,255,255,0.12)",
+          borderWidth: 1,
+          titleColor: THEME.text,
+          bodyColor: THEME.text,
+          callbacks:{
+            label:(ctx)=>`Contribution: ${ctx.raw}`,
+            afterLabel:(ctx)=> DRIVER_DEFS[ctx.label] ? DRIVER_DEFS[ctx.label] : ""
+          }
+        }
+      },
+      scales:{
+        x:{
+          grid:{display:false},
+          ticks:{color: THEME.muted, font:{size:11}}
+        },
+        y:{
+          min:0, max:40,
+          grid:{color: THEME.line},
+          ticks:{color: THEME.muted, font:{size:11}}
+        }
+      }
+    }
+  });
+}
+
   function updateCharts(res){
     radarChart.data.datasets[0].data=biasTypes.map(k=>res.scores[k]); radarChart.update();
     driversChart.data.labels=res.topDrivers.map(d=>d[0]);
@@ -660,325 +1311,7 @@
     pill("val_docs", document.getElementById("docs").selectedOptions[0].textContent);
     pill("val_anchor", [state.hasAnchor?"Anchor":"No anchor", state.mustFit?"Must-fit":"No must-fit"].join(" • "));
   }
-
-  const DEFAULT_SCENARIOS = [
-    // S1 — BOE drafting
-    {
-      name: "S1-High Risk (HR) (BOE Drafting)",
-      values: {
-        task: "Draft cost narrative / estimating approach (BOE support)",
-        outputStyle: "Narrative prose (more persuasive)",
-        decisionImpact: "High (directly influences dollars / decisions)",
-        trainingProvenance: "Closed model (unknown training mix)",
-        domainRepresentativeness: 35,
-        recency: 40,
-        labelQuality: 40,
-        dataLeakageRisk: "High (unknown overlap / copied examples)",
-        sensitiveExposure: "Mixed (ad-hoc redaction)",
-        promptDiscipline: "Loose (\"just answer\")",
-        groundingMethod: "None (pure model response)",
-        temperature: 65,
-        persuasionRisk: 85,
-        anchorPriorEstimate: true,
-        anchorMustFit: true,
-        evalRigor: "None",
-        biasTestingCoverage: 10,
-        hallucinationControls: "None",
-        monitoring: "None",
-        hitl: "None (auto-use allowed)",
-        accessEnv: "Public SaaS",
-        documentation: "None",
-        automationLevel: 85,
-        incentivePressure: 85,
-        guardNoUnauditedNumbers: false,
-        guardCitationsRequired: false,
-        guardLoggingEnabled: false
-      }
-    },
-    {
-      name: "S1-Control (CTL) (BOE Drafting)",
-      values: {
-        task: "Draft cost narrative / estimating approach (BOE support)",
-        outputStyle: "Bullets with sources + confidence tags",
-        decisionImpact: "High (directly influences dollars / decisions)",
-        trainingProvenance: "RAG over curated internal corpus",
-        domainRepresentativeness: 80,
-        recency: 80,
-        labelQuality: 70,
-        dataLeakageRisk: "Low (segregated datasets)",
-        sensitiveExposure: "Controlled (approved handling)",
-        promptDiscipline: "Strict (role, scope, constraints, cite sources)",
-        groundingMethod: "Tools + verification steps",
-        temperature: 15,
-        persuasionRisk: 25,
-        anchorPriorEstimate: false,
-        anchorMustFit: false,
-        evalRigor: "Basic spot checks",
-        biasTestingCoverage: 55,
-        hallucinationControls: "Gated release + human approval",
-        monitoring: "Manual review cadence",
-        hitl: "Required (review + sign-off)",
-        accessEnv: "Enterprise tenant controls",
-        documentation: "Full package (SOP + audit trail)",
-        automationLevel: 20,
-        incentivePressure: 30,
-        guardNoUnauditedNumbers: true,
-        guardCitationsRequired: true,
-        guardLoggingEnabled: true
-      }
-    },
-
-    // S2 — Market scan / labor rates
-    {
-      name: "S2-HR (Labor Rate Assistance)",
-      values: {
-        task: "Labor rate banding / market scan assistance",
-        outputStyle: "Narrative prose (more persuasive)",
-        decisionImpact: "High (directly influences dollars / decisions)",
-        trainingProvenance: "Closed model (unknown training mix)",
-        domainRepresentativeness: 30,
-        recency: 35,
-        labelQuality: 35,
-        dataLeakageRisk: "High (unknown overlap / copied examples)",
-        sensitiveExposure: "Mixed (ad-hoc redaction)",
-        promptDiscipline: "Loose (\"just answer\")",
-        groundingMethod: "None (pure model response)",
-        temperature: 55,
-        persuasionRisk: 70,
-        anchorPriorEstimate: true,
-        anchorMustFit: true,
-        evalRigor: "None",
-        biasTestingCoverage: 10,
-        hallucinationControls: "None",
-        monitoring: "None",
-        hitl: "None (auto-use allowed)",
-        accessEnv: "Public SaaS",
-        documentation: "None",
-        automationLevel: 70,
-        incentivePressure: 80,
-        guardNoUnauditedNumbers: false,
-        guardCitationsRequired: false,
-        guardLoggingEnabled: false
-      }
-    },
-    {
-      name: "S2-CTL (Labor Rate Assistance)",
-      values: {
-        task: "Labor rate banding / market scan assistance",
-        outputStyle: "Tables/structured output (looks \"precise\")",
-        decisionImpact: "High (directly influences dollars / decisions)",
-        trainingProvenance: "RAG over curated internal corpus",
-        domainRepresentativeness: 60,
-        recency: 85,
-        labelQuality: 55,
-        dataLeakageRisk: "Low (segregated datasets)",
-        sensitiveExposure: "Controlled (approved handling)",
-        promptDiscipline: "Strict (role, scope, constraints, cite sources)",
-        groundingMethod: "RAG (retrieval with citations)",
-        temperature: 20,
-        persuasionRisk: 30,
-        anchorPriorEstimate: false,
-        anchorMustFit: false,
-        evalRigor: "Benchmarks + holdout set",
-        biasTestingCoverage: 60,
-        hallucinationControls: "Verification step",
-        monitoring: "Manual review cadence",
-        hitl: "Required (review + sign-off)",
-        accessEnv: "Enterprise tenant controls",
-        documentation: "Model card + data sheet + change log",
-        automationLevel: 25,
-        incentivePressure: 25,
-        guardNoUnauditedNumbers: true,
-        guardCitationsRequired: true,
-        guardLoggingEnabled: true
-      }
-    },
-
-    // S3 — Anomaly detection
-    {
-      name: "S3-HR (Anomaly Detection)",
-      values: {
-        task: "Anomaly detection / data QA suggestions",
-        outputStyle: "Tables/structured output (looks \"precise\")",
-        decisionImpact: "Medium (inputs to an estimate)",
-        trainingProvenance: "Closed model (unknown training mix)",
-        domainRepresentativeness: 45,
-        recency: 45,
-        labelQuality: 30,
-        dataLeakageRisk: "High (unknown overlap / copied examples)",
-        sensitiveExposure: "Risky (unsafe inputs)",
-        promptDiscipline: "Normal",
-        groundingMethod: "None (pure model response)",
-        temperature: 40,
-        persuasionRisk: 60,
-        anchorPriorEstimate: false,
-        anchorMustFit: false,
-        evalRigor: "None",
-        biasTestingCoverage: 10,
-        hallucinationControls: "None",
-        monitoring: "None",
-        hitl: "None (auto-use allowed)",
-        accessEnv: "Public SaaS",
-        documentation: "None",
-        automationLevel: 75,
-        incentivePressure: 60,
-        guardNoUnauditedNumbers: false,
-        guardCitationsRequired: false,
-        guardLoggingEnabled: false
-      }
-    },
-    {
-      name: "S3-CTL (Anomaly Detection)",
-      values: {
-        task: "Anomaly detection / data QA suggestions",
-        outputStyle: "Bullets with sources + confidence tags",
-        decisionImpact: "Medium (inputs to an estimate)",
-        trainingProvenance: "Fine-tuned on internal data",
-        domainRepresentativeness: 75,
-        recency: 70,
-        labelQuality: 70,
-        dataLeakageRisk: "Low (segregated datasets)",
-        sensitiveExposure: "Controlled (approved handling)",
-        promptDiscipline: "Strict (role, scope, constraints, cite sources)",
-        groundingMethod: "Tools + verification steps",
-        temperature: 15,
-        persuasionRisk: 25,
-        anchorPriorEstimate: false,
-        anchorMustFit: false,
-        evalRigor: "Benchmarks + holdout set",
-        biasTestingCoverage: 55,
-        hallucinationControls: "Verification step",
-        monitoring: "Manual review cadence",
-        hitl: "Required (review + sign-off)",
-        accessEnv: "Enterprise tenant controls",
-        documentation: "Model card + data sheet + change log",
-        automationLevel: 25,
-        incentivePressure: 25,
-        guardNoUnauditedNumbers: true,
-        guardCitationsRequired: true,
-        guardLoggingEnabled: true
-      }
-    }
-  ];
-
-  function mapScenarioToInternal(scenario) {
-    const v = scenario.values;
-    const mapDecisionImpact = (val) => {
-      if (val.includes("High")) return "high";
-      if (val.includes("Medium")) return "med";
-      return "low";
-    };
-    const mapProvenance = (val) => {
-      if (val.includes("Closed model")) return "closed";
-      if (val.includes("Fine-tuned")) return "fine";
-      if (val.includes("RAG")) return "rag";
-      return "gov";
-    };
-    const mapOutputStyle = (val) => {
-      if (val.includes("Narrative")) return "narrative";
-      if (val.includes("Tables")) return "tables";
-      return "bullet";
-    };
-    const mapLeak = (val) => {
-      if (val.includes("High")) return "high";
-      if (val.includes("Low")) return "low";
-      return "med";
-    };
-    const mapSensitive = (val) => {
-      if (val.includes("Risky")) return "risky";
-      if (val.includes("Mixed")) return "mixed";
-      return "controlled";
-    };
-    const mapPromptDisc = (val) => {
-      if (val.includes("Loose")) return "loose";
-      if (val.includes("Strict")) return "strict";
-      return "normal";
-    };
-    const mapGrounding = (val) => {
-      if (val.includes("None")) return "none";
-      if (val.includes("RAG")) return "rag";
-      if (val.includes("Tools")) return "tools";
-      return "docs";
-    };
-    const mapEval = (val) => {
-      if (val === "None") return "none";
-      if (val.includes("Basic")) return "basic";
-      if (val.includes("Benchmarks")) return "bench";
-      return "red";
-    };
-    const mapHctrl = (val) => {
-      if (val === "None") return "none";
-      if (val.includes("Gated")) return "gated";
-      if (val.includes("Verification")) return "verify";
-      return "prompts";
-    };
-    const mapMonitoring = (val) => {
-      if (val === "None") return "none";
-      if (val.includes("Manual")) return "manual";
-      if (val.includes("Auto monitoring + alerts")) return "auto+alert";
-      return "auto";
-    };
-    const mapHitl = (val) => {
-      if (val.includes("None")) return "none";
-      if (val.includes("Required")) return "required";
-      return "recommended";
-    };
-    const mapEnv = (val) => {
-      if (val.includes("Public")) return "public";
-      if (val.includes("Enterprise")) return "enterprise";
-      return "gov";
-    };
-    const mapDocs = (val) => {
-      if (val === "None") return "none";
-      if (val.includes("Full package")) return "full";
-      if (val.includes("Model card")) return "modelcard";
-      return "some";
-    };
-    const mapTask = (val) => {
-      if (val.includes("Draft cost narrative")) return "estimate";
-      if (val.includes("Labor rate")) return "rates";
-      if (val.includes("Anomaly")) return "anomaly";
-      if (val.includes("SOW")) return "sow";
-      if (val.includes("WBS")) return "wbs";
-      return "risk";
-    };
-
-    return {
-      name: scenario.name,
-      created: new Date().toISOString(),
-      payload: {
-        task: mapTask(v.task),
-        outputStyle: mapOutputStyle(v.outputStyle),
-        stakes: mapDecisionImpact(v.decisionImpact),
-        provenance: mapProvenance(v.trainingProvenance),
-        repr: v.domainRepresentativeness,
-        recency: v.recency,
-        labelq: v.labelQuality,
-        leak: mapLeak(v.dataLeakageRisk),
-        sensitive: mapSensitive(v.sensitiveExposure),
-        promptDisc: mapPromptDisc(v.promptDiscipline),
-        grounding: mapGrounding(v.groundingMethod),
-        temp: v.temperature,
-        persuade: v.persuasionRisk,
-        hasAnchor: v.anchorPriorEstimate,
-        mustFit: v.anchorMustFit,
-        eval: mapEval(v.evalRigor),
-        biastest: v.biasTestingCoverage,
-        hctrl: mapHctrl(v.hallucinationControls),
-        drift: mapMonitoring(v.monitoring),
-        hitl: mapHitl(v.hitl),
-        env: mapEnv(v.accessEnv),
-        docs: mapDocs(v.documentation),
-        auto: v.automationLevel,
-        incent: v.incentivePressure,
-        guard_noNumbers: v.guardNoUnauditedNumbers,
-        guard_cite: v.guardCitationsRequired,
-        guard_log: v.guardLoggingEnabled
-      }
-    };
-  }
-
-  const LS_KEY="ai_bias_sandbox_scenarios_v1";
+const LS_KEY="ai_bias_sandbox_scenarios_v1";
   const getScenarios=()=>{
     try{
       const stored = localStorage.getItem(LS_KEY);
@@ -991,21 +1324,7 @@
     }
   };
   const setScenarios=(arr)=>{localStorage.setItem(LS_KEY,JSON.stringify(arr)); refreshScenarioSelect();};
-  
-  function seedDefaultScenariosOnce(){
-    const existing = getScenarios();
-    const existingNames = new Set(existing.map(s => s.name));
-    const defaults = DEFAULT_SCENARIOS.map(mapScenarioToInternal);
-    const toAdd = defaults.filter(s => !existingNames.has(s.name));
-    if (toAdd.length === 0) {
-      alert("All micro-pilot scenarios are already loaded.");
-      return;
-    }
-    const updated = [...existing, ...toAdd];
-    setScenarios(updated);
-    renderScenarioTable();
-    alert(`Loaded ${toAdd.length} micro-pilot scenario${toAdd.length > 1 ? 's' : ''}: ${toAdd.map(s => s.name).join(', ')}`);
-  }
+
   function summary(payload){
     const old=state; state=structuredClone(payload); const r=computeScores(); state=old; return r;
   }
@@ -1176,7 +1495,266 @@
   bind("eval","eval"); bind("biastest","biastest"); bind("hctrl","hctrl"); bind("drift","drift"); bind("hitl","hitl");
   bind("env","env"); bind("docs","docs"); bind("auto","auto"); bind("incent","incent"); bind("guard_noNumbers","guard_noNumbers","checked"); bind("guard_cite","guard_cite","checked"); bind("guard_log","guard_log","checked");
 
-  initCharts(); refreshScenarioSelect(); update();
+  applyUITips();
+  applyOutputTips();
+  applyTabTips();
+  applyScenarioHeaderTips();
+  initCharts();
+  attachRadarLabelTooltips();
+  refreshScenarioSelect();
+  update();
+
+  // ===== Walkthrough / Tour (additive) =====
+  (function(){
+    function initTour(){
+      const startBtn = document.getElementById("startTourBtn");
+      const overlay = document.getElementById("tourOverlay");
+      if(!startBtn || !overlay) return;
+
+      const highlight = overlay.querySelector(".tour-highlight");
+      const dialog = overlay.querySelector(".tour-dialog");
+      const elTitle = document.getElementById("tourTitle");
+      const elBody  = document.getElementById("tourBody");
+      const elStep  = document.getElementById("tourStep");
+
+      const btnBack  = document.getElementById("tourBack");
+      const btnNext  = document.getElementById("tourNext");
+      const btnSkip  = document.getElementById("tourSkip");
+      const btnClose = document.getElementById("tourClose");
+
+      const TOUR_SEEN_KEY = "ai_bias_sandbox_tourSeen_v1";
+      let stepIndex = 0;
+      let isOpen = false;
+
+      const steps = [
+        {
+          title: "1) Pick a Use Case",
+          body: "Start with a realistic use case and stakes. This sets the lens for interpreting risk (training aid, not a fairness metric).",
+          selector: '#panel-usecase',
+          tab: "usecase"
+        },
+        {
+          title: "2) Move left-to-right across tabs",
+          body: "Use these tabs to walk through the lifecycle: Data → Prompt → Evaluation → Governance. Hover labels for definitions.",
+          selector: '#domainTabs',
+          tab: "usecase"
+        },
+        {
+          title: "3) Data & Training quality",
+          body: "Representativeness, recency, and label quality strongly influence bias exposure. Low-quality data will dominate downstream controls.",
+          selector: '#panel-data',
+          tab: "data"
+        },
+        {
+          title: "4) Prompt & Context controls",
+          body: "Grounding (RAG/docs), prompt discipline, and anchoring reduce hallucination and bias amplification. Try toggling grounding and anchors.",
+          selector: '#panel-prompt',
+          tab: "prompt"
+        },
+        {
+          title: "5) Evaluation & Monitoring",
+          body: "Benchmarks + red-team coverage + HITL are your fastest levers to increase reliability. Drift monitoring matters once deployed.",
+          selector: '#panel-eval',
+          tab: "eval"
+        },
+        {
+          title: "6) Read the Outputs",
+          body: "These KPIs update instantly. Use the bands to translate scores into decision language (low / medium / high exposure).",
+          selector: '.kpis',
+          tab: null
+        },
+        {
+          title: "7) Bias radar (the star chart)",
+          body: "Each axis is a bias family. Hover labels for definitions. Look for spikes — they show what type of bias is most likely under current settings.",
+          selector: '#radar',
+          tab: null
+        },
+        {
+          title: "8) Drivers + Scenarios",
+          body: "Drivers show what’s pushing risk. Save a scenario, then compare versions here to communicate tradeoffs and mitigations.",
+          selector: '#scenarioTable',
+          tab: null
+        }
+      ];
+
+      function activateTab(key){
+        if(!key) return;
+        const tab = document.querySelector(`#domainTabs .tab[data-tab="${key}"]`);
+        if(tab && !tab.classList.contains("active")) tab.click();
+      }
+
+      function isVisible(el){
+        if(!el) return false;
+        // hidden panels use display:none, which makes offsetParent null (except fixed)
+        if(el.getClientRects().length === 0) return false;
+        const style = window.getComputedStyle(el);
+        return style.display !== "none" && style.visibility !== "hidden" && style.opacity !== "0";
+      }
+
+      function clamp(v, min, max){ return Math.max(min, Math.min(max, v)); }
+
+      function positionUI(target){
+        if(!target || !highlight){
+          if(highlight) highlight.style.display = "none";
+          return;
+        }
+        const r = target.getBoundingClientRect();
+        const pad = 10;
+        const top  = clamp(r.top - pad, 8, window.innerHeight - 16);
+        const left = clamp(r.left - pad, 8, window.innerWidth - 16);
+        const w = clamp(r.width + pad*2, 40, window.innerWidth - left - 8);
+        const h = clamp(r.height + pad*2, 32, window.innerHeight - top - 8);
+
+        highlight.style.display = "block";
+        highlight.style.top = `${top}px`;
+        highlight.style.left = `${left}px`;
+        highlight.style.width = `${w}px`;
+        highlight.style.height = `${h}px`;
+
+        // keep dialog away from the highlighted region when possible
+        const preferTop = r.bottom > (window.innerHeight * 0.62);
+        dialog.classList.toggle("at-top", preferTop);
+      }
+
+      function scrollIntoView(target){
+        if(!target) return Promise.resolve();
+        target.scrollIntoView({behavior:"smooth", block:"center", inline:"center"});
+        return new Promise(res=>setTimeout(res, 420));
+      }
+
+      function renderStep(){
+        if(!isOpen) return;
+        let guard = 0;
+        while(guard < steps.length){
+          const s = steps[stepIndex];
+          activateTab(s.tab);
+          const target = s.selector ? document.querySelector(s.selector) : null;
+
+          if(target && isVisible(target)){
+            elTitle.textContent = s.title;
+            elBody.textContent  = s.body;
+            elStep.textContent  = `Step ${stepIndex + 1} / ${steps.length}`;
+
+            btnBack.disabled = (stepIndex === 0);
+            btnNext.textContent = (stepIndex === steps.length - 1) ? "Done" : "Next";
+
+            scrollIntoView(target).then(()=>{
+              // measure after scroll
+              positionUI(target);
+            });
+            return;
+          }
+
+          // If target isn't found/visible, skip forward (graceful)
+          stepIndex = Math.min(steps.length - 1, stepIndex + 1);
+          guard++;
+        }
+
+        // fallback: show dialog without highlight
+        elTitle.textContent = "Tour";
+        elBody.textContent  = "Use the Start tour button anytime to revisit this walkthrough.";
+        elStep.textContent  = "";
+        if(highlight) highlight.style.display = "none";
+      }
+
+      function openTour(){
+        isOpen = true;
+        stepIndex = 0;
+        overlay.classList.remove("hidden");
+        document.body.classList.add("tour-noscroll");
+        // focus the dialog for keyboard users
+        setTimeout(()=>dialog && dialog.focus(), 0);
+        window.addEventListener("resize", onResize, {passive:true});
+        document.addEventListener("keydown", onKeydown);
+        renderStep();
+      }
+
+      function cleanupTour(){
+        if(!isOpen) return;
+        isOpen = false;
+        overlay.classList.add("hidden");
+        document.body.classList.remove("tour-noscroll");
+        if(highlight) highlight.style.display = "none";
+        window.removeEventListener("resize", onResize);
+        document.removeEventListener("keydown", onKeydown);
+        dialog.classList.remove("at-top");
+      }
+
+      function finishTour(){
+        try{ localStorage.setItem(TOUR_SEEN_KEY, "true"); }catch(e){}
+        cleanupTour();
+        startBtn.classList.remove("tour-attn");
+      }
+
+      function onResize(){
+        // re-position highlight without changing step
+        if(!isOpen) return;
+        const s = steps[stepIndex];
+        const target = s.selector ? document.querySelector(s.selector) : null;
+        if(target && isVisible(target)) positionUI(target);
+      }
+
+      function onKeydown(e){
+        if(!isOpen) return;
+        if(e.key === "Escape"){
+          e.preventDefault();
+          cleanupTour();
+        }
+      }
+
+      // Event bindings
+      startBtn.addEventListener("click", openTour);
+      btnClose.addEventListener("click", cleanupTour);
+      btnSkip.addEventListener("click", finishTour);
+      btnBack.addEventListener("click", ()=>{
+        stepIndex = Math.max(0, stepIndex - 1);
+        renderStep();
+      });
+      btnNext.addEventListener("click", ()=>{
+        if(stepIndex >= steps.length - 1){
+          finishTour();
+        }else{
+          stepIndex = Math.min(steps.length - 1, stepIndex + 1);
+          renderStep();
+        }
+      });
+
+      // First-time nudge (non-blocking)
+      try{
+        if(!localStorage.getItem(TOUR_SEEN_KEY)){
+          startBtn.classList.add("tour-attn");
+          startBtn.setAttribute("aria-label","Start tour (recommended for first-time users)");
+        }
+      }catch(e){}
+    }
+
+    if(document.readyState === "loading"){
+      document.addEventListener("DOMContentLoaded", initTour, {once:true});
+    } else {
+      initTour();
+    }
+  })();
+
 </script>
+
+<!-- ===== Walkthrough / Tour (additive) ===== -->
+<div class="tour-overlay hidden" id="tourOverlay" role="dialog" aria-modal="true" aria-labelledby="tourTitle" aria-describedby="tourBody">
+  <div class="tour-highlight" aria-hidden="true"></div>
+  <div class="tour-dialog" tabindex="-1">
+    <div class="tour-top">
+      <div class="tour-step" id="tourStep">Step</div>
+      <button class="tour-close" id="tourClose" type="button" aria-label="Close tour">×</button>
+    </div>
+    <div class="tour-title" id="tourTitle">Tour</div>
+    <div class="tour-body" id="tourBody"></div>
+    <div class="tour-actions">
+      <button class="btn secondary" id="tourBack" type="button">Back</button>
+      <div class="spacer"></div>
+      <button class="btn secondary" id="tourSkip" type="button">Skip</button>
+      <button class="btn" id="tourNext" type="button">Next</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
