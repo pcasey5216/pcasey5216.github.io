@@ -1528,6 +1528,13 @@ const LS_KEY="ai_bias_sandbox_scenarios_v1";
       const TOUR_SEEN_KEY = "ai_bias_sandbox_tourSeen_v1";
       let stepIndex = 0;
       let isOpen = false;
+      let renderToken = 0;
+      let activeTarget = null;
+      let rafId = null;
+
+      const prefersReducedMotion = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+      const isCoarsePointer = !!(window.matchMedia && window.matchMedia("(pointer: coarse)").matches);
+
 
       const steps = [
         {
@@ -1619,21 +1626,70 @@ const LS_KEY="ai_bias_sandbox_scenarios_v1";
         dialog.classList.toggle("at-top", preferTop);
       }
 
-      function scrollIntoView(target){
-        if(!target) return Promise.resolve();
-        target.scrollIntoView({behavior:"smooth", block:"center", inline:"center"});
-        return new Promise(res=>setTimeout(res, 420));
+      function nextFrame(){ return new Promise(r=>requestAnimationFrame(()=>r())); }
+      function sleep(ms){ return new Promise(r=>setTimeout(r, ms)); }
+
+      async function resolveTargetForStep(s){
+        if(!s) return null;
+        if(s.tab) activateTab(s.tab);
+
+        // wait briefly for tab/panel transitions and DOM to settle (mobile friendly)
+        for(let i=0;i<24;i++){
+          const el = s.selector ? document.querySelector(s.selector) : null;
+          if(el && isVisible(el)) return el;
+          await nextFrame();
+        }
+        const el = s.selector ? document.querySelector(s.selector) : null;
+        return (el && isVisible(el)) ? el : null;
       }
 
-      function renderStep(){
+      function updateHighlight(){
         if(!isOpen) return;
+        if(activeTarget && isVisible(activeTarget)){
+          positionUI(activeTarget);
+        }
+      }
+
+      function onAnyScroll(){
+        if(!isOpen) return;
+        // throttle highlight re-measure to animation frames
+        if(rafId) return;
+        rafId = requestAnimationFrame(()=>{
+          rafId = null;
+          updateHighlight();
+        });
+      }
+
+      async function scrollIntoView(target){
+        if(!target) return;
+        const behavior = (prefersReducedMotion || isCoarsePointer) ? "auto" : "smooth";
+        const inline = isCoarsePointer ? "nearest" : "center";
+        try{
+          target.scrollIntoView({behavior, block:"center", inline});
+        }catch(e){
+          target.scrollIntoView();
+        }
+        // allow scroll/layout to settle (mobile needs longer)
+        await nextFrame(); await nextFrame();
+        await sleep(isCoarsePointer ? 140 : 80);
+      }
+
+
+      async function renderStep(){
+        if(!isOpen) return;
+        const token = ++renderToken;
+
         let guard = 0;
         while(guard < steps.length){
           const s = steps[stepIndex];
-          activateTab(s.tab);
-          const target = s.selector ? document.querySelector(s.selector) : null;
+          const target = await resolveTargetForStep(s);
 
-          if(target && isVisible(target)){
+          // abandon if a newer render started
+          if(!isOpen || token !== renderToken) return;
+
+          if(target){
+            activeTarget = target;
+
             elTitle.textContent = s.title;
             elBody.textContent  = s.body;
             elStep.textContent  = `Step ${stepIndex + 1} / ${steps.length}`;
@@ -1641,10 +1697,13 @@ const LS_KEY="ai_bias_sandbox_scenarios_v1";
             btnBack.disabled = (stepIndex === 0);
             btnNext.textContent = (stepIndex === steps.length - 1) ? "Done" : "Next";
 
-            scrollIntoView(target).then(()=>{
-              // measure after scroll
-              positionUI(target);
-            });
+            await scrollIntoView(target);
+            if(!isOpen || token !== renderToken) return;
+
+            // measure multiple times (helps mobile address bar / viewport settling)
+            positionUI(target);
+            setTimeout(()=>{ if(isOpen && token === renderToken) positionUI(target); }, 120);
+            setTimeout(()=>{ if(isOpen && token === renderToken) positionUI(target); }, 300);
             return;
           }
 
@@ -1654,6 +1713,7 @@ const LS_KEY="ai_bias_sandbox_scenarios_v1";
         }
 
         // fallback: show dialog without highlight
+        activeTarget = null;
         elTitle.textContent = "Tour";
         elBody.textContent  = "Use the Start tour button anytime to revisit this walkthrough.";
         elStep.textContent  = "";
@@ -1669,6 +1729,12 @@ const LS_KEY="ai_bias_sandbox_scenarios_v1";
         setTimeout(()=>dialog && dialog.focus(), 0);
         window.addEventListener("resize", onResize, {passive:true});
         document.addEventListener("keydown", onKeydown);
+        // keep highlight accurate while scrolling (includes scrollable containers)
+        document.addEventListener("scroll", onAnyScroll, true);
+        if(window.visualViewport){
+          window.visualViewport.addEventListener("scroll", onAnyScroll, {passive:true});
+          window.visualViewport.addEventListener("resize", onAnyScroll, {passive:true});
+        }
         renderStep();
       }
 
@@ -1680,6 +1746,13 @@ const LS_KEY="ai_bias_sandbox_scenarios_v1";
         if(highlight) highlight.style.display = "none";
         window.removeEventListener("resize", onResize);
         document.removeEventListener("keydown", onKeydown);
+        document.removeEventListener("scroll", onAnyScroll, true);
+        if(window.visualViewport){
+          window.visualViewport.removeEventListener("scroll", onAnyScroll);
+          window.visualViewport.removeEventListener("resize", onAnyScroll);
+        }
+        if(rafId){ cancelAnimationFrame(rafId); rafId = null; }
+        activeTarget = null;
         dialog.classList.remove("at-top");
       }
 
@@ -1690,11 +1763,8 @@ const LS_KEY="ai_bias_sandbox_scenarios_v1";
       }
 
       function onResize(){
-        // re-position highlight without changing step
         if(!isOpen) return;
-        const s = steps[stepIndex];
-        const target = s.selector ? document.querySelector(s.selector) : null;
-        if(target && isVisible(target)) positionUI(target);
+        updateHighlight();
       }
 
       function onKeydown(e){
