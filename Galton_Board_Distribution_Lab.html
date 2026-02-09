@@ -345,6 +345,7 @@
       background: rgba(0,0,0,.58);
       z-index: 80;
       display:none;
+      touch-action: pan-y;
     }
     #tourOverlay.show{ display:block; }
     #tourHighlight{
@@ -362,14 +363,16 @@
       position: fixed;
       z-index: 82;
       width: min(420px, calc(100vw - 22px));
+      max-height: calc(100vh - 22px - var(--safe-top) - var(--safe-bottom));
       border-radius: 16px;
       border:1px solid rgba(255,255,255,.12);
       background: rgba(16,26,51,.95);
       box-shadow: var(--shadow);
       padding:12px 12px 10px;
+      overflow: hidden;
       display:none;
     }
-    #tourCard.show{ display:block; }
+    #tourCard.show{ display:flex; flex-direction:column; }
     #tourCard .tHead{
       display:flex;
       align-items:flex-start;
@@ -393,15 +396,33 @@
       color: rgba(232,238,252,.86);
       line-height: 1.35;
       margin-bottom:10px;
+      overflow:auto;
+      -webkit-overflow-scrolling: touch;
+      padding-right:4px;
+      word-break: break-word;
+      flex: 1 1 auto;
+      min-height: 0;
     }
     #tourCard .tBtns{
       display:grid;
       grid-template-columns: 1fr 1fr 1fr 1fr;
       gap:8px;
+      position: sticky;
+      bottom: 0;
+      padding-top: 8px;
+      margin-top: auto;
+      background: rgba(16,26,51,.98);
+      border-top: 1px solid rgba(255,255,255,.10);
     }
     @media (max-width: 520px){
       #tourCard .tBtns{ grid-template-columns: 1fr; }
     }
+    @media (max-width: 520px){
+      #tourCard{ padding: 12px 12px 10px; }
+      #tourCard .tTitle{ font-size: 14px; }
+      #tourCard .tBody{ font-size: 13px; line-height: 1.4; }
+    }
+
   </style>
 </head>
 <body>
@@ -889,7 +910,7 @@
       pdfctx=fitCanvas(costPdfCanvas);
       cdfctx=fitCanvas(costCdfCanvas);
       needsRedraw=true;
-      if(tour.active) tour.render(true);
+      if(tour.active) tour.render(false);
     }, {passive:true});
 
     // --- Math helpers ---
@@ -2388,7 +2409,8 @@ function rescaleParamInputsForUnitsChange(oldScale, newScale){
 
     boardCanvas.addEventListener("pointerdown",()=>dropBalls(1), {passive:true});
 
-    // ===== Tour (same as v5.4) =====
+    
+    // ===== Tour (mobile + desktop-safe) =====
     const tourOverlay=document.getElementById("tourOverlay");
     const tourHighlight=document.getElementById("tourHighlight");
     const tourCard=document.getElementById("tourCard");
@@ -2400,10 +2422,31 @@ function rescaleParamInputsForUnitsChange(oldScale, newScale){
     const tourNext=document.getElementById("tourNext");
     const tourRestart=document.getElementById("tourRestart");
 
+    function _tourViewport(){
+      const vv = window.visualViewport || null;
+      return {
+        vv,
+        vx: vv ? vv.offsetLeft : 0,
+        vy: vv ? vv.offsetTop  : 0,
+        vw: vv ? vv.width      : window.innerWidth,
+        vh: vv ? vv.height     : window.innerHeight
+      };
+    }
+    function _tourSafe(){
+      const cs=getComputedStyle(document.documentElement);
+      const st=parseFloat(cs.getPropertyValue("--safe-top"))||0;
+      const sb=parseFloat(cs.getPropertyValue("--safe-bottom"))||0;
+      const sl=parseFloat(cs.getPropertyValue("--safe-left"))||0;
+      const sr=parseFloat(cs.getPropertyValue("--safe-right"))||0;
+      return {st,sb,sl,sr};
+    }
+    function _tourClamp(x,a,b){ return Math.max(a, Math.min(b, x)); }
+
     const tour = {
       active:false,
       step:0,
       steps:[],
+      _raf:0,
       start(){
         const base = [
           {sel:"#rows", title:"Galton rows", body:"Rows control the number of left/right decisions. More rows → more bins and a smoother (binomial → normal-ish) histogram."},
@@ -2415,6 +2458,7 @@ function rescaleParamInputsForUnitsChange(oldScale, newScale){
           {sel:"#autoFit", title:"Auto-calculate parameters", body:"Auto-fit sets parameters so Base behaves like P50 and Budget behaves like your chosen P-level (e.g., P80)."},
           {sel:"#costCdf", title:"Read the S-curve", body:"The Cumulative Distribution Function (CDF, “S-curve”) shows percentiles. Drag on the curve to read off Cost ↔ Percentile."}
         ];
+
         this.steps = base.filter(s=>{
           const el=document.querySelector(s.sel);
           if(!el) return false;
@@ -2423,9 +2467,14 @@ function rescaleParamInputsForUnitsChange(oldScale, newScale){
           const r=el.getBoundingClientRect();
           return r.width>2 && r.height>2;
         });
+
+        if(this.steps.length===0){
+          try{ toast("Tour: nothing visible to highlight"); }catch{}
+          return;
+        }
+
         this.active=true;
         this.step=0;
-        document.body.style.overflow="hidden";
         tourOverlay.classList.add("show");
         tourHighlight.classList.add("show");
         tourCard.classList.add("show");
@@ -2433,10 +2482,14 @@ function rescaleParamInputsForUnitsChange(oldScale, newScale){
       },
       end(){
         this.active=false;
-        document.body.style.overflow="";
         tourOverlay.classList.remove("show");
         tourHighlight.classList.remove("show");
         tourCard.classList.remove("show");
+      },
+      _schedule(){
+        if(!this.active) return;
+        cancelAnimationFrame(this._raf);
+        this._raf = requestAnimationFrame(()=>this.position());
       },
       render(scrollTo=false){
         if(!this.active) return;
@@ -2452,53 +2505,133 @@ function rescaleParamInputsForUnitsChange(oldScale, newScale){
         tourNext.disabled=(this.step===this.steps.length-1);
 
         if(scrollTo && el){
-          try{ el.scrollIntoView({behavior:"smooth", block:"center", inline:"center"}); }catch{}
+          const {vw}= _tourViewport();
+          const isNarrow = vw < 700;
+          try{ el.scrollIntoView({behavior:"smooth", block:isNarrow?"start":"center", inline:"nearest"}); }catch{}
         }
-        setTimeout(()=>{
-          if(!this.active || !el) return;
-          const r=el.getBoundingClientRect();
-          const pad=6;
-          const hx=Math.max(6, r.left-pad);
-          const hy=Math.max(6, r.top-pad);
-          const hw=Math.min(window.innerWidth-12, r.width+pad*2);
-          const hh=Math.min(window.innerHeight-12, r.height+pad*2);
 
-          tourHighlight.style.left=hx+"px";
-          tourHighlight.style.top=hy+"px";
-          tourHighlight.style.width=hw+"px";
-          tourHighlight.style.height=hh+"px";
-
-          const cardW=Math.min(420, window.innerWidth-22);
-          const cardH=210;
-          let cx=r.left + r.width + 12;
-          let cy=r.top;
-
-          if(cx+cardW > window.innerWidth-10) cx=r.left-cardW-12;
-          if(cx < 10) cx=10;
-          if(cy < 10) cy=r.bottom+12;
-          if(cy+cardH > window.innerHeight-10) cy=window.innerHeight-cardH-10;
-
-          tourCard.style.left=cx+"px";
-          tourCard.style.top=cy+"px";
-        }, scrollTo?260:0);
+        // Position after content/layout settle (mobile needs a beat after scroll/toolbar changes)
+        this._schedule();
+        setTimeout(()=>this._schedule(), scrollTo?420:60);
       },
-      next(){ if(!this.active) return; this.step=Math.min(this.steps.length-1,this.step+1); this.render(true); },
-      back(){ if(!this.active) return; this.step=Math.max(0,this.step-1); this.render(true); },
-      restart(){ if(!this.active) return; this.step=0; this.render(true); }
+      position(){
+        if(!this.active) return;
+        if(this.steps.length===0) return;
+        const s=this.steps[this.step];
+        const el=document.querySelector(s.sel);
+        if(!el) return;
+
+        const {vx,vy,vw,vh} = _tourViewport();
+        const {st,sb,sl,sr} = _tourSafe();
+        const isNarrow = vw < 700;
+
+        const r = el.getBoundingClientRect();
+        const pad = isNarrow ? 10 : 6;
+        const margin = 10;
+
+        // Highlight (coords based on *visual* viewport; translate by visualViewport offset)
+        let hw = Math.max(28, Math.min(vw - margin*2, r.width + pad*2));
+        let hh = Math.max(22, Math.min(vh - margin*2, r.height + pad*2));
+        let hx = _tourClamp(r.left - pad, margin + sl, vw - margin - sr - hw);
+        let hy = _tourClamp(r.top  - pad, margin + st, vh - margin - sb - hh);
+
+        tourHighlight.style.left  = (vx + hx) + "px";
+        tourHighlight.style.top   = (vy + hy) + "px";
+        tourHighlight.style.width = hw + "px";
+        tourHighlight.style.height= hh + "px";
+
+        // Card sizing + placement
+        const cardW = isNarrow ? (vw - 22) : Math.min(420, vw - 22);
+        tourCard.style.width = cardW + "px";
+
+        // Measure AFTER width set
+        const cr = tourCard.getBoundingClientRect();
+        const cardH = Math.max(160, Math.min(vh - 20 - st - sb, cr.height || 210));
+
+        let cx=0, cy=0;
+
+        if(isNarrow){
+          // Bottom sheet on mobile for readability
+          cx = 11 + sl;
+          cy = vh - cardH - 10 - sb;
+          cy = Math.max(10 + st, cy);
+        }else{
+          // Prefer right of highlight, fall back to left / above / below
+          cx = r.right + 12;
+          cy = r.top;
+
+          if(cx + cardW > vw - 10 - sr) cx = r.left - cardW - 12;
+          cx = _tourClamp(cx, 10 + sl, vw - cardW - 10 - sr);
+
+          const below = r.bottom + 12;
+          const above = r.top - cardH - 12;
+
+          // If it would go off the bottom, try below, then above, else clamp
+          if(cy + cardH > vh - 10 - sb){
+            if(below + cardH <= vh - 10 - sb) cy = below;
+            else if(above >= 10 + st) cy = above;
+            else cy = vh - cardH - 10 - sb;
+          }
+          cy = _tourClamp(cy, 10 + st, vh - cardH - 10 - sb);
+        }
+
+        tourCard.style.left = (vx + cx) + "px";
+        tourCard.style.top  = (vy + cy) + "px";
+      },
+      next(){
+        if(!this.active) return;
+        this.step = Math.min(this.steps.length-1, this.step+1);
+        this.render(true);
+      },
+      back(){
+        if(!this.active) return;
+        this.step = Math.max(0, this.step-1);
+        this.render(true);
+      },
+      restart(){
+        if(!this.active) return;
+        this.step = 0;
+        this.render(true);
+      }
     };
 
+    // Buttons
     tourBtn.addEventListener("click", ()=>{ tour.active ? tour.restart() : tour.start(); });
-    tourOverlay.addEventListener("click", ()=>tour.end());
     tourClose.addEventListener("click", ()=>tour.end());
     tourBack.addEventListener("click", ()=>tour.back());
     tourNext.addEventListener("click", ()=>tour.next());
     tourRestart.addEventListener("click", ()=>tour.restart());
+
+    // Tap outside (overlay) closes — but only if it was a "tap", not a scroll/drag
+    let _tourTap = null;
+    tourOverlay.addEventListener("pointerdown",(e)=>{ _tourTap={x:e.clientX,y:e.clientY}; }, {passive:true});
+    tourOverlay.addEventListener("pointerup",(e)=>{
+      if(!tour.active || !_tourTap) return;
+      const dx=Math.abs(e.clientX-_tourTap.x);
+      const dy=Math.abs(e.clientY-_tourTap.y);
+      _tourTap=null;
+      if(dx<8 && dy<8) tour.end();
+    }, {passive:true});
+
+    // Keep aligned during scroll / visual viewport changes (mobile address bar, rotation, pinch-zoom)
+    const _tourOnViewport = ()=>{
+      if(!tour.active) return;
+      tour._schedule();
+      setTimeout(()=>tour._schedule(), 60);
+    };
+    window.addEventListener("scroll", _tourOnViewport, {passive:true});
+    if(window.visualViewport){
+      window.visualViewport.addEventListener("resize", _tourOnViewport);
+      window.visualViewport.addEventListener("scroll", _tourOnViewport);
+    }
+
     window.addEventListener("keydown",(e)=>{
       if(!tour.active) return;
       if(e.key==="Escape") tour.end();
       if(e.key==="ArrowRight") tour.next();
       if(e.key==="ArrowLeft") tour.back();
     });
+
 
     // Init
     function init(){
