@@ -1,0 +1,2574 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+  <title>Galton Board Distribution Lab — Galton + Monte Carlo + Latin Hypercube + Cost PDF/CDF (v5.6)</title>
+  <style>
+    :root{
+      --bg:#0b1020;
+      --panel:#101a33;
+      --text:#e8eefc;
+      --muted:#a8b6dd;
+      --accent:#7aa2ff;
+      --accent2:#62d9a6;
+      --danger:#ff6b7a;
+      --line:rgba(255,255,255,.085);
+      --shadow: 0 12px 30px rgba(0,0,0,.35);
+      --radius:16px;
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-right: env(safe-area-inset-right, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+      --safe-left: env(safe-area-inset-left, 0px);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      background:
+        radial-gradient(1200px 800px at 20% 10%, rgba(122,162,255,.18), transparent 60%),
+        radial-gradient(900px 700px at 70% 20%, rgba(98,217,166,.12), transparent 65%),
+        linear-gradient(180deg, #070b16, var(--bg));
+      color:var(--text);
+      min-height:100vh;
+      padding-bottom: calc(18px + var(--safe-bottom));
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    #errorBanner{
+      display:none;
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      padding: calc(10px + var(--safe-top)) calc(14px + var(--safe-right)) 10px calc(14px + var(--safe-left));
+      background: rgba(255,107,122,.20);
+      border-bottom: 1px solid rgba(255,107,122,.35);
+      color: rgba(255,235,238,.95);
+      font-weight: 800;
+      font-size: 12px;
+      line-height: 1.25;
+      backdrop-filter: blur(6px);
+    }
+    #errorBanner .small{
+      display:block;
+      margin-top:4px;
+      font-weight:600;
+      opacity:.9;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    header{
+      padding: calc(16px + var(--safe-top)) calc(18px + var(--safe-right)) 8px calc(18px + var(--safe-left));
+      max-width: 1550px;
+      margin: 0 auto;
+    }
+    .title{display:flex; align-items:flex-end; gap:10px; flex-wrap:wrap;}
+    h1{margin:0; font-size:22px; letter-spacing:.2px}
+    .subtitle{color:var(--muted); font-size:13px; margin-top:6px; line-height:1.35}
+
+    .wrap{
+      max-width: 1550px;
+      margin: 0 auto;
+      padding: 10px calc(18px + var(--safe-right)) 22px calc(18px + var(--safe-left));
+      display:grid;
+      grid-template-columns: 560px 1fr;
+      gap:14px;
+    }
+    @media (max-width: 1200px){ .wrap{grid-template-columns: 1fr;} }
+
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .controls{
+      padding:14px;
+      background: linear-gradient(180deg, rgba(16,26,51,.9), rgba(16,26,51,.6));
+    }
+    .row{display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:10px;}
+    .row3{display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px; margin-bottom:10px;}
+    .row4{display:grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap:10px; margin-bottom:10px;}
+    @media (max-width: 700px){
+      .row,.row3,.row4{grid-template-columns: 1fr;}
+    }
+    label{display:block; font-size:12px; color:var(--muted); margin-bottom:6px;}
+    .tip{border-bottom: 1px dotted rgba(255,255,255,.18); cursor: help;}
+    input[type="range"]{width:100%}
+    input[type="number"], input[type="text"], select, button{
+      width:100%;
+      border-radius: 12px;
+      border:1px solid var(--line);
+      background: rgba(10,16,34,.7);
+      color: var(--text);
+      padding:10px 10px;
+      outline:none;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.02);
+      font-size: 14px;
+      user-select: text;
+      -webkit-user-select: text;
+    }
+    button{
+      cursor:pointer;
+      transition: transform .06s ease, background .2s ease;
+      font-weight: 750;
+      letter-spacing:.2px;
+      touch-action: manipulation;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    button:hover{transform: translateY(-1px)}
+    button:disabled{opacity:.55; cursor:not-allowed; transform:none;}
+    .primary{background: linear-gradient(180deg, rgba(122,162,255,.28), rgba(122,162,255,.14))}
+    .secondary{background: linear-gradient(180deg, rgba(98,217,166,.22), rgba(98,217,166,.10))}
+    .ghost{background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02))}
+    .danger{background: linear-gradient(180deg, rgba(255,107,122,.22), rgba(255,107,122,.10))}
+    .btnRow4{display:grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap:10px; margin-top:10px;}
+    .btnRow3{display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px; margin-top:10px;}
+    @media (max-width: 700px){
+      .btnRow3,.btnRow4{grid-template-columns: 1fr;}
+    }
+
+    .hint{font-size:11px; color: rgba(232,238,252,.75); margin-top:4px; line-height:1.25;}
+    .badge{
+      font-size:11px;
+      padding:5px 9px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.05);
+      color: rgba(232,238,252,.8);
+      white-space:nowrap;
+    }
+    #jsStatus{font-weight:900}
+    .jsBad{border-color: rgba(255,107,122,.35); background: rgba(255,107,122,.12); color: rgba(255,235,238,.95);}
+    .jsOk{border-color: rgba(98,217,166,.35); background: rgba(98,217,166,.10); color: rgba(232,255,246,.92);}
+
+    .toggleLine{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding:10px 10px;
+      border-radius: 12px;
+      border:1px solid rgba(255,255,255,.09);
+      background: rgba(0,0,0,.10);
+      margin-top:8px;
+    }
+    .toggleLine input[type="checkbox"]{
+      width: 18px;
+      height: 18px;
+      accent-color: var(--accent);
+    }
+
+    .kv{
+      margin-top:12px;
+      padding-top:12px;
+      border-top:1px solid var(--line);
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+      font-size:12px;
+      color: var(--muted);
+    }
+    .kv strong{color: var(--text)}
+    @media (max-width: 700px){ .kv{grid-template-columns: 1fr;} }
+
+    .callout{
+      margin-top:10px;
+      padding:10px 10px;
+      border-radius: 14px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.16);
+      font-size:12px;
+      color: rgba(232,238,252,.82);
+      line-height:1.35;
+    }
+    .callout strong{color: rgba(232,238,252,.95)}
+    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
+
+    .viz{
+      padding:14px;
+      background: linear-gradient(180deg, rgba(16,26,51,.55), rgba(16,26,51,.25));
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-areas:
+        "board galton"
+        "pdf   cdf"
+        "explain explain";
+      gap:14px;
+    }
+    @media (max-width: 1200px){
+      .viz{
+        grid-template-columns: 1fr;
+        grid-template-areas:
+          "board"
+          "galton"
+          "pdf"
+          "cdf"
+          "explain";
+      }
+    }
+
+    .pane{
+      padding:10px;
+      background: rgba(10,16,34,.55);
+      border:1px solid var(--line);
+      border-radius: 14px;
+      position:relative;
+      overflow:hidden;
+    }
+    .pane h2{
+      margin:0 0 8px;
+      font-size:14px;
+      letter-spacing:.2px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+      color: rgba(232,238,252,.92);
+    }
+    .paneBoard{grid-area: board;}
+    .paneGalton{grid-area: galton;}
+    .panePdf{grid-area: pdf;}
+    .paneCdf{grid-area: cdf;}
+    .paneExplain{grid-area: explain;}
+
+    canvas{
+      width:100%;
+      height: 320px;
+      display:block;
+      border-radius: 12px;
+      background:
+        radial-gradient(900px 420px at 50% 0%, rgba(122,162,255,.10), transparent 60%),
+        radial-gradient(800px 500px at 50% 50%, rgba(98,217,166,.08), transparent 55%),
+        rgba(6,10,20,.55);
+      border:1px solid rgba(255,255,255,.06);
+      touch-action: none;
+    }
+    /* keep small for PDF/CDF only */
+    canvas.small{height: 230px;}
+    @media (max-width: 700px){
+      canvas{height: 290px;}
+      canvas.small{height: 210px;}
+    }
+    .footerNote{margin-top:8px; color: rgba(232,238,252,.65); font-size:11px; line-height:1.25;}
+
+    #tooltip{
+      position: fixed;
+      left: 0; top: 0;
+      transform: translate(-9999px, -9999px);
+      max-width: 380px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(10,16,34,.92);
+      box-shadow: var(--shadow);
+      color: rgba(232,238,252,.92);
+      font-size: 12px;
+      line-height: 1.3;
+      pointer-events: none;
+      z-index: 50;
+    }
+    #tooltip .tTitle{font-weight: 900; margin-bottom: 4px; color: rgba(232,238,252,.98)}
+    #tooltip .tBody{color: rgba(232,238,252,.86)}
+
+    .toast{
+      position: fixed;
+      left: 50%;
+      bottom: calc(18px + var(--safe-bottom));
+      transform: translateX(-50%);
+      background: rgba(16,26,51,.92);
+      border:1px solid rgba(255,255,255,.10);
+      padding:10px 12px;
+      border-radius: 999px;
+      font-size:12px;
+      color: rgba(232,238,252,.92);
+      box-shadow: var(--shadow);
+      opacity:0;
+      pointer-events:none;
+      transition: opacity .2s ease, transform .2s ease;
+      z-index: 40;
+    }
+    .toast.show{ opacity:1; transform: translateX(-50%) translateY(-2px); }
+
+    .explainInner{
+      padding:10px 10px;
+      border-radius: 14px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(10,16,34,.60);
+      max-height: 240px;
+      overflow:auto;
+    }
+    @media (max-width: 700px){ .explainInner{max-height: 280px;} }
+    .explainInner h3{
+      margin:0 0 6px;
+      font-size:12px;
+      letter-spacing:.2px;
+      color: rgba(232,238,252,.95);
+      display:flex;
+      justify-content:space-between;
+      gap:8px;
+      align-items:baseline;
+      flex-wrap:wrap;
+    }
+    .explainInner .mini{
+      font-size:10px;
+      color: rgba(232,238,252,.68);
+    }
+    .explainInner .body{
+      font-size:11px;
+      color: rgba(232,238,252,.82);
+      line-height:1.35;
+    }
+    .explainInner .body ul{ margin:6px 0 0 16px; padding:0; }
+    .explainInner .body li{ margin:3px 0; }
+    .chip{
+      display:inline-block;
+      font-size:10px;
+      padding:3px 8px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.05);
+      color: rgba(232,238,252,.78);
+      white-space:nowrap;
+    }
+
+    /* Tour */
+    #tourOverlay{
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.58);
+      z-index: 80;
+      display:none;
+    }
+    #tourOverlay.show{ display:block; }
+    #tourHighlight{
+      position: fixed;
+      border-radius: 14px;
+      border: 2px solid rgba(122,162,255,.92);
+      box-shadow: 0 0 18px rgba(122,162,255,.25);
+      z-index: 81;
+      pointer-events:none;
+      display:none;
+    }
+    #tourHighlight.show{ display:block; }
+
+    #tourCard{
+      position: fixed;
+      z-index: 82;
+      width: min(420px, calc(100vw - 22px));
+      border-radius: 16px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(16,26,51,.95);
+      box-shadow: var(--shadow);
+      padding:12px 12px 10px;
+      display:none;
+    }
+    #tourCard.show{ display:block; }
+    #tourCard .tHead{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:6px;
+    }
+    #tourCard .tTitle{
+      font-weight: 900;
+      font-size: 13px;
+      color: rgba(232,238,252,.97);
+    }
+    #tourCard .tProg{
+      font-size: 11px;
+      color: rgba(232,238,252,.70);
+      white-space:nowrap;
+      padding-top:2px;
+    }
+    #tourCard .tBody{
+      font-size: 12px;
+      color: rgba(232,238,252,.86);
+      line-height: 1.35;
+      margin-bottom:10px;
+    }
+    #tourCard .tBtns{
+      display:grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+      gap:8px;
+    }
+    @media (max-width: 520px){
+      #tourCard .tBtns{ grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div id="errorBanner">
+  Runtime error (v5.6): something threw an exception.
+  <span class="small" id="errorBannerMsg"></span>
+</div>
+
+<header>
+  <div class="title">
+    <h1>Galton Board Distribution Lab</h1>
+    <span class="badge jsBad" id="jsStatus">JS: not loaded</span>
+    <span class="badge"><span class="tip" data-tip="Pipeline — Balls → Binomial bins → (optional Probability Integral Transform (PIT) uniformization) → u∈[0,1] → Inverse CDF (quantile) Q(u) → Cost mapping.">Balls → Shapes</span></span>
+    <span class="badge"><span class="tip" data-tip="Monte Carlo draws random u. Latin Hypercube draws stratified u to reduce variance for a given N.">MC & LHS</span></span>
+    <span class="badge"><span class="tip" data-tip="Auto-fit sets parameters so Base Cost behaves like P50 and Budget behaves like your chosen P-level.">Auto-Fit</span></span>
+  </div>
+  <div class="subtitle">
+    Drop balls to build a <span class="tip" data-tip="Galton board — repeated left/right trials create a binomial histogram (normal-ish when rows are large).">Galton</span> histogram.
+    Generate cost risk shapes via <span class="tip" data-tip="Monte Carlo — random sampling; Latin Hypercube — stratified sampling across the unit interval.">MC/LHS</span>.
+    Hover/tap dotted terms for definitions.
+  </div>
+</header>
+
+<div class="wrap">
+  <!-- Controls -->
+  <div class="card">
+    <div class="controls">
+
+      <div class="row">
+        <div>
+          <label><span class="tip" data-tip="Rows (levels) of the Galton board. More rows → more bins and smoother binomial.">Galton rows</span></label>
+          <input id="rows" type="number" min="6" max="24" value="14"/>
+          <div class="hint">Bins = rows + 1</div>
+        </div>
+        <div>
+          <label><span class="tip" data-tip="Probability a ball goes Right at each peg. 0.50 is symmetric; other values skew the Galton histogram.">Galton pRight</span></label>
+          <input id="pRight" type="range" min="0.01" max="0.99" step="0.01" value="0.50"/>
+          <div class="hint">pRight: <span id="pRightVal">0.50</span></div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div>
+          <label><span class="tip" data-tip="How many balls to drop for a batch. We animate some, simulate the rest quickly.">Balls per batch</span></label>
+          <input id="ballBatch" type="number" min="1" max="200000" value="600"/>
+          <div class="hint">Drop to populate Galton + (optional) u-samples.</div>
+        </div>
+        <div>
+          <label><span class="tip" data-tip="Visual animation speed only. Does not change probabilities.">Animation speed</span></label>
+          <input id="speed" type="range" min="0.4" max="2.5" step="0.05" value="1.0"/>
+          <div class="hint">Speed: <span id="speedVal">1.00</span></div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div>
+          <label><span class="tip" data-tip="How u is generated. In Galton mode, dropped balls generate u. Monte Carlo (MC) / Latin Hypercube Sampling (LHS) generate u instantly.">Risk generation method</span></label>
+          <select id="genMethod">
+            <option value="galton">From Galton</option>
+            <option value="mc">Monte Carlo (u ~ U(0,1))</option>
+            <option value="lhs">Latin Hypercube (stratified u)</option>
+          </select>
+          <div class="hint" id="genHint">Dropped balls generate u-samples; distributions update live.</div>
+        </div>
+        <div>
+          <label><span class="tip" data-tip="Total number of u-samples to generate for Monte Carlo (MC) / Latin Hypercube Sampling (LHS) (no balls needed).">Sim samples (MC/LHS)</span></label>
+          <input id="simN" type="number" min="10" max="400000" value="8000"/>
+          <div class="hint">Simulate replaces/extends u-samples.</div>
+        </div>
+      </div>
+
+      <div class="toggleLine" id="pitLine">
+        <div>
+          <div style="font-size:12px; color:rgba(232,238,252,.92); font-weight:800;">
+            <span class="tip" data-tip="ON: Probability Integral Transform (PIT)-corrected u is uniform (mathematically correct). OFF: u derived directly from bin index (shows how Galton parameters can distort distributions if you skip the PIT step).">PIT uniformization</span>
+          </div>
+          <div class="hint">Make pRight/rows affect cost shape (OFF) vs correct uniform u (ON).</div>
+        </div>
+        <input id="pitOn" type="checkbox" checked/>
+      </div>
+
+      <div class="row">
+        <div>
+          <label><span class="tip" data-tip="Pick the distribution family. Changing this instantly remaps the PDF/CDF because we store u-samples.">Risk distribution</span></label>
+          <select id="dist">
+            <option value="normal">Normal (μ, σ)</option>
+            <option value="lognormal">Lognormal (median, σlog)</option>
+            <option value="triangular">Triangular (min, mode, max)</option>
+            <option value="uniform">Uniform (min, max)</option>
+            <option value="weibull">Weibull (k, λ)</option>
+            <option value="exponential">Exponential (mean)</option>
+          </select>
+          <div class="hint"><span class="tip" data-tip="White overlays are theoretical; blue curves are empirical from u-samples mapped through Q(u).">Theory vs empirical</span> updates instantly.</div>
+        </div>
+        <div>
+          <label><span class="tip" data-tip="Interpretation of X (the distribution variable) relative to Base Cost. Remaps live.">Apply to cost as</span></label>
+          <select id="applyMode">
+            <option value="direct">Direct cost (cost = X)</option>
+            <option value="delta" selected>Delta on base (cost = base + X)</option>
+            <option value="mult">Multiplier (cost = base × X)</option>
+          </select>
+          <div class="hint">Direct: $ | Delta: $Δ | Mult: factor.</div>
+        </div>
+      </div>
+
+      <div class="row3" id="paramsRow">
+        <div id="p1Wrap">
+          <label id="p1Label">μ</label>
+          <input id="p1" type="number" step="0.01" value="0"/>
+          <div class="hint" id="p1Hint"></div>
+        </div>
+        <div id="p2Wrap">
+          <label id="p2Label">σ</label>
+          <input id="p2" type="number" step="0.01" value="10"/>
+          <div class="hint" id="p2Hint"></div>
+        </div>
+        <div id="p3Wrap">
+          <label id="p3Label">—</label>
+          <input id="p3" type="number" step="0.01" value="0"/>
+          <div class="hint" id="p3Hint"></div>
+        </div>
+      </div>
+
+      <div class="row3">
+        <div>
+          <label><span class="tip" data-tip="Display units for Base Cost and Budget. Values are stored internally in dollars; display scales by this selection.">Units</span></label>
+          <select id="units">
+            <option value="1">$</option>
+            <option value="1000">$K</option>
+            <option value="1000000" selected>$M</option>
+          </select>
+          <div class="hint">Applies to Base + Budget inputs and cost-like params.</div>
+        </div>
+        <div>
+          <label><span class="tip" data-tip="Base cost used when applying deltas or multipliers. Remaps instantly.">Base cost</span></label>
+          <input id="baseCost" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" value="100"/>
+          <div class="hint">Anchor for delta/mult mapping + auto-fit.</div>
+        </div>
+        <div>
+          <label><span class="tip" data-tip="Budget line. Auto-fit can treat this as your chosen P-level (e.g., P80).">Budget threshold</span></label>
+          <input id="budget" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" value="120"/>
+          <div class="hint">Used for exceedance + auto-fit target.</div>
+        </div>
+      </div>
+
+      <div class="row3">
+        <div>
+          <label><span class="tip" data-tip="Target percentile marker on the S-curve. Auto-fit sets parameters so Budget≈P-level.">Target P-level</span></label>
+          <input id="pTarget" type="range" min="55" max="95" step="1" value="80"/>
+          <div class="hint">P<span id="pTargetVal">80</span> → <span id="pTargetCost">–</span></div>
+        </div>
+        <div>
+          <label><span class="tip" data-tip="Auto-fit spread control (roughly a coefficient of variation). Higher = wider distribution.">Uncertainty</span></label>
+          <input id="uncert" type="range" min="0.05" max="0.45" step="0.01" value="0.15"/>
+          <div class="hint">CV-ish: <span id="uncertVal">0.15</span></div>
+        </div>
+        <div>
+          <label><span class="tip" data-tip="Auto-fit right-tail control. Higher = more right-skew (triangular/lognormal/weibull).">Right-tail</span></label>
+          <input id="tailBias" type="range" min="0.00" max="1.00" step="0.02" value="0.55"/>
+          <div class="hint">Skew: <span id="tailBiasVal">0.55</span></div>
+        </div>
+      </div>
+
+      <div class="toggleLine" id="replaceLine">
+        <div>
+          <div style="font-size:12px; color:rgba(232,238,252,.92); font-weight:800;">
+            <span class="tip" data-tip="When simulating via Monte Carlo (MC) / Latin Hypercube Sampling (LHS), Replace clears existing u-samples first. Extend appends more u-samples.">Simulate replaces samples</span>
+          </div>
+          <div class="hint">Recommend ON for learning (clean comparisons).</div>
+        </div>
+        <input id="replaceOn" type="checkbox" checked/>
+      </div>
+
+      <div class="btnRow4">
+        <button id="autoFit" class="secondary">Auto-calculate params</button>
+        <button id="simulate" class="primary">Simulate (MC/LHS)</button>
+        <button id="dropBatch" class="secondary">Drop Ball Batch</button>
+        <button id="reset" class="danger">Reset</button>
+      </div>
+
+      <div class="btnRow3">
+        <button id="dropOne" class="primary">Drop 1 Ball</button>
+        <button id="togglePath" class="ghost">Last Path: Off</button>
+        <button id="tourBtn" class="ghost">Tour</button>
+      </div>
+
+      <div class="callout">
+        <strong>Last drop explained</strong>
+        <div id="lastExplain" style="margin-top:6px;" class="mono">Drop a ball to see: bin → u → Q(u) → cost</div>
+      </div>
+
+      <div class="kv">
+        <div>Galton balls: <strong id="galtonN">0</strong></div>
+        <div>u-samples: <strong id="riskN">0</strong></div>
+        <div>E[cost]: <strong id="ecost">–</strong></div>
+        <div>P(cost > budget): <strong id="pover">–</strong></div>
+        <div>Skew(cost): <strong id="skew">–</strong></div>
+        <div>Tail(P95/P50): <strong id="tail">–</strong></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Visuals -->
+  <div class="card">
+    <div class="viz">
+      <div class="pane paneBoard">
+        <h2>
+          <span class="tip" data-tip="Galton board — repeated left/right trials create a binomial histogram.">Galton Board</span>
+          <span class="badge" id="boardBadge">—</span>
+        </h2>
+        <canvas id="board"></canvas>
+        <div class="footerNote">Tap/click to drop a ball. “Last Path” highlights the most recent route.</div>
+      </div>
+
+      <div class="pane paneGalton">
+        <h2>
+          <span class="tip" data-tip="Histogram of Galton landing bins. White overlay = expected counts N·BinomPMF (binomial probability mass function) on the same y-scale as the bars.">Galton Histogram</span>
+          <span class="badge" id="galtonBadge">—</span>
+        </h2>
+        <!-- v5.6: NOT small; fills the row like the board -->
+        <canvas id="galtonHist"></canvas>
+        <div class="footerNote">Bin index k on X-axis (0…rows). This is the binomial shape (normal-ish when rows are larger).</div>
+      </div>
+
+      <div class="pane panePdf">
+        <h2>
+          <span class="tip" data-tip="Histogram of cost after mapping u → Q(u) then applying Base/Mode. White overlay = expected bin counts from theoretical PDF (Probability Density Function) on the same y-scale.">Cost PDF (Histogram + Theory)</span>
+          <span class="badge" id="pdfBadge">—</span>
+        </h2>
+        <canvas id="costPdf" class="small"></canvas>
+        <div class="footerNote">Budget is shown as a vertical line. Changing distribution/params/base/apply mode remaps instantly.</div>
+      </div>
+
+      <div class="pane paneCdf" id="cdfPane">
+        <h2>
+          <span class="tip" data-tip="Cost CDF (Cumulative Distribution Function, “S-curve”). Blue = empirical ECDF (Empirical CDF) from u→cost. White = theoretical CDF from parameters.">Cost S-Curve (CDF)</span>
+          <span class="badge" id="cdfBadge">Interactive</span>
+        </h2>
+        <canvas id="costCdf" class="small"></canvas>
+        <div class="footerNote" id="pNote">P10/P50/P80/P90: –</div>
+      </div>
+
+      <div class="pane paneExplain">
+        <h2>
+          <span class="tip" data-tip="Updates based on chosen distribution, sampling method, N, and observed percentiles to help cost analysts interpret implications + convergence.">Distribution Explanation</span>
+          <span class="badge" id="distExplainMini">–</span>
+        </h2>
+        <div class="explainInner">
+          <h3>
+            <span>What you’re seeing</span>
+            <span class="mini" id="distExplainMini2">–</span>
+          </h3>
+          <div class="body" id="distExplainBody">
+            Drop balls or simulate u-samples to see interpretation + convergence notes.
+          </div>
+        </div>
+        <div class="footerNote">Tip: If this section never updates and canvases are blank, check the header badge — it should say “JS: OK”.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<div id="tooltip" aria-hidden="true">
+  <div class="tTitle" id="ttTitle">Info</div>
+  <div class="tBody" id="ttBody"></div>
+</div>
+
+<!-- Tour -->
+<div id="tourOverlay"></div>
+<div id="tourHighlight"></div>
+<div id="tourCard">
+  <div class="tHead">
+    <div class="tTitle" id="tourTitle">Tour</div>
+    <div class="tProg" id="tourProg">1/1</div>
+  </div>
+  <div class="tBody" id="tourBody">...</div>
+  <div class="tBtns">
+    <button id="tourClose" class="danger">Close</button>
+    <button id="tourBack" class="ghost">Back</button>
+    <button id="tourNext" class="primary">Next</button>
+    <button id="tourRestart" class="ghost">Restart</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  const errorBanner = document.getElementById("errorBanner");
+  const errorBannerMsg = document.getElementById("errorBannerMsg");
+  const jsStatus = document.getElementById("jsStatus");
+
+  function showFatal(msg, err){
+    try{
+      console.error("[Distribution Shape Lab]", msg, err || "");
+      if(errorBanner){
+        errorBanner.style.display="block";
+        errorBannerMsg.textContent = String(msg) + (err ? ("\n" + (err.stack || err.message || String(err))) : "");
+      }
+    }catch{}
+  }
+
+  if(jsStatus){
+    jsStatus.textContent="JS: parsed";
+    jsStatus.classList.remove("jsBad");
+    jsStatus.classList.add("jsOk");
+  }
+
+  window.addEventListener("error",(e)=>showFatal(e.message||"Unhandled error", e.error));
+  window.addEventListener("unhandledrejection",(e)=>showFatal("Unhandled promise rejection", e.reason));
+
+  try{
+    const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+    const lerp=(a,b,t)=>a+(b-a)*t;
+    const now=()=>performance.now();
+
+    const fmt=(x,d=3)=>Number.isFinite(x)?x.toFixed(d):"–";
+    const fmtPct=(p)=>Number.isFinite(p)?(p*100).toFixed(1)+"%":"–";
+
+    function num(value, fallback){
+      const v = (typeof value === "number") ? value : parseFloat(String(value).trim());
+      return Number.isFinite(v) ? v : fallback;
+    }
+    function intNum(value, fallback){
+      const v = parseInt(String(value).trim(), 10);
+      return Number.isFinite(v) ? v : fallback;
+    }
+    function makeDebouncer(ms, fn){
+      let t=null;
+      return () => { clearTimeout(t); t=setTimeout(fn, ms); };
+    }
+    function toast(msg){
+      const el=document.getElementById("toast");
+      if(!el) return;
+      el.textContent=msg;
+      el.classList.add("show");
+      clearTimeout(toast._t);
+      toast._t=setTimeout(()=>el.classList.remove("show"),1200);
+    }
+
+    // Tooltip
+    const tooltip=document.getElementById("tooltip");
+    const ttTitle=document.getElementById("ttTitle");
+    const ttBody=document.getElementById("ttBody");
+    function showTipAt(clientX, clientY, text){
+      if(!text || !tooltip) return;
+      const parts=String(text).split("—");
+      ttTitle.textContent=(parts.length>1)?parts[0].trim():"Definition";
+      ttBody.textContent=(parts.length>1)?parts.slice(1).join("—").trim():String(text).trim();
+      const pad=14;
+      const x=clamp(clientX+14, pad, window.innerWidth-400);
+      const y=clamp(clientY+16, pad, window.innerHeight-170);
+      tooltip.style.left=x+"px";
+      tooltip.style.top=y+"px";
+      tooltip.style.transform="translate(0,0)";
+    }
+    function hideTip(){
+      if(!tooltip) return;
+      tooltip.style.transform="translate(-9999px,-9999px)";
+      tooltip.style.left="0px";
+      tooltip.style.top="0px";
+    }
+    const canHover = window.matchMedia && window.matchMedia("(hover: hover)").matches;
+    if(canHover){
+      document.addEventListener("mousemove",(e)=>{
+        const el=e.target && e.target.closest && e.target.closest("[data-tip]");
+        if(!el){ hideTip(); return; }
+        showTipAt(e.clientX,e.clientY,el.getAttribute("data-tip"));
+      }, {passive:true});
+      window.addEventListener("scroll", hideTip, {passive:true});
+    }else{
+      document.addEventListener("pointerdown",(e)=>{
+        const el=e.target && e.target.closest && e.target.closest("[data-tip]");
+        if(!el) return;
+        showTipAt(e.clientX,e.clientY,el.getAttribute("data-tip"));
+        clearTimeout(hideTip._t);
+        hideTip._t=setTimeout(hideTip,1600);
+      }, {passive:true});
+    }
+
+    // DOM
+    const $=(id)=>{
+      const el=document.getElementById(id);
+      if(!el) throw new Error("Missing element #"+id);
+      return el;
+    };
+
+    const rowsEl=$("rows");
+    const pRightEl=$("pRight");
+    const pRightVal=$("pRightVal");
+    const ballBatchEl=$("ballBatch");
+    const speedEl=$("speed");
+    const speedVal=$("speedVal");
+
+    const genMethodEl=$("genMethod");
+    const genHint=$("genHint");
+    const simNEl=$("simN");
+    const simulateBtn=$("simulate");
+
+    const pitLine=$("pitLine");
+    const pitOnEl=$("pitOn");
+    const replaceLine=$("replaceLine");
+    const replaceOnEl=$("replaceOn");
+
+    const distEl=$("dist");
+    const applyModeEl=$("applyMode");
+
+    const p1Wrap=$("p1Wrap"), p2Wrap=$("p2Wrap"), p3Wrap=$("p3Wrap");
+    const p1Label=$("p1Label"), p2Label=$("p2Label"), p3Label=$("p3Label");
+    const p1=$("p1"), p2=$("p2"), p3=$("p3");
+    const p1Hint=$("p1Hint"), p2Hint=$("p2Hint"), p3Hint=$("p3Hint");
+
+    const unitsEl=$("units");
+    const baseCostEl=$("baseCost");
+    const budgetEl=$("budget");
+
+    const pTargetEl=$("pTarget");
+    const pTargetVal=$("pTargetVal");
+    const pTargetCost=$("pTargetCost");
+
+    const uncertEl=$("uncert");
+    const uncertVal=$("uncertVal");
+    const tailBiasEl=$("tailBias");
+    const tailBiasVal=$("tailBiasVal");
+
+    const autoFitBtn=$("autoFit");
+    const dropOneBtn=$("dropOne");
+    const dropBatchBtn=$("dropBatch");
+    const resetBtn=$("reset");
+    const togglePathBtn=$("togglePath");
+    const tourBtn=$("tourBtn");
+
+    const galtonNEl=$("galtonN");
+    const riskNEl=$("riskN");
+    const ecostEl=$("ecost");
+    const poverEl=$("pover");
+    const skewEl=$("skew");
+    const tailEl=$("tail");
+
+    const boardBadge=$("boardBadge");
+    const galtonBadge=$("galtonBadge");
+    const pdfBadge=$("pdfBadge");
+    const cdfBadge=$("cdfBadge");
+    const pNote=$("pNote");
+    const lastExplain=$("lastExplain");
+
+    const distExplainMini=$("distExplainMini");
+    const distExplainMini2=$("distExplainMini2");
+    const distExplainBody=$("distExplainBody");
+
+    const boardCanvas=$("board");
+    const galtonHistCanvas=$("galtonHist");
+    const costPdfCanvas=$("costPdf");
+    const costCdfCanvas=$("costCdf");
+
+    // Canvas fit
+    function fitCanvas(canvas){
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+
+      // IMPORTANT: match the canvas drawing coordinate system to its CSS size.
+      // Using hard minimums can cause browser scaling, blurry text, and "messed up" axes on some layouts.
+      const wCss = Math.max(1, Math.round(rect.width || canvas.clientWidth || 300));
+      const hCss = Math.max(1, Math.round(rect.height || canvas.clientHeight || 200));
+
+      canvas.width  = Math.max(1, Math.floor(wCss * dpr));
+      canvas.height = Math.max(1, Math.floor(hCss * dpr));
+
+      const ctx = canvas.getContext("2d");
+      ctx.setTransform(dpr,0,0,dpr,0,0);
+      return ctx;
+    }
+    let bctx=fitCanvas(boardCanvas);
+    let ghctx=fitCanvas(galtonHistCanvas);
+    let pdfctx=fitCanvas(costPdfCanvas);
+    let cdfctx=fitCanvas(costCdfCanvas);
+
+    let needsRedraw = true;
+    let lastDraw = 0;
+    let lastTick = now();
+
+    window.addEventListener("resize",()=>{
+      bctx=fitCanvas(boardCanvas);
+      ghctx=fitCanvas(galtonHistCanvas);
+      pdfctx=fitCanvas(costPdfCanvas);
+      cdfctx=fitCanvas(costCdfCanvas);
+      needsRedraw=true;
+      if(tour.active) tour.render(true);
+    }, {passive:true});
+
+    // --- Math helpers ---
+    function logChoose(n,k){
+      let s=0;
+      for(let i=1;i<=k;i++) s += Math.log(n-(k-i)) - Math.log(i);
+      return s;
+    }
+    function binomPMF(n,k,p){
+      const lp = logChoose(n,k) + k*Math.log(p) + (n-k)*Math.log(1-p);
+      return Math.exp(lp);
+    }
+    function erfApprox(z){
+      const t=1/(1+0.3275911*Math.abs(z));
+      const a1=0.254829592, a2=-0.284496736, a3=1.421413741, a4=-1.453152027, a5=1.061405429;
+      const v=1-(((((a5*t+a4)*t+a3)*t+a2)*t+a1)*t)*Math.exp(-z*z);
+      return (z>=0)?v:-v;
+    }
+    function normalPDF(x,mu,s){
+      if(s<=0) return 0;
+      const z=(x-mu)/s;
+      return (1/(s*Math.sqrt(2*Math.PI)))*Math.exp(-0.5*z*z);
+    }
+    function normalCDF(x,mu,s){
+      if(s<=0) return x<mu?0:1;
+      const z=(x-mu)/(s*Math.SQRT2);
+      return 0.5*(1+erfApprox(z));
+    }
+    function invNormCDF(p){
+      p=clamp(p, 1e-12, 1-1e-12);
+      const a=[-3.969683028665376e+01,2.209460984245205e+02,-2.759285104469687e+02,1.383577518672690e+02,-3.066479806614716e+01,2.506628277459239e+00];
+      const b=[-5.447609879822406e+01,1.615858368580409e+02,-1.556989798598866e+02,6.680131188771972e+01,-1.328068155288572e+01];
+      const c=[-7.784894002430293e-03,-3.223964580411365e-01,-2.400758277161838e+00,-2.549732539343734e+00,4.374664141464968e+00,2.938163982698783e+00];
+      const d=[7.784695709041462e-03,3.224671290700398e-01,2.445134137142996e+00,3.754408661907416e+00];
+      const plow=0.02425, phigh=1-plow;
+      let q,r;
+      if(p<plow){
+        q=Math.sqrt(-2*Math.log(p));
+        return (((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5]) /
+               ((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);
+      }
+      if(p>phigh){
+        q=Math.sqrt(-2*Math.log(1-p));
+        return -(((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5]) /
+                ((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);
+      }
+      q=p-0.5;
+      r=q*q;
+      return (((((a[0]*r+a[1])*r+a[2])*r+a[3])*r+a[4])*r+a[5])*q /
+             (((((b[0]*r+b[1])*r+b[2])*r+b[3])*r+b[4])*r+1);
+    }
+
+    // --- Currency formatting ---
+    function makeMoneyFormatter(maxFrac){
+      try{
+        return new Intl.NumberFormat(undefined, {
+          style:"currency",
+          currency:"USD",
+          currencySign:"accounting",
+          maximumFractionDigits:maxFrac,
+          minimumFractionDigits:0
+        });
+      }catch{
+        return new Intl.NumberFormat(undefined, {
+          style:"currency",
+          currency:"USD",
+          maximumFractionDigits:maxFrac,
+          minimumFractionDigits:0
+        });
+      }
+    }
+    const money0=makeMoneyFormatter(0);
+    const money1=makeMoneyFormatter(1);
+    const money2=makeMoneyFormatter(2);
+
+    // ===== State =====
+    const state = {
+      rows: 14,
+      pRight: 0.50,
+      speed: 1.0,
+      ballBatch: 600,
+
+      genMethod: "galton",
+      simN: 8000,
+      pitOn: true,
+      replaceOn: true,
+
+      dist: "normal",
+      applyMode: "delta",
+
+      unitScale: 1000000,
+      baseCost: 100000000,
+      budget: 120000000,
+      pTarget: 80,
+      uncert: 0.15,
+      tailBias: 0.55,
+
+      galtonCounts: [],
+      galtonN: 0,
+      pmf: [],
+      cdfBelow: [],
+
+      uN: 0,
+      uReservoir: [],
+      RES_MAX: 9000,
+
+      costSortedDirty: true,
+      costSorted: null,
+      lastStats: null,
+
+      showLastPath:false,
+      lastPath:null,
+      lastDrop:null,
+
+      balls: [],
+      simRemainder: 0,
+
+      // for interactive CDF cursor
+      cdfCursor: {active:false, cost:NaN, p:NaN},
+      cdfLastRange: null
+    };
+
+    function unitLabel(){
+      if(state.unitScale===1) return "$";
+      if(state.unitScale===1000) return "$K";
+      return "$M";
+    }
+    function formatScaledMoney(dollars){
+      const scale=state.unitScale;
+      const v=dollars/scale;
+      const f=(scale===1)?money0:((scale===1000)?money1:money2);
+      return f.format(v);
+    }
+    function parseUnitsInput(str, fallbackDollars){
+      const cleaned=String(str)
+        .replace(/\$/g,"")
+        .replace(/,/g,"")
+        .replace(/\s/g,"")
+        .replace(/\(/g,"-")
+        .replace(/\)/g,"");
+      const v=parseFloat(cleaned);
+      if(!Number.isFinite(v)) return fallbackDollars;
+      return Math.max(1, v*state.unitScale);
+    }
+    function formatPlainUnits(dollars){
+      const v=dollars/state.unitScale;
+      if(state.unitScale===1) return Math.round(v).toLocaleString("en-US");
+      if(state.unitScale===1000){
+        const vv=Math.round(v*10)/10;
+        return vv.toLocaleString("en-US",{minimumFractionDigits:1, maximumFractionDigits:1});
+      }
+      const vv=Math.round(v*100)/100;
+      return vv.toLocaleString("en-US",{minimumFractionDigits:2, maximumFractionDigits:2});
+    }
+    function syncCurrencyInputsFromState(){
+      baseCostEl.value=formatScaledMoney(state.baseCost);
+      budgetEl.value=formatScaledMoney(state.budget);
+    }
+    function attachCurrencyHandlers(el, getVal, setVal){
+      el.addEventListener("focus",()=>{
+        el.value=formatPlainUnits(getVal());
+        setTimeout(()=>{ try{ el.select(); }catch{} }, 0);
+      });
+      el.addEventListener("input",()=>{
+        setVal(parseUnitsInput(el.value, getVal()));
+        scheduleDirty();
+      });
+      el.addEventListener("blur",()=>{
+        el.value=formatScaledMoney(getVal());
+        markDirty();
+      });
+    }
+
+    function xScaleForParams(){
+      // If X is cost-like (direct or delta), interpret params in the selected units.
+      // If multiplier mode, params are dimensionless factors.
+      return (state.applyMode==="mult") ? 1 : state.unitScale;
+    }
+
+function rescaleParamInputsForUnitsChange(oldScale, newScale){
+  // Keep the *underlying* parameter values stable when the display units change.
+  // Example: switching from $M → $ should multiply the displayed μ/σ by 1e6.
+  if(!Number.isFinite(oldScale) || !Number.isFinite(newScale) || oldScale<=0 || newScale<=0) return;
+  if(oldScale===newScale) return;
+  if(state.applyMode==="mult") return; // params are dimensionless in multiplier mode
+  const ratio = oldScale/newScale;
+  const d = state.dist;
+  const scaleInput=(el)=>{
+    const v=num(el.value, NaN);
+    if(!Number.isFinite(v)) return;
+    el.value = (v*ratio).toFixed(6);
+  };
+  if(d==="normal"){ scaleInput(p1); scaleInput(p2); return; }
+  if(d==="lognormal"){ scaleInput(p1); return; } // sigmaLog stays the same
+  if(d==="triangular"){ scaleInput(p1); scaleInput(p2); scaleInput(p3); return; }
+  if(d==="uniform"){ scaleInput(p1); scaleInput(p2); return; }
+  if(d==="exponential"){ scaleInput(p1); return; }
+  if(d==="weibull"){ scaleInput(p2); return; } // k is unitless
+}
+    function fmtX(x){
+      if(!Number.isFinite(x)) return "–";
+      if(state.applyMode==="mult") return x.toFixed(4);
+      return formatScaledMoney(x);
+    }
+
+    function markDirty(){
+      state.costSortedDirty=true;
+      state.lastStats=null;
+      needsRedraw=true;
+      refreshLastExplain();
+      updateDistributionExplanationThrottled();
+    }
+    const scheduleDirty=makeDebouncer(120, markDirty);
+
+    // ===== Distribution functions (v5.6: lognormal uses median + sigmaLog) =====
+    function distQuantile(u, dist, params){
+      u=clamp(u, 1e-12, 1-1e-12);
+      if(dist==="uniform"){
+        const a=params.a, b=params.b;
+        return a+(b-a)*u;
+      }
+      if(dist==="triangular"){
+        const a=params.a, c=params.c, b=params.b;
+        const denom=Math.max(1e-12,(b-a));
+        const fc=(c-a)/denom;
+        if(u<fc) return a+Math.sqrt(u*denom*Math.max(1e-12,(c-a)));
+        return b-Math.sqrt((1-u)*denom*Math.max(1e-12,(b-c)));
+      }
+      if(dist==="normal"){
+        return params.mu + params.sigma*invNormCDF(u);
+      }
+      if(dist==="lognormal"){
+        const med=Math.max(1e-12, params.median);
+        const z=invNormCDF(u);
+        return med * Math.exp(params.sigmaLog*z);
+      }
+      if(dist==="exponential"){
+        const mean=params.mean;
+        const lambda=1/Math.max(1e-12, mean);
+        return -Math.log(1-u)/lambda;
+      }
+      if(dist==="weibull"){
+        const k=params.k, lam=params.lam;
+        return lam*Math.pow(-Math.log(1-u), 1/Math.max(1e-12,k));
+      }
+      return NaN;
+    }
+    function distPDF(x, dist, params){
+      if(!Number.isFinite(x)) return 0;
+      if(dist==="uniform"){
+        const a=params.a, b=params.b;
+        if(x<a||x>b) return 0;
+        return 1/Math.max(1e-12,(b-a));
+      }
+      if(dist==="triangular"){
+        const a=params.a, c=params.c, b=params.b;
+        if(x<a||x>b) return 0;
+        if(x<=c) return 2*(x-a)/Math.max(1e-12,(b-a)*(c-a));
+        return 2*(b-x)/Math.max(1e-12,(b-a)*(b-c));
+      }
+      if(dist==="normal"){
+        return normalPDF(x, params.mu, params.sigma);
+      }
+      if(dist==="lognormal"){
+        if(x<=0) return 0;
+        const med=Math.max(1e-12, params.median);
+        const muLog=Math.log(med);
+        const s=params.sigmaLog;
+        const z=(Math.log(x)-muLog)/s;
+        return (1/(x*s*Math.sqrt(2*Math.PI)))*Math.exp(-0.5*z*z);
+      }
+      if(dist==="exponential"){
+        if(x<0) return 0;
+        const lambda=1/Math.max(1e-12, params.mean);
+        return lambda*Math.exp(-lambda*x);
+      }
+      if(dist==="weibull"){
+        if(x<0) return 0;
+        const k=Math.max(1e-12, params.k), lam=Math.max(1e-12, params.lam);
+        const t=x/lam;
+        return (k/lam)*Math.pow(t,k-1)*Math.exp(-Math.pow(t,k));
+      }
+      return 0;
+    }
+    function distCDF(x, dist, params){
+      if(!Number.isFinite(x)) return NaN;
+      if(dist==="uniform"){
+        const a=params.a, b=params.b;
+        if(x<=a) return 0;
+        if(x>=b) return 1;
+        return (x-a)/Math.max(1e-12,(b-a));
+      }
+      if(dist==="triangular"){
+        const a=params.a, c=params.c, b=params.b;
+        if(x<=a) return 0;
+        if(x>=b) return 1;
+        if(x<=c) return ((x-a)*(x-a))/Math.max(1e-12,(b-a)*(c-a));
+        return 1-((b-x)*(b-x))/Math.max(1e-12,(b-a)*(b-c));
+      }
+      if(dist==="normal"){
+        return normalCDF(x, params.mu, params.sigma);
+      }
+      if(dist==="lognormal"){
+        if(x<=0) return 0;
+        const med=Math.max(1e-12, params.median);
+        const muLog=Math.log(med);
+        const z=(Math.log(x)-muLog)/(params.sigmaLog*Math.SQRT2);
+        return 0.5*(1+erfApprox(z));
+      }
+      if(dist==="exponential"){
+        if(x<0) return 0;
+        return 1-Math.exp(-x/Math.max(1e-12,params.mean));
+      }
+      if(dist==="weibull"){
+        if(x<0) return 0;
+        const k=Math.max(1e-12, params.k), lam=Math.max(1e-12, params.lam);
+        return 1 - Math.exp(-Math.pow(x/lam,k));
+      }
+      return NaN;
+    }
+
+    function getDistParams(){
+      const d=state.dist;
+      const sc=xScaleForParams();
+      if(d==="normal"){
+        return {mu:num(p1.value,0)*sc, sigma:Math.max(1e-12, num(p2.value,1)*sc)};
+      }
+      if(d==="lognormal"){
+        return {median:Math.max(1e-12, num(p1.value,1)*sc), sigmaLog:Math.max(1e-12, num(p2.value,0.2))};
+      }
+      if(d==="triangular"){
+        let a=num(p1.value,0)*sc, c=num(p2.value,1)*sc, b=num(p3.value,2)*sc;
+        const lo=Math.min(a,c,b), hi=Math.max(a,c,b);
+        a=lo; b=hi; c=clamp(c,a,b);
+        if(b===a) b=a+1e-6;
+        return {a,c,b};
+      }
+      if(d==="uniform"){
+        let a=num(p1.value,0)*sc, b=num(p2.value,1)*sc;
+        if(b<a){ const t=a; a=b; b=t; }
+        if(b===a) b=a+1e-6;
+        return {a,b};
+      }
+      if(d==="weibull"){
+        return {k:Math.max(1e-12,num(p1.value,2)), lam:Math.max(1e-12,num(p2.value,1)*sc)};
+      }
+      if(d==="exponential"){
+        return {mean:Math.max(1e-12,num(p1.value,1)*sc)};
+      }
+      return {};
+    }
+
+    function xFromU(u){
+      const params=getDistParams();
+      return distQuantile(u, state.dist, params);
+    }
+    function toCostFromX(x){
+      const base=Math.max(1, state.baseCost);
+      if(state.applyMode==="direct") return x;
+      if(state.applyMode==="delta") return base + x;
+      return base * x;
+    }
+    function costToX(cost){
+      const base=Math.max(1, state.baseCost);
+      if(state.applyMode==="direct") return cost;
+      if(state.applyMode==="delta") return cost - base;
+      return cost / base;
+    }
+    function dX_dCost(){
+      const base=Math.max(1, state.baseCost);
+      return (state.applyMode==="mult") ? (1/base) : 1;
+    }
+
+    // ===== Galton =====
+    function ensureGalton(){
+      const bins=state.rows+1;
+      if(state.galtonCounts.length!==bins) state.galtonCounts=new Array(bins).fill(0);
+    }
+    function rebuildBinomTables(){
+      const n=state.rows, p=state.pRight;
+      state.pmf=new Array(n+1);
+      state.cdfBelow=new Array(n+1);
+      let cum=0;
+      for(let k=0;k<=n;k++){
+        const pk=binomPMF(n,k,p);
+        state.pmf[k]=pk;
+        state.cdfBelow[k]=cum;
+        cum+=pk;
+      }
+      const sum=state.pmf.reduce((a,b)=>a+b,0);
+      if(sum>0){
+        for(let k=0;k<=n;k++){
+          state.pmf[k]/=sum;
+          state.cdfBelow[k]=(k===0)?0:state.cdfBelow[k]/sum;
+        }
+      }
+    }
+    function uFromGaltonBin_PIT(k){
+      const below=state.cdfBelow[k]||0;
+      const pk=state.pmf[k]||0;
+      return clamp(below + Math.random()*pk, 1e-12, 1-1e-12);
+    }
+    function uFromGaltonBin_RAW(k){
+      const n=state.rows;
+      return clamp((k + Math.random())/(n+1), 1e-12, 1-1e-12);
+    }
+
+    // Reservoir
+    function reservoirAddU(u){
+      u=clamp(u, 1e-12, 1-1e-12);
+      const n=state.uN+1;
+      if(state.uReservoir.length < state.RES_MAX){
+        state.uReservoir.push(u);
+      }else{
+        const j=Math.floor(Math.random()*n);
+        if(j < state.RES_MAX) state.uReservoir[j]=u;
+      }
+      state.uN++;
+      state.costSortedDirty=true;
+      state.lastStats=null;
+    }
+    function reservoirClear(){
+      state.uReservoir=[];
+      state.uN=0;
+      state.costSortedDirty=true;
+      state.costSorted=null;
+      state.lastStats=null;
+    }
+
+    // MC/LHS u generation
+    function genU_MC(n){
+      const u=new Array(n);
+      for(let i=0;i<n;i++) u[i]=Math.random();
+      return u;
+    }
+    function genU_LHS(n){
+      const u=new Array(n);
+      for(let i=0;i<n;i++) u[i]=(i+Math.random())/n;
+      for(let i=n-1;i>0;i--){
+        const j=Math.floor(Math.random()*(i+1));
+        const t=u[i]; u[i]=u[j]; u[j]=t;
+      }
+      return u;
+    }
+    function simulateU(n){
+      if(n<=0) return;
+      const us=(state.genMethod==="lhs")?genU_LHS(n):genU_MC(n);
+      for(const u of us) reservoirAddU(u);
+    }
+
+    // Galton path
+    function simulateOneGaltonPath(){
+      const n=state.rows, p=state.pRight;
+      const steps=new Array(n);
+      const indices=new Array(n+1);
+      indices[0]=0;
+      let idx=0, rights=0;
+      for(let i=0;i<n;i++){
+        const r=Math.random()<p;
+        steps[i]=r?1:0;
+        if(r){ idx++; rights++; }
+        indices[i+1]=idx;
+      }
+      return {steps, indices, k:rights};
+    }
+    function finalizeBall(path){
+      ensureGalton();
+      state.galtonCounts[path.k]+=1;
+      state.galtonN+=1;
+      state.lastPath=path;
+
+      if(state.genMethod==="galton"){
+        const u=state.pitOn ? uFromGaltonBin_PIT(path.k) : uFromGaltonBin_RAW(path.k);
+        reservoirAddU(u);
+        state.lastDrop={k:path.k, u, sourceLabel: state.pitOn ? "PIT" : "RAW"};
+      }else{
+        state.lastDrop={k:path.k, u:NaN, sourceLabel:"(Galton only)"};
+      }
+      refreshLastExplain();
+      markDirty();
+    }
+
+    // Animation
+    function makeBall(path){
+      return { path, progress:0, segDur:240/Math.max(0.4,state.speed), done:false };
+    }
+    function advanceBalls(dt){
+      const n=state.rows;
+      for(const ball of state.balls){
+        if(ball.done) continue;
+        ball.progress += dt/ball.segDur;
+        if(ball.progress>=n){
+          ball.done=true;
+          finalizeBall(ball.path);
+        }
+      }
+      state.balls = state.balls.filter(b=>!b.done);
+    }
+    function dropBalls(n){
+      const animateMax=90;
+      const toAnim=Math.min(n, animateMax);
+      const rem=n-toAnim;
+      for(let i=0;i<toAnim;i++){
+        state.balls.push(makeBall(simulateOneGaltonPath()));
+      }
+      if(rem>0) state.simRemainder += rem;
+      needsRedraw=true;
+    }
+    function simulateRemainingFast(limit=7000){
+      const n=Math.min(state.simRemainder, limit);
+      for(let i=0;i<n;i++) finalizeBall(simulateOneGaltonPath());
+      state.simRemainder -= n;
+    }
+
+    // Sorted costs + stats
+    function mappedCostArray(){
+      const out=[];
+      for(const u of state.uReservoir){
+        const x=xFromU(u);
+        const c=toCostFromX(x);
+        if(Number.isFinite(c)) out.push(c);
+      }
+      return out;
+    }
+    function getSortedCosts(){
+      if(!state.costSortedDirty && state.costSorted) return state.costSorted;
+      const arr=mappedCostArray().sort((a,b)=>a-b);
+      state.costSorted=arr;
+      state.costSortedDirty=false;
+      return arr;
+    }
+    function qFromSorted(arr, p){
+      p=clamp(p,0,1);
+      if(arr.length<1) return NaN;
+      if(arr.length<2) return arr[0];
+      const i=(arr.length-1)*p;
+      const i0=Math.floor(i), i1=Math.ceil(i);
+      return (i0===i1)?arr[i0]:lerp(arr[i0], arr[i1], i-i0);
+    }
+    function lowerBound(arr, x){
+      let lo=0, hi=arr.length;
+      while(lo<hi){
+        const mid=(lo+hi)>>1;
+        if(arr[mid] < x) lo=mid+1; else hi=mid;
+      }
+      return lo;
+    }
+    function moments(arr){
+      const n=arr.length;
+      if(n<3) return {mean:NaN, sd:NaN, skew:NaN};
+      let mean=0;
+      for(const x of arr) mean+=x;
+      mean/=n;
+      let m2=0,m3=0;
+      for(const x of arr){
+        const d=x-mean;
+        m2+=d*d;
+        m3+=d*d*d;
+      }
+      const var_=m2/(n-1);
+      const sd=Math.sqrt(Math.max(0,var_));
+      const skew=(sd===0)?0:(n*m3)/((n-1)*(n-2)*Math.pow(sd,3));
+      return {mean, sd, skew};
+    }
+    function computeStats(){
+      if(state.lastStats) return state.lastStats;
+      const arr=getSortedCosts();
+      if(arr.length<8){
+        state.lastStats={has:false, arr};
+        return state.lastStats;
+      }
+      const {mean, sd, skew}=moments(arr);
+      const p10=qFromSorted(arr,0.10), p50=qFromSorted(arr,0.50), p80=qFromSorted(arr,0.80), p90=qFromSorted(arr,0.90), p95=qFromSorted(arr,0.95);
+      const idx=lowerBound(arr, state.budget);
+      const pOver=1-(idx/arr.length);
+      state.lastStats={has:true, arr, mean, sd, skew, p10,p50,p80,p90,p95, pOver};
+      return state.lastStats;
+    }
+
+    // Param labels UI (v5.6: show units; lognormal median)
+    function setParamUI(){
+      const d=state.dist;
+      const unit = (state.applyMode==="mult") ? "" : ` (${unitLabel()})`;
+
+      p1Wrap.style.display="block";
+      p2Wrap.style.display="block";
+      p3Wrap.style.display="block";
+
+      if(d==="normal"){
+        p1Label.innerHTML=`<span class="tip" data-tip="Normal μ — mean of X.">${"μ"+unit}</span>`;
+        p2Label.innerHTML=`<span class="tip" data-tip="Normal σ — standard deviation of X.">${"σ"+unit}</span>`;
+        p3Wrap.style.display="none";
+        p1Hint.textContent="Auto-fit: μ uses P50 anchor";
+        p2Hint.textContent="Auto-fit: σ uses Budget at P-level";
+      }else if(d==="lognormal"){
+        p1Label.innerHTML=`<span class="tip" data-tip="Lognormal median (P50) of X.">${"median"+unit}</span>`;
+        p2Label.innerHTML=`<span class="tip" data-tip="Lognormal σlog — std dev of ln(X). Larger = heavier right tail.">σlog</span>`;
+        p3Wrap.style.display="none";
+        p1Hint.textContent="Auto-fit: median uses P50 anchor";
+        p2Hint.textContent="Auto-fit: Budget at P-level sets σlog";
+      }else if(d==="triangular"){
+        p1Label.innerHTML=`<span class="tip" data-tip="Triangular min — lower bound.">${"min"+unit}</span>`;
+        p2Label.innerHTML=`<span class="tip" data-tip="Triangular mode — most likely value.">${"mode"+unit}</span>`;
+        p3Label.innerHTML=`<span class="tip" data-tip="Triangular max — upper bound.">${"max"+unit}</span>`;
+        p3Wrap.style.display="block";
+        p1Hint.textContent="Auto-fit uses uncertainty + right-tail";
+        p2Hint.textContent="Auto-fit: mode uses P50 anchor";
+        p3Hint.textContent="Auto-fit: Budget influences max";
+      }else if(d==="uniform"){
+        p1Label.innerHTML=`<span class="tip" data-tip="Uniform min — lower bound.">${"min"+unit}</span>`;
+        p2Label.innerHTML=`<span class="tip" data-tip="Uniform max — upper bound.">${"max"+unit}</span>`;
+        p3Wrap.style.display="none";
+        p1Hint.textContent="Auto-fit: symmetric-ish";
+        p2Hint.textContent="Auto-fit: width from uncertainty";
+      }else if(d==="weibull"){
+        p1Label.innerHTML=`<span class="tip" data-tip="Weibull k — shape. Smaller k = heavier tail.">k</span>`;
+        p2Label.innerHTML=`<span class="tip" data-tip="Weibull λ — scale.">${"λ"+unit}</span>`;
+        p3Wrap.style.display="none";
+        p1Hint.textContent="Auto-fit: tail sets k";
+        p2Hint.textContent="Auto-fit: Budget sets λ";
+      }else if(d==="exponential"){
+        p1Label.innerHTML=`<span class="tip" data-tip="Exponential mean — controls tail. X ≥ 0.">${"mean"+unit}</span>`;
+        p2Wrap.style.display="none";
+        p3Wrap.style.display="none";
+        p1Hint.textContent="Auto-fit: Budget at P-level sets mean";
+      }
+    }
+
+    // Auto-fit (v5.6: writes params in display units for cost-like modes)
+    function autoFit(){
+      const p=clamp(state.pTarget/100, 0.55, 0.95);
+      const z=invNormCDF(p);
+      const base=Math.max(1,state.baseCost);
+      const budget=Math.max(1,state.budget);
+      const cv=clamp(state.uncert, 0.05, 0.45);
+      const skew=clamp(state.tailBias, 0.0, 1.0);
+
+      const anchorCost=base;
+      const targetCost=budget;
+
+      const anchorX=costToX(anchorCost);
+      let targetX=costToX(targetCost);
+
+      const fallbackScale=()=>{
+        if(state.applyMode==="mult") return Math.max(0.02, cv);
+        return base*cv;
+      };
+      if(!Number.isFinite(targetX) || Math.abs(targetX-anchorX)<1e-10){
+        targetX = anchorX + fallbackScale();
+      }
+
+      const d=state.dist;
+      const sc=xScaleForParams();
+
+      if(d==="normal"){
+        const mu=anchorX;
+        let sigma=(targetX-mu)/z;
+        if(!Number.isFinite(sigma) || sigma<=0) sigma=Math.abs(fallbackScale());
+        p1.value=(mu/sc).toFixed(6);
+        p2.value=(sigma/sc).toFixed(6);
+        toast("Auto-fit: Normal");
+      }else if(d==="lognormal"){
+        let median=anchorX;
+        if(!(median>0)) median=Math.max(1e-6, base*cv*0.35);
+        let t=targetX;
+        if(!(t>0)) t=Math.max(1e-6, median*(1.2+1.5*cv));
+        let sigmaLog=(Math.log(t)-Math.log(median))/z;
+        if(!Number.isFinite(sigmaLog) || sigmaLog<=0) sigmaLog=0.15+0.65*cv+0.35*skew;
+        p1.value=(median/sc).toFixed(6);
+        p2.value=sigmaLog.toFixed(6);
+        toast("Auto-fit: Lognormal");
+      }else if(d==="triangular"){
+        let mode=anchorX;
+        const s=Math.max(1e-9, Math.abs(fallbackScale()));
+        let rightSpan=s*(1.5+3.0*cv+2.2*skew);
+        let leftSpan=s*(1.0+2.0*cv+0.8*(1-skew));
+        if(targetX>mode) rightSpan=Math.max(rightSpan, (targetX-mode)*(1.05+0.10*skew));
+        let min=mode-leftSpan;
+        let max=mode+rightSpan;
+        if(state.applyMode==="mult"){
+          min=Math.max(0.05,min);
+          max=Math.max(min+0.05,max);
+          mode=clamp(mode,min,max);
+        }else{
+          if(!(max>min)) max=min+s;
+          mode=clamp(mode,min,max);
+        }
+        p1.value=(min/sc).toFixed(6);
+        p2.value=(mode/sc).toFixed(6);
+        p3.value=(max/sc).toFixed(6);
+        toast("Auto-fit: Triangular");
+      }else if(d==="uniform"){
+        const half=Math.max(1e-9, Math.abs(fallbackScale()))*(1.3+1.6*cv);
+        let a=anchorX-half;
+        let b=anchorX+half;
+        if(state.applyMode==="mult"){
+          a=Math.max(0.05,a);
+          b=Math.max(a+0.05,b);
+        }
+        p1.value=(a/sc).toFixed(6);
+        p2.value=(b/sc).toFixed(6);
+        toast("Auto-fit: Uniform");
+      }else if(d==="exponential"){
+        let t=targetX;
+        if(!(t>0)) t=Math.max(1e-6,fallbackScale());
+        const denom=-Math.log(1-p);
+        const mean=Math.max(1e-12, t/Math.max(1e-12,denom));
+        p1.value=(mean/sc).toFixed(6);
+        toast("Auto-fit: Exponential");
+      }else if(d==="weibull"){
+        const k=clamp(2.8-2.0*skew, 0.7, 6.0);
+        let t=targetX;
+        if(!(t>0)) t=Math.max(1e-6,fallbackScale());
+        const lam=t/Math.pow(-Math.log(1-p), 1/k);
+        p1.value=k.toFixed(6);
+        p2.value=(Math.max(1e-12,lam)/sc).toFixed(6);
+        toast("Auto-fit: Weibull");
+      }
+
+      setParamUI();
+      markDirty();
+    }
+
+    // ===== Drawing helpers (v5.6: proper X/Y axes) =====
+    function clear(ctx, canvas){
+      const r=canvas.getBoundingClientRect();
+      ctx.clearRect(0,0,r.width,r.height);
+      ctx.fillStyle="rgba(255,255,255,0.02)";
+      ctx.fillRect(0,0,r.width,r.height);
+    }
+    function drawAxes(ctx,W,H,pad,opts){
+      const plotW=W-pad.l-pad.r;
+      const plotH=H-pad.t-pad.b;
+
+      ctx.save();
+      ctx.strokeStyle="rgba(255,255,255,0.11)";
+      ctx.lineWidth=1;
+      ctx.beginPath();
+      ctx.moveTo(pad.l,pad.t);
+      ctx.lineTo(pad.l,pad.t+plotH);
+      ctx.lineTo(pad.l+plotW,pad.t+plotH);
+      ctx.stroke();
+
+      const yMax=Math.max(1e-12, opts.yMax||1);
+      const yTicks=opts.yTicks||4;
+      const yFmt=opts.yFmt||((v)=>String(Math.round(v)));
+      ctx.font="11px ui-sans-serif, system-ui";
+      ctx.fillStyle="rgba(232,238,252,0.72)";
+      ctx.textAlign="right";
+      ctx.textBaseline="middle";
+
+      for(let i=0;i<=yTicks;i++){
+        const v=yMax*i/yTicks;
+        const y=pad.t+plotH - plotH*i/yTicks;
+        ctx.strokeStyle="rgba(255,255,255,0.06)";
+        ctx.beginPath(); ctx.moveTo(pad.l,y); ctx.lineTo(pad.l+plotW,y); ctx.stroke();
+        ctx.fillText(yFmt(v), pad.l-8, y);
+      }
+
+      // y label
+      if(opts.yLabel){
+        ctx.textAlign="left";
+        ctx.textBaseline="top";
+        ctx.fillStyle="rgba(232,238,252,0.65)";
+        ctx.fillText(opts.yLabel, 10, 10);
+      }
+
+      // x ticks
+      const xTicks=opts.xTicks||[];
+      const xLabel=opts.xLabel||"";
+      ctx.textAlign="center";
+      ctx.textBaseline="top";
+      ctx.fillStyle="rgba(232,238,252,0.70)";
+      for(const t of xTicks){
+        const x=pad.l + clamp(t.t,0,1)*plotW;
+        ctx.strokeStyle="rgba(255,255,255,0.06)";
+        ctx.beginPath(); ctx.moveTo(x,pad.t); ctx.lineTo(x,pad.t+plotH); ctx.stroke();
+        ctx.fillText(t.label, x, pad.t+plotH+6);
+      }
+      if(xLabel){
+        ctx.fillStyle="rgba(232,238,252,0.60)";
+        ctx.fillText(xLabel, pad.l+plotW/2, H-16);
+      }
+
+      ctx.restore();
+      return {plotW, plotH};
+    }
+
+    function bars(ctx,pad,plotW,plotH,counts,maxC){
+      const bins=counts.length;
+      const barW=plotW/bins;
+      const gap=2;
+      for(let i=0;i<bins;i++){
+        const c=counts[i];
+        const h=plotH*(c/maxC);
+        const x=pad.l+i*barW+gap*0.5;
+        const y=pad.t+plotH-h;
+        const g=ctx.createLinearGradient(0,y,0,y+h);
+        g.addColorStop(0,"rgba(122,162,255,0.55)");
+        g.addColorStop(1,"rgba(98,217,166,0.25)");
+        ctx.fillStyle=g;
+        ctx.fillRect(x,y,Math.max(1,barW-gap),h);
+      }
+    }
+
+    function drawPlaceholder(ctx, canvas, msg){
+      const rect=canvas.getBoundingClientRect();
+      const W=rect.width, H=rect.height;
+      ctx.save();
+      ctx.fillStyle="rgba(232,238,252,0.80)";
+      ctx.font="12px ui-sans-serif, system-ui";
+      const w=ctx.measureText(msg).width;
+      ctx.fillText(msg, (W-w)/2, H/2);
+      ctx.restore();
+    }
+
+    // Board geometry/drawing
+    function boardGeom(){
+      const W=boardCanvas.getBoundingClientRect().width;
+      const H=boardCanvas.getBoundingClientRect().height;
+      const padX=26, padTop=24, padBottom=40;
+      const n=state.rows;
+      const usableH=H-padTop-padBottom;
+      const vStep=usableH/(n+0.2);
+      const hStep=Math.min((W-2*padX)/(n+1.8), vStep*1.2);
+      const cx=W/2;
+      const pegR=clamp(hStep*0.10, 2.6, 5.2);
+      const ballR=clamp(hStep*0.16, 3.2, 7.0);
+      return {W,H,padX,padTop,padBottom,n,vStep,hStep,cx,pegR,ballR};
+    }
+    function nodePos(level, idx, g){
+      return { x: g.cx + (idx - level/2)*g.hStep, y: g.padTop + level*g.vStep };
+    }
+    function ballPos(ball,g){
+      const n=g.n;
+      const seg=Math.floor(ball.progress);
+      const t=ball.progress-seg;
+      const la=clamp(seg,0,n);
+      const lb=clamp(seg+1,0,n);
+      const ia=ball.path.indices[la];
+      const ib=ball.path.indices[lb];
+      const a=nodePos(la,ia,g);
+      const b=nodePos(lb,ib,g);
+      const tt=t*t*(3-2*t);
+      const wob=Math.sin((ball.progress+1)*2.7)*0.25;
+      return {x:lerp(a.x,b.x,tt)+wob, y:lerp(a.y,b.y,tt)};
+    }
+    function drawBoard(){
+      const ctx=bctx;
+      const g=boardGeom();
+      clear(ctx, boardCanvas);
+
+      for(let lvl=1; lvl<g.n; lvl++){
+        for(let idx=0; idx<=lvl; idx++){
+          const p=nodePos(lvl,idx,g);
+          ctx.beginPath();
+          ctx.arc(p.x,p.y,g.pegR,0,Math.PI*2);
+          ctx.fillStyle="rgba(232,238,252,0.16)";
+          ctx.fill();
+          ctx.strokeStyle="rgba(122,162,255,0.14)";
+          ctx.lineWidth=1;
+          ctx.stroke();
+        }
+      }
+      for(let idx=0; idx<=g.n; idx++){
+        const p=nodePos(g.n,idx,g);
+        ctx.beginPath();
+        ctx.arc(p.x,p.y,g.pegR*0.95,0,Math.PI*2);
+        ctx.fillStyle="rgba(98,217,166,0.13)";
+        ctx.fill();
+      }
+
+      if(state.showLastPath && state.lastPath){
+        ctx.save();
+        ctx.strokeStyle="rgba(255,255,255,0.75)";
+        ctx.lineWidth=2.5;
+        ctx.beginPath();
+        for(let lvl=0; lvl<=g.n; lvl++){
+          const idx=state.lastPath.indices[lvl];
+          const p=nodePos(lvl,idx,g);
+          if(lvl===0) ctx.moveTo(p.x,p.y); else ctx.lineTo(p.x,p.y);
+        }
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      for(const ball of state.balls){
+        const p=ballPos(ball,g);
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(p.x,p.y,g.ballR*2.2,0,Math.PI*2);
+        ctx.fillStyle="rgba(122,162,255,0.10)";
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.arc(p.x,p.y,g.ballR,0,Math.PI*2);
+        ctx.fillStyle="rgba(232,238,252,0.92)";
+        ctx.fill();
+        ctx.strokeStyle="rgba(98,217,166,0.35)";
+        ctx.lineWidth=1.6;
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      boardBadge.textContent = `${state.pitOn ? "PIT" : "RAW"} • rows ${state.rows}`;
+    }
+
+    function drawGaltonHist(){
+      const ctx=ghctx;
+      const rect=galtonHistCanvas.getBoundingClientRect();
+      const W=rect.width, H=rect.height;
+      clear(ctx, galtonHistCanvas);
+
+      ensureGalton();
+      galtonBadge.textContent=`Bins: ${state.rows+1}`;
+
+      const pad={l:62,r:16,t:18,b:34};
+      const maxC=Math.max(1,...state.galtonCounts);
+
+      const mid = Math.round(state.rows/2);
+      const {plotW,plotH}=drawAxes(ctx,W,H,pad,{
+        yMax:maxC,
+        yLabel:"count",
+        yFmt:(v)=>String(Math.round(v)),
+        xLabel:"bin k",
+        xTicks:[
+          {t:0, label:"0"},
+          {t:0.5, label:String(mid)},
+          {t:1, label:String(state.rows)}
+        ]
+      });
+
+      bars(ctx,pad,plotW,plotH,state.galtonCounts,maxC);
+
+      // expected overlay
+      const N=state.galtonN;
+      if(N>0){
+        ctx.save();
+        ctx.strokeStyle="rgba(255,255,255,0.80)";
+        ctx.lineWidth=2;
+        ctx.beginPath();
+        const bins=state.rows+1;
+        for(let k=0;k<=state.rows;k++){
+          const x=pad.l + (k+0.5)*(plotW/bins);
+          const expected=N*(state.pmf[k]||0);
+          const y=pad.t + plotH - (expected/maxC)*plotH;
+          if(k===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+        }
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+
+    function getDisplayRangeFromSorted(sorted){
+      if(sorted.length<2) return {min:0,max:1};
+      const n=sorted.length;
+      const lo=sorted[Math.floor(0.01*(n-1))];
+      const hi=sorted[Math.ceil(0.99*(n-1))];
+      let min=lo, max=hi;
+      if(!(max>min)){ min=sorted[0]; max=sorted[n-1]; }
+      let pad=(max-min)*0.08;
+      if(!Number.isFinite(pad) || pad===0) pad=Math.max(1, Math.abs(min)*0.05);
+      min-=pad; max+=pad;
+      if(!(max>min)) max=min+1;
+      return {min,max};
+    }
+
+    function buildCostHist(bins){
+      const costs=mappedCostArray();
+      if(costs.length<2){
+        return {bins, counts:new Array(bins).fill(0), min:0, max:1, total:0, binW:1};
+      }
+      const sorted=costs.slice().sort((a,b)=>a-b);
+      const {min,max}=getDisplayRangeFromSorted(sorted);
+      const span=max-min;
+      const counts=new Array(bins).fill(0);
+
+      const scale=state.uN / Math.max(1, costs.length);
+      for(const x of costs){
+        const t=(x-min)/span;
+        const i=clamp(Math.floor(t*bins), 0, bins-1);
+        counts[i]+=scale;
+      }
+      const total=counts.reduce((a,b)=>a+b,0);
+      const binW=span/bins;
+      return {bins, counts, min, max, total, binW};
+    }
+
+    function refreshLastExplain(){
+      if(!state.lastDrop){
+        lastExplain.textContent="Drop a ball to see: bin → u → Q(u) → cost";
+        return;
+      }
+      const k=state.lastDrop.k;
+      const u=state.lastDrop.u;
+      if(!Number.isFinite(u)){
+        lastExplain.textContent = `bin k=${k}/${state.rows} (Galton). Risk samples from ${String(state.genMethod||"").toUpperCase()}.`;
+        return;
+      }
+      const x=xFromU(u);
+      const cost=toCostFromX(x);
+      lastExplain.textContent =
+        `bin k=${k}/${state.rows} → u≈${u.toFixed(4)} (${state.lastDrop.sourceLabel}) → Q(u)=X≈${fmtX(x)} → cost≈${formatScaledMoney(cost)}`;
+    }
+
+    // ===== Stats UI =====
+    const updateDistributionExplanationThrottled = makeDebouncer(140, updateDistributionExplanation);
+
+    function distName(){
+      const d=state.dist;
+      if(d==="normal") return "Normal";
+      if(d==="lognormal") return "Lognormal";
+      if(d==="triangular") return "Triangular";
+      if(d==="uniform") return "Uniform";
+      if(d==="weibull") return "Weibull";
+      if(d==="exponential") return "Exponential";
+      return d;
+    }
+    function applyName(){
+      if(state.applyMode==="direct") return "Direct";
+      if(state.applyMode==="delta") return "Delta";
+      return "Multiplier";
+    }
+
+    function updateDistributionExplanation(){
+      const s=computeStats();
+      const resN=state.uReservoir.length;
+      const totalU=state.uN;
+      const method=String(state.genMethod||"galton").toUpperCase();
+      const unit=unitLabel();
+      const params=getDistParams();
+      const bullets=[];
+
+      bullets.push(`<span class="chip">Samples</span> Galton balls: <b>${state.galtonN.toLocaleString()}</b>, u-samples: <b>${totalU.toLocaleString()}</b> (display ~${resN.toLocaleString()})`);
+      if(state.uN > state.RES_MAX) bullets.push(`Reservoir sampling is active (keeps UI fast while approximating full N).`);
+
+      if(state.genMethod==="galton"){
+        bullets.push(state.pitOn
+          ? `PIT is <b>ON</b>: Galton is a visual demo; u is uniform; shape comes from the selected distribution.`
+          : `PIT is <b>OFF</b>: Galton pRight/rows distort u on purpose (useful “mapping mistake” demo).`);
+      }else{
+        bullets.push(`${method}: u is generated directly (no balls needed). LHS is typically smoother than MC for the same N.`);
+      }
+
+      if(state.dist==="normal"){
+        bullets.push(`Normal is <b>symmetric</b>. Tail risk grows with σ.`);
+        bullets.push(`Params: μ=${fmtX(params.mu)}, σ=${fmtX(params.sigma)} (X-space). Apply: <b>${applyName()}</b>.`);
+      }else if(state.dist==="lognormal"){
+        bullets.push(`Lognormal is <b>positive</b> and <b>right-tailed</b>. Larger σlog → heavier tail.`);
+        bullets.push(`Params: median=${fmtX(params.median)}, σlog=${fmt(params.sigmaLog,3)}. Apply: <b>${applyName()}</b>.`);
+      }else if(state.dist==="triangular"){
+        bullets.push(`Triangular is <b>bounded</b>. Clear assumptions; tail is capped at max.`);
+        bullets.push(`Params: min=${fmtX(params.a)}, mode=${fmtX(params.c)}, max=${fmtX(params.b)}. Apply: <b>${applyName()}</b>.`);
+      }else if(state.dist==="uniform"){
+        bullets.push(`Uniform assumes <b>all values equally likely</b> in the bounds.`);
+        bullets.push(`Params: min=${fmtX(params.a)}, max=${fmtX(params.b)}. Apply: <b>${applyName()}</b>.`);
+      }else if(state.dist==="weibull"){
+        bullets.push(`Weibull is flexible for <b>skew + tail</b>. Smaller k generally means heavier tail.`);
+        bullets.push(`Params: k=${fmt(params.k,3)}, λ=${fmtX(params.lam)}. Apply: <b>${applyName()}</b>.`);
+      }else if(state.dist==="exponential"){
+        bullets.push(`Exponential is <b>memoryless</b> with a strong tail.`);
+        bullets.push(`Param: mean=${fmtX(params.mean)}. Apply: <b>${applyName()}</b>.`);
+      }
+
+      if(s.has){
+        bullets.push(`<span class="chip">Decision</span> P50≈<b>${formatScaledMoney(s.p50)}</b> ${unit}, P80≈<b>${formatScaledMoney(s.p80)}</b> ${unit}, P90≈<b>${formatScaledMoney(s.p90)}</b> ${unit}`);
+        bullets.push(`<span class="chip">Budget</span> P(cost > Budget)≈<b>${fmtPct(s.pOver)}</b> (Budget=${formatScaledMoney(state.budget)} ${unit})`);
+        const nEff=Math.max(1,resN);
+        const seMean=Number.isFinite(s.sd)?(s.sd/Math.sqrt(nEff)):NaN;
+        const seProb=Number.isFinite(s.pOver)?Math.sqrt(Math.max(1e-12, s.pOver*(1-s.pOver))/nEff):NaN;
+        bullets.push(`<span class="chip">Convergence</span> Noise shrinks ~1/√N. Mean SE≈${Number.isFinite(seMean)?formatScaledMoney(seMean):"–"}; P(exceed) SE≈${Number.isFinite(seProb)?("±"+(seProb*100).toFixed(1)+"%"):"–"}.`);
+      }else{
+        bullets.push(`<span class="chip">Convergence</span> Add more drops/samples to stabilize PDF/CDF.`);
+      }
+
+      distExplainMini.textContent = `${distName()} • ${applyName()} • units ${unit}`;
+      distExplainMini2.textContent = `${method} • PIT ${state.pitOn?"ON":"OFF"} • rows ${state.rows}`;
+      distExplainBody.innerHTML = `<ul>${bullets.map(b=>`<li>${b}</li>`).join("")}</ul>`;
+    }
+
+    function updateStatsUI(){
+      galtonNEl.textContent=state.galtonN.toLocaleString();
+      riskNEl.textContent=state.uN.toLocaleString();
+
+      const s=computeStats();
+      if(!s.has){
+        ecostEl.textContent="–";
+        poverEl.textContent="–";
+        skewEl.textContent="–";
+        tailEl.textContent="–";
+        updateDistributionExplanationThrottled();
+        return;
+      }
+      ecostEl.textContent=formatScaledMoney(s.mean);
+      poverEl.textContent=(s.pOver*100).toFixed(1)+"%";
+      skewEl.textContent=fmt(s.skew,3);
+      tailEl.textContent=(Number.isFinite(s.p50)&&Number.isFinite(s.p95)&&s.p50!==0)?fmt(s.p95/s.p50,3):"–";
+      updateDistributionExplanationThrottled();
+    }
+
+    // ===== Cost PDF/CDF drawing (v5.6: axes + budget line + Ptarget marker) =====
+    function drawCostViews(){
+      const sortedCosts=getSortedCosts();
+      pdfBadge.textContent=`u-samples: ${state.uN.toLocaleString()}`;
+
+      // PDF
+      {
+        const ctx=pdfctx;
+        const rect=costPdfCanvas.getBoundingClientRect();
+        const W=rect.width, H=rect.height;
+        clear(ctx, costPdfCanvas);
+
+        if(sortedCosts.length<2){
+          drawPlaceholder(ctx, costPdfCanvas, "Drop balls (Galton) or simulate via Monte Carlo (MC) / Latin Hypercube Sampling (LHS) to see cost PDF.");
+        }else{
+          const hist=buildCostHist(32);
+          const pad={l:70,r:16,t:18,b:38};
+          const maxC=Math.max(1,...hist.counts);
+
+          const xMid=(hist.min+hist.max)/2;
+          const {plotW,plotH}=drawAxes(ctx,W,H,pad,{
+            yMax:maxC,
+            yLabel:"count",
+            yFmt:(v)=>String(Math.round(v)),
+            xLabel:`Cost (${unitLabel()})`,
+            xTicks:[
+              {t:0, label:formatPlainUnits(hist.min)},
+              {t:0.5, label:formatPlainUnits(xMid)},
+              {t:1, label:formatPlainUnits(hist.max)}
+            ]
+          });
+
+          bars(ctx,pad,plotW,plotH,hist.counts,maxC);
+
+          const params=getDistParams();
+          const jac=dX_dCost();
+          const totalCount=hist.total;
+
+          // theory overlay
+          ctx.save();
+          ctx.strokeStyle="rgba(255,255,255,0.80)";
+          ctx.lineWidth=2;
+          ctx.beginPath();
+          for(let i=0;i<hist.bins;i++){
+            const midCost = hist.min + (i+0.5)*(hist.max-hist.min)/hist.bins;
+            const xVar = costToX(midCost);
+            const pdfX = distPDF(xVar, state.dist, params);
+            const pdfC = pdfX * jac;
+            const expected = pdfC * hist.binW * totalCount;
+            const x = pad.l + (i+0.5)*(plotW/hist.bins);
+            const y = pad.t + plotH - (expected/maxC)*plotH;
+            if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+          }
+          ctx.stroke();
+          ctx.restore();
+
+          // budget line
+          const b=state.budget;
+          const tb=clamp((b-hist.min)/(hist.max-hist.min),0,1);
+          const xb=pad.l + tb*plotW;
+          ctx.save();
+          ctx.strokeStyle="rgba(255,107,122,0.85)";
+          ctx.lineWidth=2;
+          ctx.setLineDash([6,4]);
+          ctx.beginPath();
+          ctx.moveTo(xb,pad.t);
+          ctx.lineTo(xb,pad.t+plotH);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.fillStyle="rgba(255,235,238,0.90)";
+          ctx.font="11px ui-sans-serif, system-ui";
+          ctx.textAlign="left";
+          ctx.textBaseline="top";
+          ctx.fillText("Budget", xb+6, pad.t+6);
+          ctx.restore();
+        }
+      }
+
+      // CDF
+      {
+        const ctx=cdfctx;
+        const rect=costCdfCanvas.getBoundingClientRect();
+        const W=rect.width, H=rect.height;
+        clear(ctx, costCdfCanvas);
+
+        if(sortedCosts.length<2){
+          drawPlaceholder(ctx, costCdfCanvas, "Drop balls or simulate u-samples to see cost CDF.");
+          return;
+        }
+
+        const {min,max}=getDisplayRangeFromSorted(sortedCosts);
+        const pad={l:70,r:16,t:18,b:38};
+        const plotW=W-pad.l-pad.r;
+        const plotH=H-pad.t-pad.b;
+
+        state.cdfLastRange={min,max,pad,plotW,plotH,W,H};
+
+        const xMid=(min+max)/2;
+        drawAxes(ctx,W,H,pad,{
+          yMax:1,
+          yLabel:"prob",
+          yFmt:(v)=>String(Math.round(v*100))+"%",
+          xLabel:`Cost (${unitLabel()})`,
+          xTicks:[
+            {t:0, label:formatPlainUnits(min)},
+            {t:0.5, label:formatPlainUnits(xMid)},
+            {t:1, label:formatPlainUnits(max)}
+          ]
+        });
+
+        // ECDF
+        ctx.save();
+        ctx.strokeStyle="rgba(122,162,255,0.86)";
+        ctx.lineWidth=2;
+        ctx.beginPath();
+        const step=Math.max(1, Math.floor(sortedCosts.length/700));
+        for(let i=0;i<sortedCosts.length;i+=step){
+          const xCost=sortedCosts[i];
+          const p=(i/(sortedCosts.length-1));
+          const x=pad.l + clamp((xCost-min)/(max-min),0,1)*plotW;
+          const y=pad.t + plotH - p*plotH;
+          if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+        }
+        const xEnd=pad.l + clamp((sortedCosts[sortedCosts.length-1]-min)/(max-min),0,1)*plotW;
+        ctx.lineTo(xEnd, pad.t);
+        ctx.stroke();
+        ctx.restore();
+
+        // Theoretical CDF overlay
+        const params=getDistParams();
+        ctx.save();
+        ctx.strokeStyle="rgba(255,255,255,0.75)";
+        ctx.lineWidth=2;
+        ctx.beginPath();
+        const bins=110;
+        for(let i=0;i<bins;i++){
+          const cost=min+(i+0.5)*(max-min)/bins;
+          const xVar=costToX(cost);
+          let p=distCDF(xVar, state.dist, params);
+          if(!Number.isFinite(p)) p=0;
+          p=clamp(p,0,1);
+          const x=pad.l + (i+0.5)*(plotW/bins);
+          const y=pad.t + plotH - p*plotH;
+          if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+        }
+        ctx.stroke();
+        ctx.restore();
+
+        // Budget line on CDF
+        {
+          const b=state.budget;
+          const tB=clamp((b-min)/(max-min),0,1);
+          const xB=pad.l + tB*plotW;
+          ctx.save();
+          ctx.strokeStyle="rgba(255,107,122,0.85)";
+          ctx.lineWidth=2;
+          ctx.setLineDash([6,4]);
+          ctx.beginPath();
+          ctx.moveTo(xB,pad.t);
+          ctx.lineTo(xB,pad.t+plotH);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.fillStyle="rgba(255,235,238,0.90)";
+          ctx.font="11px ui-sans-serif, system-ui";
+          ctx.textAlign="left";
+          ctx.textBaseline="top";
+          ctx.fillText("Budget", xB+6, pad.t+6);
+          ctx.restore();
+        }
+
+        // Target percentile marker
+        const pt=clamp(state.pTarget/100, 0.55, 0.95);
+        const qc=qFromSorted(sortedCosts, pt);
+        pTargetVal.textContent=String(state.pTarget);
+        pTargetCost.textContent=Number.isFinite(qc)?formatScaledMoney(qc):"–";
+
+        if(Number.isFinite(qc)){
+          const xT=pad.l + clamp((qc-min)/(max-min),0,1)*plotW;
+          const yT=pad.t + plotH - pt*plotH;
+          ctx.save();
+          ctx.strokeStyle="rgba(98,217,166,0.85)";
+          ctx.lineWidth=2;
+          ctx.setLineDash([5,5]);
+          ctx.beginPath();
+          ctx.moveTo(xT,pad.t);
+          ctx.lineTo(xT,pad.t+plotH);
+          ctx.moveTo(pad.l,yT);
+          ctx.lineTo(pad.l+plotW,yT);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.fillStyle="rgba(98,217,166,0.95)";
+          ctx.beginPath();
+          ctx.arc(xT,yT,4.2,0,Math.PI*2);
+          ctx.fill();
+          ctx.restore();
+        }
+
+        const s=computeStats();
+        if(s.has){
+          pNote.textContent = `P10 ${formatScaledMoney(s.p10)} • P50 ${formatScaledMoney(s.p50)} • P80 ${formatScaledMoney(s.p80)} • P90 ${formatScaledMoney(s.p90)}`;
+        }else{
+          pNote.textContent = `P10/P50/P80/P90: –`;
+        }
+
+        // Interactive cursor badge (optional)
+        if(state.cdfCursor.active && Number.isFinite(state.cdfCursor.cost) && Number.isFinite(state.cdfCursor.p)){
+          cdfBadge.textContent = `${formatScaledMoney(state.cdfCursor.cost)} • P${Math.round(state.cdfCursor.p*100)}`;
+        }else{
+          cdfBadge.textContent = "Interactive";
+        }
+      }
+    }
+
+    // ===== Explanation + full draw =====
+    function drawAll(){
+      drawBoard();
+      drawGaltonHist();
+      drawCostViews();
+      updateStatsUI();
+      needsRedraw=false;
+    }
+
+    // ===== CDF pointer interaction (v5.6) =====
+    function updateCdfCursorFromEvent(e){
+      const r=state.cdfLastRange;
+      const sorted=getSortedCosts();
+      if(!r || sorted.length<2) return;
+      const rect=costCdfCanvas.getBoundingClientRect();
+      const x = (e.clientX - rect.left);
+      const t = clamp((x - r.pad.l)/r.plotW, 0, 1);
+      const cost = r.min + t*(r.max-r.min);
+      const idx = lowerBound(sorted, cost);
+      const p = idx/Math.max(1, sorted.length);
+      state.cdfCursor.cost=cost;
+      state.cdfCursor.p=clamp(p,0,1);
+      needsRedraw=true;
+    }
+    costCdfCanvas.addEventListener("pointerdown",(e)=>{
+      state.cdfCursor.active=true;
+      updateCdfCursorFromEvent(e);
+      costCdfCanvas.setPointerCapture(e.pointerId);
+    });
+    costCdfCanvas.addEventListener("pointermove",(e)=>{
+      if(!state.cdfCursor.active) return;
+      updateCdfCursorFromEvent(e);
+    });
+    costCdfCanvas.addEventListener("pointerup",(e)=>{
+      state.cdfCursor.active=false;
+      needsRedraw=true;
+      try{ costCdfCanvas.releasePointerCapture(e.pointerId); }catch{}
+    });
+
+    // ===== Gen method UI =====
+    function updateGenMethodUI(){
+      state.genMethod=genMethodEl.value;
+      const isGalton = state.genMethod==="galton";
+      pitLine.style.display = isGalton ? "flex" : "none";
+      replaceLine.style.display = isGalton ? "none" : "flex";
+      simulateBtn.disabled = isGalton;
+      genHint.textContent = isGalton
+        ? "Dropped balls generate u-samples; distributions update live."
+        : "Monte Carlo (MC) / Latin Hypercube Sampling (LHS) generate u-samples instantly; distributions update live.";
+      refreshLastExplain();
+      updateDistributionExplanationThrottled();
+      needsRedraw=true;
+    }
+
+    // Reset
+    function hardReset(){
+      state.galtonCounts=[];
+      state.galtonN=0;
+      state.balls=[];
+      state.simRemainder=0;
+      state.lastPath=null;
+      state.lastDrop=null;
+      state.cdfCursor.active=false;
+      reservoirClear();
+      ensureGalton();
+      rebuildBinomTables();
+      refreshLastExplain();
+      needsRedraw=true;
+      toast("Reset");
+    }
+
+    // Controls wiring
+    rowsEl.addEventListener("change",()=>{
+      state.rows=clamp(intNum(rowsEl.value,14),6,24);
+      hardReset();
+    });
+
+    pRightEl.addEventListener("input",()=>{
+      state.pRight=clamp(num(pRightEl.value,0.5),0.01,0.99);
+      pRightVal.textContent=state.pRight.toFixed(2);
+      rebuildBinomTables();
+      needsRedraw=true;
+    });
+    pRightEl.addEventListener("change", hardReset);
+
+    ballBatchEl.addEventListener("change",()=>{ state.ballBatch=clamp(intNum(ballBatchEl.value,600),1,200000); });
+
+    speedEl.addEventListener("input",()=>{
+      state.speed=clamp(num(speedEl.value,1),0.4,2.5);
+      speedVal.textContent=state.speed.toFixed(2);
+    });
+
+    genMethodEl.addEventListener("change", updateGenMethodUI);
+
+    pitOnEl.addEventListener("change",()=>{
+      state.pitOn=!!pitOnEl.checked;
+      refreshLastExplain();
+      needsRedraw=true;
+      updateDistributionExplanationThrottled();
+    });
+
+    replaceOnEl.addEventListener("change",()=>{ state.replaceOn=!!replaceOnEl.checked; });
+
+    simNEl.addEventListener("change",()=>{ state.simN=clamp(intNum(simNEl.value,8000),10,400000); });
+
+    distEl.addEventListener("change",()=>{
+      state.dist=distEl.value;
+      setParamUI();
+      markDirty();
+    });
+
+    applyModeEl.addEventListener("change",()=>{
+      state.applyMode=applyModeEl.value;
+      setParamUI();
+      markDirty();
+    });
+
+    unitsEl.addEventListener("change", ()=>{
+      const oldScale = state.unitScale;
+      const nextScale = Math.max(1, intNum(unitsEl.value,1000000));
+      if(nextScale===oldScale) return;
+      state.unitScale = nextScale;
+
+      // Keep parameter values stable when the units switch (e.g., $M ↔ $).
+      rescaleParamInputsForUnitsChange(oldScale, nextScale);
+
+      syncCurrencyInputsFromState();
+      setParamUI();
+      markDirty();
+    });
+
+    attachCurrencyHandlers(baseCostEl, ()=>state.baseCost, (v)=>{ state.baseCost=v; });
+    attachCurrencyHandlers(budgetEl, ()=>state.budget, (v)=>{ state.budget=v; });
+
+    pTargetEl.addEventListener("input",()=>{
+      state.pTarget=clamp(intNum(pTargetEl.value,80),55,95);
+      needsRedraw=true;
+      updateDistributionExplanationThrottled();
+    });
+
+    uncertEl.addEventListener("input",()=>{
+      state.uncert=clamp(num(uncertEl.value,0.15),0.05,0.45);
+      uncertVal.textContent=state.uncert.toFixed(2);
+    });
+    tailBiasEl.addEventListener("input",()=>{
+      state.tailBias=clamp(num(tailBiasEl.value,0.55),0.0,1.0);
+      tailBiasVal.textContent=state.tailBias.toFixed(2);
+    });
+
+    [p1,p2,p3].forEach(el=>{
+      el.addEventListener("input", scheduleDirty);
+      el.addEventListener("change", markDirty);
+    });
+
+    autoFitBtn.addEventListener("click", autoFit);
+
+    dropOneBtn.addEventListener("click",()=>{ dropBalls(1); toast("Dropped 1 ball"); });
+    dropBatchBtn.addEventListener("click",()=>{
+      const n=clamp(intNum(ballBatchEl.value,1),1,200000);
+      dropBalls(n);
+      toast(`Dropped ${n.toLocaleString()} balls (animated sample)`);
+    });
+
+    simulateBtn.addEventListener("click",()=>{
+      if(state.genMethod==="galton"){
+        toast("Switch to MC or LHS to simulate without balls.");
+        return;
+      }
+      const n=clamp(intNum(simNEl.value,8000),10,400000);
+      if(state.replaceOn) reservoirClear();
+      simulateU(n);
+      toast(`${state.replaceOn?"Simulated":"Extended"} ${n.toLocaleString()} u-samples (${state.genMethod.toUpperCase()})`);
+      markDirty();
+    });
+
+    resetBtn.addEventListener("click", hardReset);
+
+    togglePathBtn.addEventListener("click",()=>{
+      state.showLastPath=!state.showLastPath;
+      togglePathBtn.textContent = state.showLastPath ? "Last Path: On" : "Last Path: Off";
+      needsRedraw=true;
+    });
+
+    boardCanvas.addEventListener("pointerdown",()=>dropBalls(1), {passive:true});
+
+    // ===== Tour (same as v5.4) =====
+    const tourOverlay=document.getElementById("tourOverlay");
+    const tourHighlight=document.getElementById("tourHighlight");
+    const tourCard=document.getElementById("tourCard");
+    const tourTitle=document.getElementById("tourTitle");
+    const tourProg=document.getElementById("tourProg");
+    const tourBody=document.getElementById("tourBody");
+    const tourClose=document.getElementById("tourClose");
+    const tourBack=document.getElementById("tourBack");
+    const tourNext=document.getElementById("tourNext");
+    const tourRestart=document.getElementById("tourRestart");
+
+    const tour = {
+      active:false,
+      step:0,
+      steps:[],
+      start(){
+        const base = [
+          {sel:"#rows", title:"Galton rows", body:"Rows control the number of left/right decisions. More rows → more bins and a smoother (binomial → normal-ish) histogram."},
+          {sel:"#pRight", title:"Skew the Galton board", body:"pRight controls skew (p=0.5 symmetric). Changing this resets the board so the histogram matches the new physics."},
+          {sel:"#dropBatch", title:"Drop balls", body:"Drop a batch to build the Galton histogram. A handful animate; the rest simulate fast so you can scale to big N."},
+          {sel:"#genMethod", title:"Sampling method", body:"Switch between Galton-generated samples and Monte Carlo (MC) / Latin Hypercube Sampling (LHS). LHS is usually smoother than MC for the same N."},
+          ...(state.genMethod==="galton" ? [{sel:"#pitLine", title:"PIT uniformization", body:"Probability Integral Transform (PIT) ON makes u uniform (correct). Turning PIT OFF shows how skipping the PIT step can distort outcomes."}] : []),
+          {sel:"#dist", title:"Pick a distribution", body:"Choose a distribution family. The Probability Density Function (PDF) & Cumulative Distribution Function (CDF) remap instantly because we store u-samples."},
+          {sel:"#autoFit", title:"Auto-calculate parameters", body:"Auto-fit sets parameters so Base behaves like P50 and Budget behaves like your chosen P-level (e.g., P80)."},
+          {sel:"#costCdf", title:"Read the S-curve", body:"The Cumulative Distribution Function (CDF, “S-curve”) shows percentiles. Drag on the curve to read off Cost ↔ Percentile."}
+        ];
+        this.steps = base.filter(s=>{
+          const el=document.querySelector(s.sel);
+          if(!el) return false;
+          const st=getComputedStyle(el);
+          if(st.display==="none" || st.visibility==="hidden") return false;
+          const r=el.getBoundingClientRect();
+          return r.width>2 && r.height>2;
+        });
+        this.active=true;
+        this.step=0;
+        document.body.style.overflow="hidden";
+        tourOverlay.classList.add("show");
+        tourHighlight.classList.add("show");
+        tourCard.classList.add("show");
+        this.render(true);
+      },
+      end(){
+        this.active=false;
+        document.body.style.overflow="";
+        tourOverlay.classList.remove("show");
+        tourHighlight.classList.remove("show");
+        tourCard.classList.remove("show");
+      },
+      render(scrollTo=false){
+        if(!this.active) return;
+        if(this.steps.length===0) return;
+        const s=this.steps[this.step];
+        const el=document.querySelector(s.sel);
+
+        tourTitle.textContent=s.title;
+        tourBody.textContent=s.body;
+        tourProg.textContent=`${this.step+1}/${this.steps.length}`;
+
+        tourBack.disabled=(this.step===0);
+        tourNext.disabled=(this.step===this.steps.length-1);
+
+        if(scrollTo && el){
+          try{ el.scrollIntoView({behavior:"smooth", block:"center", inline:"center"}); }catch{}
+        }
+        setTimeout(()=>{
+          if(!this.active || !el) return;
+          const r=el.getBoundingClientRect();
+          const pad=6;
+          const hx=Math.max(6, r.left-pad);
+          const hy=Math.max(6, r.top-pad);
+          const hw=Math.min(window.innerWidth-12, r.width+pad*2);
+          const hh=Math.min(window.innerHeight-12, r.height+pad*2);
+
+          tourHighlight.style.left=hx+"px";
+          tourHighlight.style.top=hy+"px";
+          tourHighlight.style.width=hw+"px";
+          tourHighlight.style.height=hh+"px";
+
+          const cardW=Math.min(420, window.innerWidth-22);
+          const cardH=210;
+          let cx=r.left + r.width + 12;
+          let cy=r.top;
+
+          if(cx+cardW > window.innerWidth-10) cx=r.left-cardW-12;
+          if(cx < 10) cx=10;
+          if(cy < 10) cy=r.bottom+12;
+          if(cy+cardH > window.innerHeight-10) cy=window.innerHeight-cardH-10;
+
+          tourCard.style.left=cx+"px";
+          tourCard.style.top=cy+"px";
+        }, scrollTo?260:0);
+      },
+      next(){ if(!this.active) return; this.step=Math.min(this.steps.length-1,this.step+1); this.render(true); },
+      back(){ if(!this.active) return; this.step=Math.max(0,this.step-1); this.render(true); },
+      restart(){ if(!this.active) return; this.step=0; this.render(true); }
+    };
+
+    tourBtn.addEventListener("click", ()=>{ tour.active ? tour.restart() : tour.start(); });
+    tourOverlay.addEventListener("click", ()=>tour.end());
+    tourClose.addEventListener("click", ()=>tour.end());
+    tourBack.addEventListener("click", ()=>tour.back());
+    tourNext.addEventListener("click", ()=>tour.next());
+    tourRestart.addEventListener("click", ()=>tour.restart());
+    window.addEventListener("keydown",(e)=>{
+      if(!tour.active) return;
+      if(e.key==="Escape") tour.end();
+      if(e.key==="ArrowRight") tour.next();
+      if(e.key==="ArrowLeft") tour.back();
+    });
+
+    // Init
+    function init(){
+      state.rows=clamp(intNum(rowsEl.value,14),6,24);
+      state.pRight=clamp(num(pRightEl.value,0.5),0.01,0.99);
+      state.speed=clamp(num(speedEl.value,1),0.4,2.5);
+      state.ballBatch=clamp(intNum(ballBatchEl.value,600),1,200000);
+      state.simN=clamp(intNum(simNEl.value,8000),10,400000);
+
+      state.pitOn=!!pitOnEl.checked;
+      state.replaceOn=!!replaceOnEl.checked;
+
+      state.dist=distEl.value;
+      state.applyMode=applyModeEl.value;
+      state.unitScale=Math.max(1, intNum(unitsEl.value,1000000));
+
+      state.baseCost=parseUnitsInput(baseCostEl.value, 100000000);
+      state.budget=parseUnitsInput(budgetEl.value, 120000000);
+
+      state.pTarget=clamp(intNum(pTargetEl.value,80),55,95);
+      state.uncert=clamp(num(uncertEl.value,0.15),0.05,0.45);
+      state.tailBias=clamp(num(tailBiasEl.value,0.55),0.0,1.0);
+
+      pRightVal.textContent=state.pRight.toFixed(2);
+      speedVal.textContent=state.speed.toFixed(2);
+      uncertVal.textContent=state.uncert.toFixed(2);
+      tailBiasVal.textContent=state.tailBias.toFixed(2);
+
+      ensureGalton();
+      rebuildBinomTables();
+      setParamUI();
+      updateGenMethodUI();
+
+      syncCurrencyInputsFromState();
+      refreshLastExplain();
+
+      autoFit(); // start with a valid shape
+      needsRedraw=true;
+
+      if(jsStatus){
+        jsStatus.textContent="JS: OK";
+        jsStatus.classList.remove("jsBad");
+        jsStatus.classList.add("jsOk");
+      }
+      updateDistributionExplanationThrottled();
+      console.log("Distribution Shape Lab v5.6 booted");
+    }
+
+    function tick(){
+      const t=now();
+      const dt=t-lastTick; lastTick=t;
+
+      if(state.balls.length>0){ advanceBalls(dt); needsRedraw=true; }
+      if(state.simRemainder>0){ simulateRemainingFast(7000); needsRedraw=true; }
+
+      const minFrame = (state.balls.length>0 || state.simRemainder>0) ? 0 : 33;
+      if(needsRedraw && (t-lastDraw)>=minFrame){
+        lastDraw=t;
+        drawAll();
+      }
+      requestAnimationFrame(tick);
+    }
+
+    init();
+    requestAnimationFrame(tick);
+
+  }catch(err){
+    showFatal("Initialization failed (v5.6).", err);
+  }
+})();
+</script>
+</body>
+</html>
