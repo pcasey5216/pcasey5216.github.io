@@ -1,44 +1,60 @@
-# Bias Forecasting Sandbox (Cloud, CSP-Agnostic) — DoD/ICEAA Assumption-Driven Bias Dashboard
+# Cost Analysis Interactive Labs
 
-An interactive, educational dashboard for cost analysts to explore how common **CARD/BOE/IGCE assumption choices** can introduce **predictable bias exposure**—even when scope doesn’t change. This tool focuses on *bias mechanics and defensibility*, not “true pricing.”
+This GitHub Pages site hosts **two standalone, browser-based HTML tools** (no install, no build step).
 
-## Live Demo
-- (Add your GitHub Pages link here once enabled)
+## Live Tools
 
-## What you can do
-Adjust four assumption domains:
-1. **Data Pedigree** (traceability, WBS/scope alignment, FY$ normalization, sample size, recency, missing/outliers, survivorship)
-2. **Method Choices** (analogy/parametric/build-up blend, BOE maturity, cross-checks, reuse/learning, commitment posture)
-3. **Economic & Rates** (contract context, escalation approach, rate stance, indirect handling)
-4. **Schedule & Risk** (schedule realism, P50–P90 posture, correlation, uncertainty stance, risk register linkage, budget/anchor/competition pressure)
+- **AI Bias Sandbox**  
+  https://pcasey5216.github.io/AI_Bias_Sandbox.html
 
-Outputs include:
-- **Bias Risk Score (0–100)**
-- **Traceability/Defensibility score (0–100)**
-- **CARD readiness indicator**
-- Likely **bias direction** (under/over/ambiguous)
-- **Bias radar**, **drivers**, and **mitigation suggestions** (DoD/ICEAA language)
-- Local **scenario save/compare**
+- **Galton Board Distribution Lab**  
+  https://pcasey5216.github.io/Galton_Board_Distribution_Lab.html
 
-## Files
-- `index.html` — the dashboard (open in any modern browser)
-- `qr.html` — paste your hosted URL to generate a QR code for slides
+---
 
-## Host this as a webpage (GitHub Pages)
-1. Put `index.html` in the repo root (this repo).
-2. Go to **Repo → Settings → Pages**
-3. Under **Build and deployment**:
-   - Source: **Deploy from a branch**
-   - Branch: **main** (or master) / **root**
-4. Save. Your site will publish to a URL like:
-   - `https://<username>.github.io/<repo>/` (project site), or
-   - `https://<username>.github.io/` (if using the special `<username>.github.io` repo)
+## 1) AI Bias Sandbox (`AI_Bias_Sandbox.html`)
 
-## QR code for your presentation
-After Pages is live:
-1. Open `qr.html` locally
-2. Paste the final hosted URL
-3. Generate the QR and screenshot it into PowerPoint
+An interactive, **rules-based educational sandbox** for exploring how common AI + analytics choices can introduce bias risk across a workflow.
 
-## Disclaimer
-This is a **rules-based educational tool** meant for training and discussion. The “cost” model is a lightweight placeholder to illustrate how bias and defensibility can shift results. It is not a validated pricing engine.
+What you’ll find inside:
+- A **Start Tour** walkthrough and in-page hover definitions (for terms and acronyms)
+- Adjustable assumptions across typical lifecycle areas (use case, data, evaluation, governance)
+- Real-time score/output updates as you change settings
+- Scenario save/load behavior that runs locally in your browser
+
+Note:
+- This page is intended for **training / discussion / structured thinking**, not as a validated audit or compliance instrument.
+
+---
+
+## 2) Galton Board Distribution Lab (`Galton_Board_Distribution_Lab.html`)
+
+A visual lab connecting **Galton board intuition** to **sampling** and **cost-risk charts**.
+
+What you’ll find inside:
+- Galton-board style sampling and distribution intuition
+- Sampling modes (e.g., Monte Carlo / Latin Hypercube) and distribution options
+- Cost-risk visualizations including **PDF** and **CDF (S-curve)** views
+- A built-in **Tour** and hover definitions to explain how to use the tool
+
+---
+
+## Repo Files
+
+- `AI_Bias_Sandbox.html`
+- `Galton_Board_Distribution_Lab.html`
+- `README.md`
+
+(Optional but recommended)
+- `index.html` (a simple landing page linking to both tools)
+
+---
+
+## Run Locally
+
+You can open each file by double-clicking it.
+
+For the most consistent behavior, run a tiny local server:
+
+```bash
+python -m http.server 8000
