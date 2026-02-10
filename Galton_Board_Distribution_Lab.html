@@ -248,13 +248,23 @@
         radial-gradient(800px 500px at 50% 50%, rgba(98,217,166,.08), transparent 55%),
         rgba(6,10,20,.55);
       border:1px solid rgba(255,255,255,.06);
-      touch-action: none;
+      touch-action: manipulation;
     }
+    /* Mobile-friendly touch behavior: allow scrolling over non-drag charts */
+    #galtonHist, #costPdf{touch-action: pan-y;}
+    /* Keep CDF interactive drag (read-off) */
+    #costCdf{touch-action: none;}
+
     /* keep small for PDF/CDF only */
     canvas.small{height: 230px;}
     @media (max-width: 700px){
-      canvas{height: 290px;}
-      canvas.small{height: 210px;}
+      /* tighter gutters so charts can breathe on phones */
+      .wrap{padding: 10px calc(12px + var(--safe-right)) 18px calc(12px + var(--safe-left));}
+      .viz{padding:10px;}
+      /* bigger, viewport-aware canvases */
+      canvas{height: clamp(320px, 48vh, 520px);}
+      #board{height: clamp(360px, 55vh, 640px);}
+      canvas.small{height: clamp(240px, 34vh, 360px);}
     }
     .footerNote{margin-top:8px; color: rgba(232,238,252,.65); font-size:11px; line-height:1.25;}
 
@@ -395,6 +405,7 @@
       font-size: 12px;
       color: rgba(232,238,252,.86);
       line-height: 1.35;
+      white-space: pre-wrap;
       margin-bottom:10px;
       overflow:auto;
       -webkit-overflow-scrolling: touch;
@@ -904,14 +915,22 @@
     let lastDraw = 0;
     let lastTick = now();
 
-    window.addEventListener("resize",()=>{
+    function refitAllCanvases(){
       bctx=fitCanvas(boardCanvas);
       ghctx=fitCanvas(galtonHistCanvas);
       pdfctx=fitCanvas(costPdfCanvas);
       cdfctx=fitCanvas(costCdfCanvas);
       needsRedraw=true;
+    }
+    function _onViewportResize(){
+      refitAllCanvases();
       if(tour.active) tour.render(false);
-    }, {passive:true});
+    }
+    window.addEventListener("resize", _onViewportResize, {passive:true});
+    window.addEventListener("orientationchange", ()=>setTimeout(_onViewportResize, 180), {passive:true});
+    if(window.visualViewport){
+      window.visualViewport.addEventListener("resize", _onViewportResize, {passive:true});
+    }
 
     // --- Math helpers ---
     function logChoose(n,k){
@@ -1657,7 +1676,8 @@ function rescaleParamInputsForUnitsChange(oldScale, newScale){
       const yMax=Math.max(1e-12, opts.yMax||1);
       const yTicks=opts.yTicks||4;
       const yFmt=opts.yFmt||((v)=>String(Math.round(v)));
-      ctx.font="11px ui-sans-serif, system-ui";
+      const fs = opts.fontSize || (W < 420 ? 10 : 11);
+      ctx.font = `${fs}px ui-sans-serif, system-ui`;
       ctx.fillStyle="rgba(232,238,252,0.72)";
       ctx.textAlign="right";
       ctx.textBaseline="middle";
@@ -1827,7 +1847,8 @@ function rescaleParamInputsForUnitsChange(oldScale, newScale){
       ensureGalton();
       galtonBadge.textContent=`Bins: ${state.rows+1}`;
 
-      const pad={l:62,r:16,t:18,b:34};
+      const isNarrow = W < 420;
+      const pad = isNarrow ? {l:54,r:12,t:16,b:44} : {l:62,r:16,t:18,b:34};
       const maxC=Math.max(1,...state.galtonCounts);
 
       const mid = Math.round(state.rows/2);
@@ -1836,11 +1857,10 @@ function rescaleParamInputsForUnitsChange(oldScale, newScale){
         yLabel:"count",
         yFmt:(v)=>String(Math.round(v)),
         xLabel:"bin k",
-        xTicks:[
-          {t:0, label:"0"},
-          {t:0.5, label:String(mid)},
-          {t:1, label:String(state.rows)}
-        ]
+        xTicks:(isNarrow
+          ? [{t:0, label:"0"}, {t:1, label:String(state.rows)}]
+          : [{t:0, label:"0"}, {t:0.5, label:String(mid)}, {t:1, label:String(state.rows)}]
+        )
       });
 
       bars(ctx,pad,plotW,plotH,state.galtonCounts,maxC);
@@ -2027,7 +2047,8 @@ function rescaleParamInputsForUnitsChange(oldScale, newScale){
           drawPlaceholder(ctx, costPdfCanvas, "Drop balls (Galton) or simulate via Monte Carlo (MC) / Latin Hypercube Sampling (LHS) to see cost PDF.");
         }else{
           const hist=buildCostHist(32);
-          const pad={l:70,r:16,t:18,b:38};
+          const isNarrow = W < 420;
+          const pad = isNarrow ? {l:58,r:12,t:16,b:52} : {l:70,r:16,t:18,b:38};
           const maxC=Math.max(1,...hist.counts);
 
           const xMid=(hist.min+hist.max)/2;
@@ -2036,11 +2057,10 @@ function rescaleParamInputsForUnitsChange(oldScale, newScale){
             yLabel:"count",
             yFmt:(v)=>String(Math.round(v)),
             xLabel:`Cost (${unitLabel()})`,
-            xTicks:[
-              {t:0, label:formatPlainUnits(hist.min)},
-              {t:0.5, label:formatPlainUnits(xMid)},
-              {t:1, label:formatPlainUnits(hist.max)}
-            ]
+            xTicks:(isNarrow
+              ? [{t:0, label:formatPlainUnits(hist.min)}, {t:1, label:formatPlainUnits(hist.max)}]
+              : [{t:0, label:formatPlainUnits(hist.min)}, {t:0.5, label:formatPlainUnits(xMid)}, {t:1, label:formatPlainUnits(hist.max)}]
+            )
           });
 
           bars(ctx,pad,plotW,plotH,hist.counts,maxC);
@@ -2102,7 +2122,8 @@ function rescaleParamInputsForUnitsChange(oldScale, newScale){
         }
 
         const {min,max}=getDisplayRangeFromSorted(sortedCosts);
-        const pad={l:70,r:16,t:18,b:38};
+        const isNarrow = W < 420;
+        const pad = isNarrow ? {l:58,r:12,t:16,b:52} : {l:70,r:16,t:18,b:38};
         const plotW=W-pad.l-pad.r;
         const plotH=H-pad.t-pad.b;
 
@@ -2114,11 +2135,10 @@ function rescaleParamInputsForUnitsChange(oldScale, newScale){
           yLabel:"prob",
           yFmt:(v)=>String(Math.round(v*100))+"%",
           xLabel:`Cost (${unitLabel()})`,
-          xTicks:[
-            {t:0, label:formatPlainUnits(min)},
-            {t:0.5, label:formatPlainUnits(xMid)},
-            {t:1, label:formatPlainUnits(max)}
-          ]
+          xTicks:(isNarrow
+            ? [{t:0, label:formatPlainUnits(min)}, {t:1, label:formatPlainUnits(max)}]
+            : [{t:0, label:formatPlainUnits(min)}, {t:0.5, label:formatPlainUnits(xMid)}, {t:1, label:formatPlainUnits(max)}]
+          )
         });
 
         // ECDF
@@ -2449,14 +2469,104 @@ function rescaleParamInputsForUnitsChange(oldScale, newScale){
       _raf:0,
       start(){
         const base = [
-          {sel:"#rows", title:"Galton rows", body:"Rows control the number of left/right decisions. More rows → more bins and a smoother (binomial → normal-ish) histogram."},
-          {sel:"#pRight", title:"Skew the Galton board", body:"pRight controls skew (p=0.5 symmetric). Changing this resets the board so the histogram matches the new physics."},
-          {sel:"#dropBatch", title:"Drop balls", body:"Drop a batch to build the Galton histogram. A handful animate; the rest simulate fast so you can scale to big N."},
-          {sel:"#genMethod", title:"Sampling method", body:"Switch between Galton-generated samples and Monte Carlo (MC) / Latin Hypercube Sampling (LHS). LHS is usually smoother than MC for the same N."},
-          ...(state.genMethod==="galton" ? [{sel:"#pitLine", title:"PIT uniformization", body:"Probability Integral Transform (PIT) ON makes u uniform (correct). Turning PIT OFF shows how skipping the PIT step can distort outcomes."}] : []),
-          {sel:"#dist", title:"Pick a distribution", body:"Choose a distribution family. The Probability Density Function (PDF) & Cumulative Distribution Function (CDF) remap instantly because we store u-samples."},
-          {sel:"#autoFit", title:"Auto-calculate parameters", body:"Auto-fit sets parameters so Base behaves like P50 and Budget behaves like your chosen P-level (e.g., P80)."},
-          {sel:"#costCdf", title:"Read the S-curve", body:"The Cumulative Distribution Function (CDF, “S-curve”) shows percentiles. Drag on the curve to read off Cost ↔ Percentile."}
+          {sel:"#tourBtn", title:"Tour controls", body:`This guided tour is identical on desktop + mobile.
+• Use Next/Back to navigate steps
+• Restart re-centers if you rotate or the layout shifts
+• You can scroll the page while the tour is open`},
+
+          {sel:"header .tip", title:"Tooltips & definitions", body:`Any dotted term has a quick definition.
+• Desktop: hover
+• Mobile: tap
+These help explain Galton, PIT, PDF/CDF, and sampling terms.`},
+
+          {sel:"#rows", title:"Galton rows", body:`Rows = number of left/right decisions.
+More rows → more bins (rows+1) and a smoother (binomial → normal-ish) Galton histogram.`},
+
+          {sel:"#pRight", title:"Galton pRight (skew)", body:`pRight controls skew.
+• 0.50 = symmetric
+• <0.50 = left-skewed bins
+• >0.50 = right-skewed bins
+Changing pRight resets the board so the histogram matches the new physics.`},
+
+          {sel:"#board", title:"Drop balls (tap/click)", body:`Tap/click the Galton board to drop a single ball.
+Use “Last Path” to highlight the most recent route.
+In “From Galton” mode, dropped balls also generate u-samples that drive the cost charts.`},
+
+          {sel:"#dropBatch", title:"Drop a batch", body:`Drop Ball Batch builds the Galton histogram quickly.
+A handful animate for intuition; the rest simulate fast so you can scale to large N.`},
+
+          {sel:"#galtonHist", title:"Galton histogram", body:`Bars = observed bin counts (where balls land).
+The light overlay shows the expected binomial shape for your rows & pRight.
+This is the “physics” that creates u when you sample from Galton.`},
+
+          {sel:"#genMethod", title:"How samples are generated", body:`Choose where u-samples come from:
+• From Galton: u comes from the board’s outcomes
+• MC: random u ~ Uniform(0,1)
+• LHS: stratified u (often smoother than MC for the same N)
+Tip: PIT (next) matters most in Galton mode.`},
+
+          {sel:"#simulate", title:"Simulate (MC/LHS)", body:`When using MC or LHS, Simulate generates u-samples instantly.
+Set “Sim samples (MC/LHS)” to control N.
+If “Simulate replaces samples” is ON, you get clean comparisons; OFF will append more samples.`},
+
+          {sel:"#replaceLine", title:"Replace vs extend samples", body:`Replace ON clears existing u-samples before simulating.
+Extend (Replace OFF) keeps the old u-samples and adds more.
+For learning & comparisons: Replace ON is usually best.`},
+
+          {sel:"#pitLine", title:"PIT uniformization (Galton)", body:`PIT ON makes u uniform (mathematically correct) before mapping to cost.
+PIT OFF intentionally shows what happens if you skip that step:
+your Galton settings can distort the cost distribution.`},
+
+          {sel:"#dist", title:"Choose a distribution family", body:`Pick the distribution used to map u → Q(u).
+Because we store u-samples, changing the family remaps PDF/CDF immediately.`},
+
+          {sel:"#p1", title:"Distribution parameters", body:`These numeric parameters define the chosen distribution.
+The labels change depending on the family (Normal, Lognormal, Triangular, Weibull, etc.).
+Tip: Use Auto-calculate if you want to anchor to P50 + Budget without hand-tuning.`},
+
+          {sel:"#applyMode", title:"How cost is applied", body:`Apply Mode controls how Q(u) becomes a cost:
+• Absolute: Q(u) is the cost directly
+• Delta: cost = Base + Q(u)
+• Multiplier: cost = Base × Q(u)
+Base Cost is the anchor for Delta/Multiplier modes.`},
+
+          {sel:"#baseCost", title:"Base cost (anchor)", body:`Base Cost is your anchor value.
+It’s used by Delta/Multiplier mapping and by Auto-calculate.
+Units ($, $K, $M) affect display only; internal math is in dollars.`},
+
+          {sel:"#budget", title:"Budget threshold", body:`Budget draws the vertical line in the PDF and is used for exceedance:
+P(cost > budget).
+Auto-calculate can treat Budget as your target percentile (e.g., Budget≈P80).`},
+
+          {sel:"#pTarget", title:"Target percentile (P-level)", body:`This sets the percentile marker on the S-curve.
+Example: P80 means 80% of outcomes are at or below that cost.
+The UI shows the current cost at your target P-level.`},
+
+          {sel:"#autoFit", title:"Auto-calculate parameters", body:`Auto-calculate chooses parameters so:
+• Base behaves like ~P50
+• Budget aligns to your Target P-level (e.g., Budget≈P80)
+Use Uncertainty + Right-tail to shape spread and skew.`},
+
+          {sel:"#lastExplain", title:"Last drop explained", body:`This trace shows the full pipeline for one sample:
+bin → u → Q(u) → cost.
+It’s the fastest way to connect the Galton board intuition to the cost charts.`},
+
+          {sel:"#costPdf", title:"Cost PDF (histogram + theory)", body:`PDF view shows the distribution of simulated costs.
+• Bars = simulated outcomes
+• Light curve/overlay = theoretical PDF for the chosen parameters
+The Budget line helps visualize risk of exceedance.`},
+
+          {sel:"#costCdf", title:"Cost S-curve (CDF)", body:`The CDF (“S-curve”) shows percentiles.
+Drag/tap along the curve to read Cost ↔ Percentile.
+Compare empirical (from samples) vs theoretical (from parameters) to see convergence.`},
+
+          {sel:"#distExplainBody", title:"Distribution explanation panel", body:`This section summarizes what the current setup implies:
+• Interpretation (spread, skew, tail behavior)
+• Convergence notes (is N large enough?)
+• Practical cost-risk takeaways`},
+
+          {sel:"#reset", title:"Reset & iterate", body:`Reset clears the board and samples so you can try clean scenarios.
+Tip: Use Replace ON + Reset when comparing families or parameter choices.`}
         ];
 
         this.steps = base.filter(s=>{
@@ -2507,12 +2617,21 @@ function rescaleParamInputsForUnitsChange(oldScale, newScale){
         if(scrollTo && el){
           const {vw}= _tourViewport();
           const isNarrow = vw < 700;
-          try{ el.scrollIntoView({behavior:"smooth", block:isNarrow?"start":"center", inline:"nearest"}); }catch{}
+          try{ el.scrollIntoView({behavior:"smooth", block:"center", inline:"nearest"}); }catch{}
         }
 
         // Position after content/layout settle (mobile needs a beat after scroll/toolbar changes)
         this._schedule();
         setTimeout(()=>this._schedule(), scrollTo?420:60);
+        if(scrollTo){
+          const until = now() + 950;
+          const loop = ()=>{
+            if(!this.active) return;
+            this.position();
+            if(now() < until) requestAnimationFrame(loop);
+          };
+          requestAnimationFrame(loop);
+        }
       },
       position(){
         if(!this.active) return;
@@ -2521,22 +2640,21 @@ function rescaleParamInputsForUnitsChange(oldScale, newScale){
         const el=document.querySelector(s.sel);
         if(!el) return;
 
-        const {vx,vy,vw,vh} = _tourViewport();
+        const {vw,vh} = _tourViewport();
         const {st,sb,sl,sr} = _tourSafe();
         const isNarrow = vw < 700;
 
         const r = el.getBoundingClientRect();
         const pad = isNarrow ? 10 : 6;
-        const margin = 10;
 
-        // Highlight (coords based on *visual* viewport; translate by visualViewport offset)
-        let hw = Math.max(28, Math.min(vw - margin*2, r.width + pad*2));
-        let hh = Math.max(22, Math.min(vh - margin*2, r.height + pad*2));
-        let hx = _tourClamp(r.left - pad, margin + sl, vw - margin - sr - hw);
-        let hy = _tourClamp(r.top  - pad, margin + st, vh - margin - sb - hh);
+        // Highlight: keep it *exactly* around the target (no clamping — clamping can look misaligned).
+        const hw = Math.max(10, r.width + pad*2);
+        const hh = Math.max(10, r.height + pad*2);
+        const hx = r.left - pad;
+        const hy = r.top  - pad;
 
-        tourHighlight.style.left  = (vx + hx) + "px";
-        tourHighlight.style.top   = (vy + hy) + "px";
+        tourHighlight.style.left  = hx + "px";
+        tourHighlight.style.top   = hy + "px";
         tourHighlight.style.width = hw + "px";
         tourHighlight.style.height= hh + "px";
 
@@ -2575,8 +2693,8 @@ function rescaleParamInputsForUnitsChange(oldScale, newScale){
           cy = _tourClamp(cy, 10 + st, vh - cardH - 10 - sb);
         }
 
-        tourCard.style.left = (vx + cx) + "px";
-        tourCard.style.top  = (vy + cy) + "px";
+        tourCard.style.left = cx + "px";
+        tourCard.style.top  = cy + "px";
       },
       next(){
         if(!this.active) return;
