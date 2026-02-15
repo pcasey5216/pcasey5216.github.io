@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Cost Analysis Simulation Engine (CASE)</title>
+  <title>CASE — Cost Analysis &amp; Simulation Engine (v3.0.17)</title>
   <style>
     :root{
       --bg:#0b1220; --panel:#101a33; --panel2:#0f1930; --text:#e8eefc; --muted:#a9b6d6;
@@ -965,8 +965,8 @@ body.layout-stack.layout-swap .grid{grid-template-areas:"outputs" "inputs";}
       <div class="brand">
         <div class="logo" aria-hidden="true"></div>
         <div class="titleWrap">
-          <h1>Cost Estimating Tool</h1>
-          <div class="sub">Single‑file estimator • schedule phasing + risk simulation • <span class="pill">v3.0.17</span></div>
+          <h1>CASE</h1>
+          <div class="sub">Cost Analysis &amp; Simulation Engine • schedule phasing + risk simulation • <span class="pill">v3.0.17</span></div>
         </div>
       </div>
 
@@ -1754,7 +1754,7 @@ body.layout-stack.layout-swap .grid{grid-template-areas:"outputs" "inputs";}
   <script>
 
     /*********************
-     * Cost Estimating Tool v1.8
+     * CASE — Cost Analysis & Simulation Engine (v3.0.17)
      * - Fixed correlation implementation (supports negative ρ when valid).
      * - Date parsing and FY mapping are UTC-stable.
      * - LocalStorage stays small (results arrays are not persisted).
@@ -1911,7 +1911,7 @@ body.layout-stack.layout-swap .grid{grid-template-areas:"outputs" "inputs";}
 
     function diagReport(){
       const lines = [];
-      lines.push(`Cost Estimating Tool ${diag.build}`);
+      lines.push(`CASE — Cost Analysis & Simulation Engine ${diag.build}`);
       lines.push(`Time: ${fmtTs(new Date())}`);
       lines.push("");
       lines.push(`Boot OK: ${diag.bootOk}`);
@@ -3390,7 +3390,7 @@ function nowStamp(){
     function exportScenarioPack(){
       const pack = {
         schemaVersion: PACK_SCHEMA_VERSION,
-        tool: "Cost Estimating Tool",
+        tool: "CASE — Cost Analysis & Simulation Engine",
         toolVersion: (document.title.match(/\(v([^)]+)\)/)?.[1] || "unknown"),
         exportedAt: new Date().toISOString(),
         payload: {
@@ -3408,7 +3408,7 @@ function nowStamp(){
       const a = document.createElement("a");
       a.href = url;
       const stamp = new Date().toISOString().slice(0,10).replace(/-/g,"");
-      a.download = `CostTool_ScenarioPack_v${pack.toolVersion}_${stamp}.json`;
+      a.download = `Cost_Analysis_Simulation_Engine_ScenarioPack_v${pack.toolVersion}_${stamp}.json`;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -3991,7 +3991,7 @@ function wbsTitleFor(key){
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `CostTool_Scenario_${(s?s.name:"Current").replace(/[^a-z0-9]+/gi,"_").slice(0,40)}.json`;
+      a.download = `Cost_Analysis_Simulation_Engine_Scenario_${(s?s.name:"Current").replace(/[^a-z0-9]+/gi,"_").slice(0,40)}.json`;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -6535,7 +6535,7 @@ function applyResults(res){
       if(isFiniteNumber(s.max)) out.push(["Max", s.max].join(","));
       if(isFiniteNumber(s.stdev)) out.push(["StdDev", s.stdev].join(","));
       if(isFiniteNumber(s.stdev) && isFiniteNumber(s.mean) && s.mean>0) out.push(["CV", (s.stdev/s.mean)].join(","));
-      downloadTextFile(out.join("\n"), `Cost_Estimate_Summary_${new Date().toISOString().slice(0,10)}.csv`);
+      downloadTextFile(out.join("\n"), `Cost_Analysis_Simulation_Engine_Summary_${new Date().toISOString().slice(0,10)}.csv`);
       setStatus("good","Downloaded.","Summary CSV saved.");
     }
 
@@ -6547,7 +6547,7 @@ function applyResults(res){
       for(let i=0;i<fy.keys.length;i++){
         out.push([fy.keys[i], fy.mean[i], fy.p80[i]].join(","));
       }
-      downloadTextFile(out.join("\n"), `Cost_Estimate_FY_${new Date().toISOString().slice(0,10)}.csv`);
+      downloadTextFile(out.join("\n"), `Cost_Analysis_Simulation_Engine_FY_${new Date().toISOString().slice(0,10)}.csv`);
       setStatus("good","Downloaded.","FY profile CSV saved.");
     }
 
@@ -6560,7 +6560,7 @@ function applyResults(res){
           ln.start, ln.end, ln.phase, ln.rampPct, ln.skew, (ln.corrGroup||"")
         ].join(","));
       }
-      downloadTextFile(out.join("\n"), `Cost_Estimate_Lines_${new Date().toISOString().slice(0,10)}.csv`);
+      downloadTextFile(out.join("\n"), `Cost_Analysis_Simulation_Engine_Lines_${new Date().toISOString().slice(0,10)}.csv`);
       setStatus("good","Downloaded.","Cost lines CSV saved.");
     }
 
@@ -6575,7 +6575,7 @@ function applyResults(res){
         const share = totalMean>0 ? (r.mean/totalMean) : 0;
         out.push([csvSafe(r.name), csvSafe(r.wbs||""), r.mean, r.p50, r.p80, r.p90, r.stdev, share].join(","));
       }
-      downloadTextFile(out.join("\n"), `Cost_Estimate_PerLine_${new Date().toISOString().slice(0,10)}.csv`);
+      downloadTextFile(out.join("\n"), `Cost_Analysis_Simulation_Engine_PerLine_${new Date().toISOString().slice(0,10)}.csv`);
       setStatus("good","Downloaded.","Per-line results CSV saved.");
     }
 
@@ -6597,7 +6597,7 @@ function applyResults(res){
         const sd = (k==="TOTAL") ? s.stdev : st.stdev;
         out.push([csvSafe(wbsLabel(k)), mean, p50, p80, p90, sd, model.nodes[i].nLines||0].join(","));
       }
-      downloadTextFile(out.join("\n"), `Cost_Estimate_WBS_${new Date().toISOString().slice(0,10)}.csv`);
+      downloadTextFile(out.join("\n"), `Cost_Analysis_Simulation_Engine_WBS_${new Date().toISOString().slice(0,10)}.csv`);
       setStatus("good","Downloaded.","WBS roll-up CSV saved.");
     }
 
