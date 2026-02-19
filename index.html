@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="description" content="Interactive, browser-based tools for cost analysis training and visualization: AI Bias Sandbox and Galton Board Distribution Lab." />
+  <meta name="description" content="Interactive, browser-based tools for cost analysis training, simulation, and visualization: AI Bias Sandbox, Galton Board Distribution Lab, K-Means Clustering Lab, and CASE." />
   <title>Cost Analysis Interactive Labs</title>
 
   <style>
@@ -30,11 +30,8 @@
       margin:0;
       font-family: system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji";
       color: var(--text);
-      background:
-        radial-gradient(1200px 600px at 15% 10%, rgba(125,211,252,0.18), transparent 60%),
-        radial-gradient(900px 500px at 85% 15%, rgba(167,139,250,0.16), transparent 60%),
-        radial-gradient(700px 450px at 50% 95%, rgba(52,211,153,0.10), transparent 60%),
-        linear-gradient(180deg, #050816 0%, var(--bg) 100%);
+      background: var(--bg);
+      background-color: var(--bg);
       overflow-x:hidden;
     }
 
@@ -51,24 +48,33 @@
       padding: 28px 18px 40px;
     }
 
+    /*
+      Header layout: keep the title/description full-width (so it doesn't wrap into
+      a tall left column) and place quick-link buttons underneath in a 2x2 grid.
+    */
     header{
-      display:flex;
-      justify-content:space-between;
-      align-items:flex-start;
+      display:grid;
+      grid-template-columns: 1fr;
       gap: 14px;
-      margin-bottom: 20px;
+      align-items:start;
+      justify-items:center;
+      text-align:center;
+      margin-bottom: 22px;
     }
-
     .brand{
       display:flex;
       flex-direction:column;
       gap: 6px;
       min-width: 0;
+      width: 100%;
+      max-width: 920px;
+      align-items:center;
     }
 
     .kicker{
       display:inline-flex;
       align-items:center;
+      justify-content:center;
       gap:10px;
       font-size: 12px;
       letter-spacing: 0.12em;
@@ -89,20 +95,20 @@
       line-height: 1.12;
       letter-spacing: -0.02em;
     }
-
     .sub{
-      margin: 0;
-      max-width: 70ch;
+      margin: 0 auto;
+      max-width: 78ch;
       color: var(--muted);
       line-height: 1.5;
       font-size: 15px;
     }
-
     .quicklinks{
-      display:flex;
+      display:grid;
+      grid-template-columns: repeat(2, minmax(220px, 1fr));
       gap: 10px;
-      flex-wrap:wrap;
-      justify-content:flex-end;
+      width: min(660px, 100%);
+      margin: 6px auto 0;
+      justify-content:center;
     }
 
     .pill{
@@ -117,6 +123,7 @@
       font-size: 13px;
       transition: transform 0.12s ease, background 0.12s ease, border-color 0.12s ease;
       user-select:none;
+      justify-content:center;
     }
     .pill:hover{ transform: translateY(-1px); background: rgba(255,255,255,0.09); border-color: rgba(255,255,255,0.18); }
 
@@ -128,9 +135,17 @@
     }
 
     @media (max-width: 880px){
-      header{ flex-direction:column; align-items:stretch; }
-      .quicklinks{ justify-content:flex-start; }
+      .quicklinks{
+        width: min(660px, 100%);
+        justify-content:center;
+        margin: 8px auto 0;
+      }
       .grid{ grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 640px){
+      .quicklinks{ grid-template-columns: 1fr; }
+      .pill{ justify-content:center; }
     }
 
     .card{
@@ -315,9 +330,12 @@
         <div class="kicker"><span class="dot" aria-hidden="true"></span> GitHub Pages • Interactive Labs</div>
         <h1>Cost Analysis Interactive Labs</h1>
         <p class="sub">
-          Two browser-based tools for training, intuition-building, and communicating assumptions:
-          the <strong>AI Bias Sandbox</strong> and the <strong>Galton Board Distribution Lab</strong>.
+          
+          Four browser-based tools for training, intuition-building, and communicating assumptions:
+          the <strong>AI Bias Sandbox</strong>, <strong>Galton Board Distribution Lab</strong>,
+          <strong>K-Means Clustering Lab</strong>, and <strong>CASE</strong> (Cost Analysis &amp; Simulation Engine).
           No install required—just open and use.
+        
         </p>
       </div>
 
@@ -330,6 +348,7 @@
           </svg>
           Open Bias Sandbox
         </a>
+
         <a class="pill" href="https://pcasey5216.github.io/Galton_Board_Distribution_Lab.html" rel="noopener">
           <svg class="tinyicon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <path d="M14 3h7v7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
@@ -337,6 +356,28 @@
             <path d="M10 5H6a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
           </svg>
           Open Galton Lab
+        </a>
+
+        <a class="pill" href="https://pcasey5216.github.io/KMeans_Clustering_Lab.html" rel="noopener">
+          <svg class="tinyicon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M4 19V5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="M4 19H20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="M8 14l3-3 3 2 4-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="8" cy="14" r="1.3" stroke="currentColor" stroke-width="2"/>
+            <circle cx="11" cy="11" r="1.3" stroke="currentColor" stroke-width="2"/>
+            <circle cx="14" cy="13" r="1.3" stroke="currentColor" stroke-width="2"/>
+          </svg>
+          Open K-Means Lab
+        </a>
+
+        <a class="pill" href="https://pcasey5216.github.io/Cost_Analysis_Simulation_Engine.html" rel="noopener">
+          <svg class="tinyicon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M12 3v18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="M7 7h4v4H7z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M13 13h4v4h-4z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+          </svg>
+          Open CASE
         </a>
       </nav>
     </header>
@@ -421,6 +462,88 @@
           https://pcasey5216.github.io/Galton_Board_Distribution_Lab.html
         </div>
       </article>
+
+      <!-- K-Means Clustering Lab -->
+      <article class="card">
+        <div class="tagrow">
+          <span class="tag"><span class="tiny" style="background:rgba(125,211,252,0.75)"></span> Unsupervised ML</span>
+          <span class="tag"><span class="tiny" style="background:rgba(52,211,153,0.75)"></span> K-means++</span>
+          <span class="tag"><span class="tiny" style="background:rgba(251,191,36,0.85)"></span> Elbow / Silhouette</span>
+          <span class="tag"><span class="tiny" style="background:rgba(255,255,255,0.35)"></span> v0.7.5.2</span>
+        </div>
+
+        <h2>K-Means Clustering Lab</h2>
+        <p class="desc">
+          An interactive K-means “sandbox” for building intuition: click to add points, step through iterations,
+          and use diagnostics to pick <strong>k</strong>.
+        </p>
+
+        <ul>
+          <li>Teaching vs Analysis mode, k-means++ or random initialization, step/auto-run</li>
+          <li>K-scan helpers (elbow and silhouette) plus diagnostics and exports</li>
+          <li>CSV upload + presets + normalization for quick experiments</li>
+        </ul>
+
+        <div class="actions">
+          <a class="btn primary" href="https://pcasey5216.github.io/KMeans_Clustering_Lab.html" rel="noopener">
+            Launch K-Means Lab
+            <svg class="tinyicon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M14 3h7v7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <path d="M21 3l-9 9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <path d="M10 5H6a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </a>
+          <button class="btn" type="button" data-copy="kmeans">
+            Copy link
+            <span class="sr-only">Copy K-Means Clustering Lab link</span>
+          </button>
+        </div>
+
+        <div class="mono" id="kmeansLink" aria-label="K-Means Clustering Lab URL">
+          https://pcasey5216.github.io/KMeans_Clustering_Lab.html
+        </div>
+      </article>
+
+      <!-- CASE -->
+      <article class="card">
+        <div class="tagrow">
+          <span class="tag"><span class="tiny" style="background:rgba(52,211,153,0.75)"></span> Cost Estimating</span>
+          <span class="tag"><span class="tiny" style="background:rgba(167,139,250,0.75)"></span> WBS-driven</span>
+          <span class="tag"><span class="tiny" style="background:rgba(251,191,36,0.85)"></span> Risk / Monte Carlo</span>
+          <span class="tag"><span class="tiny" style="background:rgba(255,255,255,0.35)"></span> v3.0.17</span>
+        </div>
+
+        <h2>CASE — Cost Analysis &amp; Simulation Engine</h2>
+        <p class="desc">
+          A browser-based estimating workflow: build a WBS, enter cost lines, apply uncertainty,
+          and generate cost-risk outputs (including PDF/CDF “S-curve” views).
+        </p>
+
+        <ul>
+          <li>WBS templates + library to jump-start structuring (MIL-STD style layouts)</li>
+          <li>Risk distributions, sampling, and summary statistics for “what-if” exploration</li>
+          <li>Exports and sharing-friendly outputs for documentation and briefings</li>
+        </ul>
+
+        <div class="actions">
+          <a class="btn primary" href="https://pcasey5216.github.io/Cost_Analysis_Simulation_Engine.html" rel="noopener">
+            Launch CASE
+            <svg class="tinyicon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M14 3h7v7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <path d="M21 3l-9 9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <path d="M10 5H6a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </a>
+          <button class="btn" type="button" data-copy="case">
+            Copy link
+            <span class="sr-only">Copy CASE link</span>
+          </button>
+        </div>
+
+        <div class="mono" id="caseLink" aria-label="CASE URL">
+          https://pcasey5216.github.io/Cost_Analysis_Simulation_Engine.html
+        </div>
+      </article>
     </section>
 
     <section class="split" aria-label="About and notes">
@@ -442,7 +565,7 @@
 
     <footer>
       <div style="margin-top:8px;">
-        &copy; <span id="year"></span> • Hosted on GitHub Pages • Last updated automatically by this page.
+        &copy; <span id="year"></span> • Hosted on GitHub Pages • Landing page index.
       </div>
     </footer>
   </div>
@@ -451,12 +574,12 @@
     // Year
     document.getElementById('year').textContent = new Date().getFullYear();
 
-    // Copy buttons
+    // Copy helpers
     function copyText(text) {
       if (navigator.clipboard && window.isSecureContext) {
         return navigator.clipboard.writeText(text);
       }
-      // Fallback for older browsers
+      // Fallback for older browsers / non-secure contexts
       const ta = document.createElement('textarea');
       ta.value = text;
       ta.style.position = 'fixed';
@@ -471,21 +594,27 @@
     }
 
     function flash(btn, msg) {
-      const original = btn.textContent.trim();
+      if (!btn.dataset.origHtml) btn.dataset.origHtml = btn.innerHTML;
       btn.textContent = msg;
       btn.style.transform = 'translateY(-1px)';
       setTimeout(() => {
-        btn.textContent = original;
+        btn.innerHTML = btn.dataset.origHtml;
         btn.style.transform = '';
       }, 900);
     }
 
+    const URLS = {
+      bias: 'https://pcasey5216.github.io/AI_Bias_Sandbox.html',
+      galton: 'https://pcasey5216.github.io/Galton_Board_Distribution_Lab.html',
+      kmeans: 'https://pcasey5216.github.io/KMeans_Clustering_Lab.html',
+      case: 'https://pcasey5216.github.io/Cost_Analysis_Simulation_Engine.html'
+    };
+
     document.querySelectorAll('button[data-copy]').forEach(btn => {
       btn.addEventListener('click', async () => {
         const which = btn.getAttribute('data-copy');
-        const url = (which === 'bias')
-          ? 'https://pcasey5216.github.io/AI_Bias_Sandbox.html'
-          : 'https://pcasey5216.github.io/Galton_Board_Distribution_Lab.html';
+        const url = URLS[which] || '';
+        if (!url) return flash(btn, 'No link');
 
         try {
           await copyText(url);
