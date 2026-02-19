@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>K-Means Clustering Lab (v0.7.4.1)</title>
+  <title>K-Means Clustering Lab</title>
   <style>
     :root{
       color-scheme: dark;
@@ -22,8 +22,36 @@
       --radius2:22px;
       --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
       --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
-    
-      --grid-left: 330px;
+
+      /* Phase 1A: design tokens (spacing + typography) */
+      --space-0: 2px;
+      --space-1: 6px;
+      --space-2: 8px;
+      --space-3: 10px;
+      --space-4: 12px;
+      --space-5: 14px;
+      --space-6: 16px;
+      --space-7: 20px;
+      --space-8: 24px;
+
+      --fs-0: 11px;
+      --fs-1: 12px;
+      --fs-2: 13px;
+      --fs-3: 16px;
+
+      --pad-app: var(--space-4);
+      --gap-app: var(--space-4);
+      --pad-panel-y: var(--space-4);
+      --pad-panel-x: var(--space-5);
+      --gap-row: var(--space-3);
+
+      /* Phase 1B: button sizing + hierarchy */
+      --btn-h: 40px;
+      --btn-h-sm: 36px;
+      --btn-pad-x: 12px;
+      --btn-pad-x-sm: 10px;
+      --btn-gap: 8px;
+--grid-left: 330px;
       --grid-right: 370px;
       --grid-bottom: 260px;
 
@@ -45,15 +73,15 @@
       height:100%;
       display:flex;
       flex-direction:column;
-      gap:12px;
-      padding:12px;
+      gap:var(--gap-app);
+      padding:var(--pad-app);
     }
     .topbar{
       display:flex;
       align-items:center;
       justify-content:space-between;
-      gap:12px;
-      padding:12px 14px;
+      gap:var(--gap-app);
+      padding:var(--pad-panel-y) var(--pad-panel-x);
       border:1px solid var(--border);
       background: linear-gradient(180deg, rgba(16,26,51,0.92), rgba(14,23,48,0.82));
       border-radius: var(--radius2);
@@ -68,8 +96,8 @@
       box-shadow: 0 8px 20px rgba(0,0,0,0.35);
     }
     .titlewrap{display:flex; flex-direction:column; line-height:1.1}
-    .title{font-weight:800; letter-spacing:0.2px; font-size:16px}
-    .subtitle{font-size:12px; color:var(--muted)}
+    .title{font-weight:800; letter-spacing:0.2px; font-size:var(--fs-3)}
+    .subtitle{font-size:var(--fs-1); color:var(--muted)}
     .pill{
       font-size:12px;
       padding:3px 9px;
@@ -79,27 +107,50 @@
       background: rgba(255,255,255,0.04);
       white-space:nowrap;
     }
-    .top-actions{display:flex; align-items:center; gap:10px; flex-wrap:wrap; justify-content:flex-end}
+    .top-actions{display:flex; align-items:center; gap:var(--gap-row); flex-wrap:wrap; justify-content:flex-end}
     .btn{
       appearance:none;
       border:1px solid var(--border);
       background: rgba(255,255,255,0.05);
       color:var(--text);
-      padding:9px 11px;
+      padding:0 var(--btn-pad-x);
+      min-height: var(--btn-h);
       border-radius:14px;
       font-weight:700;
-      font-size:13px;
+      font-size:var(--fs-2);
       cursor:pointer;
-      transition: transform 0.05s ease, background 0.15s ease, border-color 0.15s ease;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap: var(--btn-gap);
+      line-height:1;
+      white-space:nowrap;
+      user-select:none;
+      transition: transform 0.05s ease, background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .btn:disabled, .btn[aria-disabled="true"]{
+      opacity:0.55;
+      cursor:not-allowed;
+      transform:none !important;
+      box-shadow:none !important;
     }
     .btn:hover{background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.16)}
     .btn:active{transform: translateY(1px)}
     .btn.primary{
-      background: linear-gradient(180deg, rgba(122,162,255,0.26), rgba(122,162,255,0.12));
-      border-color: rgba(122,162,255,0.35);
+      background: linear-gradient(180deg, rgba(122,162,255,0.30), rgba(122,162,255,0.14));
+      border-color: rgba(122,162,255,0.42);
+      box-shadow: 0 10px 24px rgba(122,162,255,0.10);
     }
+
+    .btn.danger{
+      background: rgba(251,113,133,0.10);
+      border-color: rgba(251,113,133,0.40);
+    }
+    .btn.danger:hover{background: rgba(251,113,133,0.16); border-color: rgba(251,113,133,0.55)}
+    .btn.danger.ghost{background: rgba(251,113,133,0.06)}
+
     .btn.ghost{background: rgba(255,255,255,0.02)}
-    .btn.small{padding:7px 10px; font-size:12px; border-radius:12px}
+    .btn.small{padding:0 var(--btn-pad-x-sm); min-height: var(--btn-h-sm); font-size:var(--fs-1); border-radius:12px}
     .seg{
       display:flex;
       border:1px solid var(--border);
@@ -111,10 +162,16 @@
       border:0;
       background: transparent;
       color: var(--muted);
-      padding:8px 10px;
+      padding:0 12px;
+      min-height: var(--btn-h-sm);
       font-weight:800;
-      font-size:12px;
+      font-size:var(--fs-1);
       cursor:pointer;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      white-space:nowrap;
     }
     .seg button.active{color:var(--text); background: rgba(122,162,255,0.16)}
     .grid{
@@ -123,7 +180,7 @@
       display:grid;
       grid-template-columns: var(--grid-left) 1fr var(--grid-right);
       grid-template-rows: 1fr var(--grid-bottom);
-      gap:12px;
+      gap:var(--gap-app);
       position:relative;
     }
 
@@ -146,14 +203,14 @@
       display:flex;
       align-items:center;
       justify-content:space-between;
-      gap:10px;
-      padding:12px 14px;
+      gap:var(--gap-row);
+      padding:var(--pad-panel-y) var(--pad-panel-x);
       border-bottom:1px solid var(--border);
       background: rgba(255,255,255,0.02);
     }
     .panel-title{
       font-weight:900;
-      font-size:13px;
+      font-size:var(--fs-2);
       letter-spacing:0.2px;
       color: var(--text);
       display:flex;
@@ -165,16 +222,16 @@
       background: rgba(122,162,255,0.9);
       box-shadow: 0 0 0 3px rgba(122,162,255,0.15);
     }
-    .panel-body{padding:12px 14px; min-height:0; overflow:auto; flex:1; -webkit-overflow-scrolling: touch;}
-    .panel-body.tight{padding:10px 12px}
+    .panel-body{padding:var(--pad-panel-y) var(--pad-panel-x); min-height:0; overflow:auto; flex:1; -webkit-overflow-scrolling: touch;}
+    .panel-body.tight{padding:var(--space-3) var(--space-4)}
     .muted{color:var(--muted)}
     .small{font-size:12px}
-    .row{display:flex; gap:10px; flex-wrap:wrap}
+    .row{display:flex; gap:var(--gap-row); flex-wrap:wrap}
     .field{
-      display:flex; flex-direction:column; gap:6px;
+      display:flex; flex-direction:column; gap:var(--space-1);
       min-width: 140px; flex:1;
     }
-    label{font-size:11px; color:var(--muted); font-weight:800; letter-spacing:0.2px}
+    label{font-size:var(--fs-0); color:var(--muted); font-weight:800; letter-spacing:0.2px}
     input[type="number"], input[type="text"], select{
       width:100%;
       border:1px solid var(--border);
@@ -184,7 +241,7 @@
       border-radius:14px;
       outline:none;
       font-weight:700;
-      font-size:13px;
+      font-size:var(--fs-2);
     }
 select{ color-scheme: dark; }
 select option{
@@ -203,7 +260,7 @@ select option{
     }
     .kbd{
       font-family:var(--mono);
-      font-size:11px;
+      font-size:var(--fs-0);
       border:1px solid var(--border);
       padding:2px 6px;
       border-radius:8px;
@@ -213,7 +270,7 @@ select option{
     .split{
       display:grid;
       grid-template-columns: 1fr 1fr;
-      gap:10px;
+      gap:var(--gap-row);
     }
     .statusline{
       display:flex; align-items:center; gap:10px; flex-wrap:wrap;
@@ -227,7 +284,7 @@ select option{
       background: rgba(255,255,255,0.03);
       color:var(--muted);
       font-weight:800;
-      font-size:11px;
+      font-size:var(--fs-0);
       white-space:nowrap;
     }
     .badge .b{
@@ -242,7 +299,7 @@ select option{
     .badge.bad .b{background: rgba(251,113,133,0.95)}
     .debug{
       font-family: var(--mono);
-      font-size: 11px;
+      font-size: var(--fs-0);
       white-space: pre-wrap;
       line-height: 1.35;
       margin:0;
@@ -265,9 +322,9 @@ table.miniTable{width:100%; border-collapse:collapse; font-size:12px; min-width:
       display:flex; flex-direction:column;
     }
     .canvas-head{
-      padding:10px 12px;
+      padding:var(--space-3) var(--space-4);
       border-bottom:1px solid var(--border);
-      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      display:flex; align-items:center; justify-content:space-between; gap:var(--gap-row);
       background: rgba(255,255,255,0.02);
       z-index:2;
     }
@@ -476,7 +533,7 @@ body.resizing.row{ cursor: row-resize; }
       <div class="brand">
         <div class="logo" aria-hidden="true"></div>
         <div class="titlewrap">
-          <div class="title">K-Means Clustering Lab <span class="pill" id="versionPill">v0.7.4.1</span></div>
+          <div class="title">K-Means Clustering Lab <span class="pill" id="versionPill">v0.7.6.1</span></div>
           <div class="subtitle">Interactive cost-analysis explainer • click-to-create points, math steps, diagnostics, and exports</div>
         </div>
       </div>
@@ -553,11 +610,11 @@ body.resizing.row{ cursor: row-resize; }
             <div style="height:10px"></div>
 
             <div class="row">
-              <button class="btn small" id="btnInitialize" type="button">Initialize</button>
+              <button class="btn small primary" id="btnInitialize" type="button">Initialize</button>
               <button class="btn small" id="btnStep" type="button">Step</button>
-              <button class="btn small" id="btnRun" type="button">Auto-run</button>
-              <button class="btn small" id="btnPause" type="button">Pause</button>
-              <button class="btn small" id="btnReset" type="button">Reset</button>
+              <button class="btn small primary" id="btnRun" type="button">Auto-run</button>
+              <button class="btn small ghost" id="btnPause" type="button">Pause</button>
+              <button class="btn small ghost" id="btnReset" type="button">Reset</button>
             </div>
 
             <div style="height:10px"></div>
@@ -697,8 +754,8 @@ body.resizing.row{ cursor: row-resize; }
     </div>
     <div style="height:10px"></div>
     <div class="row" style="gap:10px; flex-wrap:wrap;">
-      <button class="btn small" id="btnExportPoints" type="button">Export points CSV</button>
-      <button class="btn small" id="btnExportCentroids" type="button">Export centroids CSV</button>
+      <button class="btn small ghost" id="btnExportPoints" type="button">Export points CSV</button>
+      <button class="btn small ghost" id="btnExportCentroids" type="button">Export centroids CSV</button>
     </div>
     <div style="height:10px"></div>
     <div class="muted small">
@@ -738,8 +795,8 @@ body.resizing.row{ cursor: row-resize; }
             <div class="right">
               <button class="btn small" id="btnAddMode" type="button">Add</button>
               <button class="btn small" id="btnEraseMode" type="button">Erase</button>
-              <button class="btn small" id="btnClearPoints" type="button">Clear</button>
-              <button class="btn small" id="btnFitAxes" type="button">Fit axes</button>
+              <button class="btn small danger ghost" id="btnClearPoints" type="button">Clear</button>
+              <button class="btn small ghost" id="btnFitAxes" type="button">Fit axes</button>
             </div>
           </div>
           <canvas id="plotCanvas" aria-label="Plot canvas"></canvas>
@@ -919,7 +976,7 @@ body.resizing.row{ cursor: row-resize; }
           <div class="panel-title"><span class="dot"></span>Diagnostics</div>
           <div class="statusline">
             <span class="badge"><span class="b"></span><span>K Helpers • Elbow • Silhouette • Convergence (Phase G+H)</span></span>
-            <button class="btn small" id="btnDiagSnapshot" title="Copy key diagnostics to clipboard">Snapshot</button>
+            <button class="btn small ghost" id="btnDiagSnapshot" title="Copy key diagnostics to clipboard">Snapshot</button>
           </div>
         </div>
         <div class="panel-body">
@@ -969,7 +1026,7 @@ body.resizing.row{ cursor: row-resize; }
 
   <div style="height:10px"></div>
   <div class="row" style="gap:10px; flex-wrap:wrap; align-items:center;">
-    <button class="btn" id="btnScanK">Scan K</button>
+    <button class="btn primary" id="btnScanK">Scan K</button>
     <button class="btn" id="btnApplyRecommendedK" disabled>Apply recommended</button>
     <button class="btn ghost" id="btnApplySelectedK" disabled>Apply selected</button>
     <span class="muted small" id="kScanRecommendation">Recommendation: —</span>
@@ -1144,7 +1201,7 @@ body.resizing.row{ cursor: row-resize; }
 ;(() => {
     "use strict";
 
-    const VERSION = "v0.7.5.2";
+    const VERSION = "v0.7.6.1";
     const TZ = "America/New_York";
 
     // --- App State (will expand in later phases) ---
@@ -1750,6 +1807,211 @@ C,4,5
   return out;
 }
 
+// Phase 0B: Expand bug test coverage (layout/observers/exports/teaching tools)
+function phase0BBugChecks() {
+  const out = { ok: true, notes: [] };
+
+  // 1) Theme tokens present (future-proof for theme work)
+  try {
+    const cs = getComputedStyle(document.documentElement);
+    const req = ["--bg","--panel","--text","--accent","--border","--grid-left","--grid-right","--grid-bottom"]; 
+    const missing = req.filter(v => !String(cs.getPropertyValue(v) || "").trim());
+    if (missing.length) {
+      out.ok = false;
+      out.notes.push(`Theme tokens: FAIL (missing ${missing.join(', ')})`);
+    } else {
+      out.notes.push("Theme tokens: OK");
+    }
+  } catch (e) {
+    out.ok = false;
+    out.notes.push(`Theme tokens error: ${e && e.message ? e.message : e}`);
+  }
+
+  // 2) Splitter/layout sanity
+  try {
+    const m = getGridMetrics();
+    const midW = m.rect.width - m.col1 - m.col3 - 2*m.gapX;
+    const topH = m.rect.height - m.row2 - m.gapY;
+    const okNums = [m.col1,m.col2,m.col3,m.row1,m.row2,midW,topH].every(n => isFinite(n) && n > 0);
+    const okLimits = (m.col1 >= LAYOUT_LIMITS.leftMin) && (m.col3 >= LAYOUT_LIMITS.rightMin) && (m.row2 >= LAYOUT_LIMITS.bottomMin) && (midW >= LAYOUT_LIMITS.midMin) && (topH >= LAYOUT_LIMITS.topMin);
+
+    // Ensure top splitters don't overlap diagnostics panel
+    let overlapOk = true;
+    try {
+      const diag = els.diagPanel ? els.diagPanel.getBoundingClientRect() : null;
+      const splits = [els.splitColLeft, els.splitColRight, els.splitRowBottom].filter(Boolean);
+      if (diag && splits.length) {
+        for (const s of splits) {
+          const r = s.getBoundingClientRect();
+          const overlapX = Math.max(0, Math.min(r.right, diag.right) - Math.max(r.left, diag.left));
+          const overlapY = Math.max(0, Math.min(r.bottom, diag.bottom) - Math.max(r.top, diag.top));
+          if (overlapX * overlapY > 2) { overlapOk = false; break; }
+        }
+      }
+    } catch {}
+
+    // Diagnostics internal splitter sanity (if present)
+    let diagOk = true;
+    try {
+      const cs = getComputedStyle(document.documentElement);
+      const v = String(cs.getPropertyValue('--diag-left') || '').trim();
+      if (v.endsWith('%')) {
+        const pct = parseFloat(v);
+        if (!(pct >= 25 && pct <= 75)) diagOk = false;
+      }
+    } catch {}
+
+    if (okNums && okLimits && overlapOk && diagOk) {
+      out.notes.push("Splitters/layout: OK");
+    } else {
+      out.ok = false;
+      out.notes.push(`Splitters/layout: FAIL (nums=${okNums}, limits=${okLimits}, overlap=${overlapOk}, diagSplit=${diagOk})`);
+    }
+  } catch (e) {
+    out.ok = false;
+    out.notes.push(`Splitter/layout error: ${e && e.message ? e.message : e}`);
+  }
+
+  // 3) Plot resize observer present (axes should stay visible when resizing)
+  try {
+    const roOk = !!(app.ui && app.ui._plotResizeObs && typeof app.ui._plotResizeObs.observe === 'function');
+    if (roOk) out.notes.push("Plot resize observer: OK");
+    else { out.ok = false; out.notes.push("Plot resize observer: FAIL"); }
+  } catch (e) {
+    out.ok = false;
+    out.notes.push(`Plot resize observer error: ${e && e.message ? e.message : e}`);
+  }
+
+  // 4) Key buttons present + sensible enabled state
+  try {
+    const pointsN = (app.data.points || []).length;
+    const k = (app.kmeans && isFinite(app.kmeans.k)) ? app.kmeans.k : parseInt(els.kInput?.value || '3', 10);
+    const canInit = pointsN >= (k || 1);
+
+    const keyBtns = [
+      ['Initialize', els.btnInitialize],
+      ['Step', els.btnStep],
+      ['Auto-run', els.btnRun],
+      ['Pause', els.btnPause],
+      ['Reset', els.btnReset],
+      ['Export points', els.btnExportPoints],
+      ['Export centroids', els.btnExportCentroids],
+    ];
+
+    const missing = keyBtns.filter(([name,el]) => !el).map(x => x[0]);
+    if (missing.length) {
+      out.ok = false;
+      out.notes.push(`Key controls: FAIL (missing ${missing.join(', ')})`);
+    } else {
+      // Only enforce a small, safe rule: if enough points exist, Initialize shouldn't be disabled.
+      const initDisabledBad = !!(els.btnInitialize && els.btnInitialize.disabled && canInit);
+      if (initDisabledBad) {
+        out.ok = false;
+        out.notes.push('Key controls: FAIL (Initialize disabled with sufficient points)');
+      } else {
+        out.notes.push('Key controls: OK');
+      }
+    }
+  } catch (e) {
+    out.ok = false;
+    out.notes.push(`Key controls error: ${e && e.message ? e.message : e}`);
+  }
+
+  // 5) Export functions produce non-empty CSV (capture downloadText)
+  try {
+    const snap = {
+      points: (app.data.points || []).slice(),
+      classifications: (app.data.classifications || []).slice(),
+      k: app.kmeans.k,
+      centroids: (app.kmeans.centroids || []).map(c => ({x:c.x, y:c.y})),
+      assignments: (app.kmeans.assignments || []).slice(),
+      history: (app.kmeans.history || []).slice(),
+      viewIndex: app.ui.viewIndex,
+      tshirtMetric: app.ui.tshirtMetric
+    };
+
+    const seedIfNeeded = () => {
+      if (!(app.data.points && app.data.points.length)) {
+        app.data.points = [
+          { id: 'A', x: -1, y: -1 },
+          { id: 'B', x:  1, y:  1 },
+          { id: 'C', x:  2, y:  0 },
+        ];
+      }
+      if (!(app.kmeans.centroids && app.kmeans.centroids.length)) {
+        app.kmeans.k = 2;
+        app.kmeans.centroids = [{x:-1,y:-1},{x:1.5,y:0.5}];
+        app.kmeans.assignments = [0,1,1];
+        app.kmeans.history = [];
+        app.ui.viewIndex = null;
+      }
+    };
+
+    const captureDownload = (fn) => {
+      const orig = downloadText;
+      let cap = null;
+      try {
+        downloadText = (filename, text) => { cap = { filename, text }; };
+        fn();
+      } finally {
+        downloadText = orig;
+      }
+      return cap;
+    };
+
+    seedIfNeeded();
+    const cap1 = captureDownload(() => exportPointsCsv());
+    const cap2 = captureDownload(() => exportCentroidsCsv());
+
+    const ok1 = cap1 && typeof cap1.text === 'string' && cap1.text.trim().length > 20 && cap1.text.includes('id,x,y');
+    const ok2 = cap2 && typeof cap2.text === 'string' && cap2.text.trim().length > 20 && cap2.text.includes('cluster,centroid_x');
+
+    if (ok1 && ok2) {
+      out.notes.push('Exports (CSV build): OK');
+    } else {
+      out.ok = false;
+      out.notes.push(`Exports (CSV build): FAIL (points=${!!ok1}, centroids=${!!ok2})`);
+    }
+
+    // restore
+    app.data.points = snap.points;
+    app.data.classifications = snap.classifications;
+    app.kmeans.k = snap.k;
+    app.kmeans.centroids = snap.centroids;
+    app.kmeans.assignments = snap.assignments;
+    app.kmeans.history = snap.history;
+    app.ui.viewIndex = snap.viewIndex;
+    app.ui.tshirtMetric = snap.tshirtMetric;
+  } catch (e) {
+    out.ok = false;
+    out.notes.push(`Export CSV error: ${e && e.message ? e.message : e}`);
+  }
+
+  // 6) Tour + Glossary functions exist and can open/close without throwing
+  try {
+    const haveTour = (typeof tourStart === 'function') && (typeof tourStop === 'function');
+    const haveGloss = (typeof openGlossary === 'function') && (typeof closeGlossary === 'function');
+    if (!haveTour || !haveGloss) {
+      out.ok = false;
+      out.notes.push(`Teaching tools: FAIL (tour=${haveTour}, glossary=${haveGloss})`);
+    } else {
+      const wasTour = !!(app.tour && app.tour.active);
+      const gEl = document.getElementById('glossaryUI');
+      const wasGloss = !!(gEl && !gEl.classList.contains('hidden'));
+      try { if (!wasGloss) { openGlossary(); closeGlossary(); } } catch (e) { throw e; }
+      try { if (!wasTour) { tourStart(); tourStop(); } } catch (e) { throw e; }
+      out.notes.push('Teaching tools: OK');
+      // restore open states if needed
+      // (No restore needed: we only toggled when the tool was previously closed.)
+    }
+  } catch (e) {
+    out.ok = false;
+    out.notes.push(`Teaching tools error: ${e && e.message ? e.message : e}`);
+  }
+
+  return out;
+}
+
 function bugTest() {
       if (app.debug._bugTestRunning) return;
       app.debug._bugTestRunning = true;
@@ -1764,6 +2026,7 @@ function bugTest() {
             setBadge($("badgeWired"), `Wired: ${app.debug.wiredOk ? "OK" : "FAIL"}`, app.debug.wiredOk ? "ok" : "bad");
 
             const phaseM = phaseMBugChecks();
+            const phase0B = phase0BBugChecks();
             const report = [
               `K-Means Clustering Lab ${VERSION}`,
               `Time: ${nowLocal()}`,
@@ -1778,6 +2041,9 @@ function bugTest() {
               ``,
               `KMeans: status=${app.kmeans.status} k=${app.kmeans.k} iter=${app.kmeans.iter} inertia=${app.kmeans.inertia!=null ? app.kmeans.inertia.toFixed(4) : "—"}`,
               `Engine ready: ${typeof initializeKMeans === "function" && typeof kmeansStep === "function" && typeof startAutoRun === "function" && typeof resetClustering === "function"}`,
+              ``,
+              `Phase 0B checks: ${phase0B.ok ? "OK" : "FAIL"}`,
+              ...phase0B.notes.map(n => `- ${n}`),
               ``,
               `Phase M checks: ${phaseM.ok ? "OK" : "FAIL"}`,
               ...phaseM.notes.map(n => `- ${n}`),
@@ -1863,6 +2129,10 @@ function copyDiagnosticsSnapshot() {
 // --- Rendering (Phase A minimal placeholders) ---
     function renderTopbar() {
       $("versionPill").textContent = VERSION;
+      // Keep the browser tab title consistent with VERSION
+      if (!document.title || !document.title.includes(VERSION)) {
+        document.title = `K-Means Clustering Lab (${VERSION})`;
+      }
       $("modeTeaching").classList.toggle("active", app.meta.mode === "teaching");
       $("modeAnalysis").classList.toggle("active", app.meta.mode === "analysis");
       $("modeTeaching").setAttribute("aria-selected", app.meta.mode === "teaching" ? "true" : "false");
@@ -3669,16 +3939,16 @@ function computeSizeByCluster(centroids, k, metric) {
   return sizeByCluster;
 }
 
-function exportPointsCsv() {
+// Build export payloads without triggering downloads (used by Bug Test and export wrappers)
+function makePointsCsvPayload() {
   const points = app.data.points || [];
-  if (!points.length) { log("No points to export", "warn"); return; }
+  if (!points.length) return null;
 
   const vi = app.ui.viewIndex;
   const snap = (vi != null && app.kmeans.history && app.kmeans.history[vi]) ? app.kmeans.history[vi] : null;
   const centroids = snap ? snap.centroids : app.kmeans.centroids;
   const assignments = snap ? snap.assignments : app.kmeans.assignments;
 
-  const k = app.kmeans.k;
   const metric = app.ui.tshirtMetric || "x";
   const sizeMap = (centroids && centroids.length) ? computeTshirtSizingByCluster(centroids, metric).sizeByCluster : null;
 
@@ -3693,20 +3963,17 @@ function exportPointsCsv() {
   const ts = new Date();
   const pad2 = (n)=>String(n).padStart(2,"0");
   const fname = `kmeans_points_${ts.getFullYear()}${pad2(ts.getMonth()+1)}${pad2(ts.getDate())}_${pad2(ts.getHours())}${pad2(ts.getMinutes())}.csv`;
-  downloadText(fname, out);
-  log(`Exported points CSV: ${fname}`);
+  return { filename: fname, text: out };
 }
 
-function exportCentroidsCsv() {
+function makeCentroidsCsvPayload() {
   const points = app.data.points || [];
-  const k = app.kmeans.k;
-
   const vi = app.ui.viewIndex;
   const snap = (vi != null && app.kmeans.history && app.kmeans.history[vi]) ? app.kmeans.history[vi] : null;
   const centroids = snap ? snap.centroids : app.kmeans.centroids;
   const assignments = snap ? snap.assignments : app.kmeans.assignments;
 
-  if (!centroids || !centroids.length) { log("Initialize to export centroids", "warn"); return; }
+  if (!centroids || !centroids.length) return null;
 
   const metric = app.ui.tshirtMetric || "x";
   const sizeMap = computeTshirtSizingByCluster(centroids, metric).sizeByCluster;
@@ -3715,9 +3982,9 @@ function exportCentroidsCsv() {
   const counts = new Array(kEff).fill(0);
   if (assignments && assignments.length === points.length) {
     for (let i = 0; i < assignments.length; i++) {
-    const c = assignments[i];
-    if (c != null && c >= 0 && c < kEff) counts[c]++;
-  }
+      const c = assignments[i];
+      if (c != null && c >= 0 && c < kEff) counts[c]++;
+    }
   }
 
   let out = "cluster,centroid_x,centroid_y,n_points,tshirt_size\n";
@@ -3729,8 +3996,21 @@ function exportCentroidsCsv() {
   const t = new Date();
   const pad2 = (n)=>String(n).padStart(2,"0");
   const fname = `kmeans_centroids_${t.getFullYear()}${pad2(t.getMonth()+1)}${pad2(t.getDate())}_${pad2(t.getHours())}${pad2(t.getMinutes())}.csv`;
-  downloadText(fname, out);
-  log(`Exported centroids CSV: ${fname}`);
+  return { filename: fname, text: out };
+}
+
+function exportPointsCsv() {
+  const payload = makePointsCsvPayload();
+  if (!payload) { log("No points to export", "warn"); return; }
+  downloadText(payload.filename, payload.text);
+  log(`Exported points CSV: ${payload.filename}`);
+}
+
+function exportCentroidsCsv() {
+  const payload = makeCentroidsCsvPayload();
+  if (!payload) { log("Initialize to export centroids", "warn"); return; }
+  downloadText(payload.filename, payload.text);
+  log(`Exported centroids CSV: ${payload.filename}`);
 }
 
 function updateDataToolsState() {
