@@ -22,41 +22,19 @@
       --radius2:22px;
       --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
       --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
-
-      /* Phase 1A: design tokens (spacing + typography) */
-      --space-0: 2px;
-      --space-1: 6px;
-      --space-2: 8px;
-      --space-3: 10px;
-      --space-4: 12px;
-      --space-5: 14px;
-      --space-6: 16px;
-      --space-7: 20px;
-      --space-8: 24px;
-
-      --fs-0: 11px;
-      --fs-1: 12px;
-      --fs-2: 13px;
-      --fs-3: 16px;
-
-      --pad-app: var(--space-4);
-      --gap-app: var(--space-4);
-      --pad-panel-y: var(--space-4);
-      --pad-panel-x: var(--space-5);
-      --gap-row: var(--space-3);
-
-      /* Phase 1B: button sizing + hierarchy */
-      --btn-h: 40px;
-      --btn-h-sm: 36px;
-      --btn-pad-x: 12px;
-      --btn-pad-x-sm: 10px;
-      --btn-gap: 8px;
---grid-left: 330px;
+    
+      --grid-left: 330px;
       --grid-right: 370px;
       --grid-bottom: 260px;
 
       --diag-left: 58%;
+      --sat: env(safe-area-inset-top);
+      --sab: env(safe-area-inset-bottom);
+      --sal: env(safe-area-inset-left);
+      --sar: env(safe-area-inset-right);
+
 }
+
     *{box-sizing:border-box}
     html,body{height:100%}
     body{
@@ -73,15 +51,15 @@
       height:100%;
       display:flex;
       flex-direction:column;
-      gap:var(--gap-app);
-      padding:var(--pad-app);
+      gap:12px;
+      padding:12px;
     }
     .topbar{
       display:flex;
       align-items:center;
       justify-content:space-between;
-      gap:var(--gap-app);
-      padding:var(--pad-panel-y) var(--pad-panel-x);
+      gap:12px;
+      padding:12px 14px;
       border:1px solid var(--border);
       background: linear-gradient(180deg, rgba(16,26,51,0.92), rgba(14,23,48,0.82));
       border-radius: var(--radius2);
@@ -96,8 +74,8 @@
       box-shadow: 0 8px 20px rgba(0,0,0,0.35);
     }
     .titlewrap{display:flex; flex-direction:column; line-height:1.1}
-    .title{font-weight:800; letter-spacing:0.2px; font-size:var(--fs-3)}
-    .subtitle{font-size:var(--fs-1); color:var(--muted)}
+    .title{font-weight:800; letter-spacing:0.2px; font-size:16px}
+    .subtitle{font-size:12px; color:var(--muted)}
     .pill{
       font-size:12px;
       padding:3px 9px;
@@ -107,50 +85,27 @@
       background: rgba(255,255,255,0.04);
       white-space:nowrap;
     }
-    .top-actions{display:flex; align-items:center; gap:var(--gap-row); flex-wrap:wrap; justify-content:flex-end}
+    .top-actions{display:flex; align-items:center; gap:10px; flex-wrap:wrap; justify-content:flex-end}
     .btn{
       appearance:none;
       border:1px solid var(--border);
       background: rgba(255,255,255,0.05);
       color:var(--text);
-      padding:0 var(--btn-pad-x);
-      min-height: var(--btn-h);
+      padding:9px 11px;
       border-radius:14px;
       font-weight:700;
-      font-size:var(--fs-2);
+      font-size:13px;
       cursor:pointer;
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      gap: var(--btn-gap);
-      line-height:1;
-      white-space:nowrap;
-      user-select:none;
-      transition: transform 0.05s ease, background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
-    }
-    .btn:disabled, .btn[aria-disabled="true"]{
-      opacity:0.55;
-      cursor:not-allowed;
-      transform:none !important;
-      box-shadow:none !important;
+      transition: transform 0.05s ease, background 0.15s ease, border-color 0.15s ease;
     }
     .btn:hover{background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.16)}
     .btn:active{transform: translateY(1px)}
     .btn.primary{
-      background: linear-gradient(180deg, rgba(122,162,255,0.30), rgba(122,162,255,0.14));
-      border-color: rgba(122,162,255,0.42);
-      box-shadow: 0 10px 24px rgba(122,162,255,0.10);
+      background: linear-gradient(180deg, rgba(122,162,255,0.26), rgba(122,162,255,0.12));
+      border-color: rgba(122,162,255,0.35);
     }
-
-    .btn.danger{
-      background: rgba(251,113,133,0.10);
-      border-color: rgba(251,113,133,0.40);
-    }
-    .btn.danger:hover{background: rgba(251,113,133,0.16); border-color: rgba(251,113,133,0.55)}
-    .btn.danger.ghost{background: rgba(251,113,133,0.06)}
-
     .btn.ghost{background: rgba(255,255,255,0.02)}
-    .btn.small{padding:0 var(--btn-pad-x-sm); min-height: var(--btn-h-sm); font-size:var(--fs-1); border-radius:12px}
+    .btn.small{padding:7px 10px; font-size:12px; border-radius:12px}
     .seg{
       display:flex;
       border:1px solid var(--border);
@@ -162,16 +117,10 @@
       border:0;
       background: transparent;
       color: var(--muted);
-      padding:0 12px;
-      min-height: var(--btn-h-sm);
+      padding:8px 10px;
       font-weight:800;
-      font-size:var(--fs-1);
+      font-size:12px;
       cursor:pointer;
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      gap:8px;
-      white-space:nowrap;
     }
     .seg button.active{color:var(--text); background: rgba(122,162,255,0.16)}
     .grid{
@@ -180,11 +129,11 @@
       display:grid;
       grid-template-columns: var(--grid-left) 1fr var(--grid-right);
       grid-template-rows: 1fr var(--grid-bottom);
-      gap:var(--gap-app);
+      gap:12px;
       position:relative;
     }
 
-/* Layout tweak: use bottom row horizontally (Phase layout refactor) */
+/* Layout tweak: use bottom row horizontally  */
 #diagPanel{grid-column:1 / span 2; grid-row:2;}
 #debugPanel{grid-column:3; grid-row:2;}
 
@@ -203,14 +152,14 @@
       display:flex;
       align-items:center;
       justify-content:space-between;
-      gap:var(--gap-row);
-      padding:var(--pad-panel-y) var(--pad-panel-x);
+      gap:10px;
+      padding:12px 14px;
       border-bottom:1px solid var(--border);
       background: rgba(255,255,255,0.02);
     }
     .panel-title{
       font-weight:900;
-      font-size:var(--fs-2);
+      font-size:13px;
       letter-spacing:0.2px;
       color: var(--text);
       display:flex;
@@ -222,16 +171,16 @@
       background: rgba(122,162,255,0.9);
       box-shadow: 0 0 0 3px rgba(122,162,255,0.15);
     }
-    .panel-body{padding:var(--pad-panel-y) var(--pad-panel-x); min-height:0; overflow:auto; flex:1; -webkit-overflow-scrolling: touch;}
-    .panel-body.tight{padding:var(--space-3) var(--space-4)}
+    .panel-body{padding:12px 14px; min-height:0; overflow:auto; flex:1; -webkit-overflow-scrolling: touch;}
+    .panel-body.tight{padding:10px 12px}
     .muted{color:var(--muted)}
     .small{font-size:12px}
-    .row{display:flex; gap:var(--gap-row); flex-wrap:wrap}
+    .row{display:flex; gap:10px; flex-wrap:wrap}
     .field{
-      display:flex; flex-direction:column; gap:var(--space-1);
+      display:flex; flex-direction:column; gap:6px;
       min-width: 140px; flex:1;
     }
-    label{font-size:var(--fs-0); color:var(--muted); font-weight:800; letter-spacing:0.2px}
+    label{font-size:11px; color:var(--muted); font-weight:800; letter-spacing:0.2px}
     input[type="number"], input[type="text"], select{
       width:100%;
       border:1px solid var(--border);
@@ -241,7 +190,7 @@
       border-radius:14px;
       outline:none;
       font-weight:700;
-      font-size:var(--fs-2);
+      font-size:13px;
     }
 select{ color-scheme: dark; }
 select option{
@@ -260,7 +209,7 @@ select option{
     }
     .kbd{
       font-family:var(--mono);
-      font-size:var(--fs-0);
+      font-size:11px;
       border:1px solid var(--border);
       padding:2px 6px;
       border-radius:8px;
@@ -270,7 +219,7 @@ select option{
     .split{
       display:grid;
       grid-template-columns: 1fr 1fr;
-      gap:var(--gap-row);
+      gap:10px;
     }
     .statusline{
       display:flex; align-items:center; gap:10px; flex-wrap:wrap;
@@ -284,7 +233,7 @@ select option{
       background: rgba(255,255,255,0.03);
       color:var(--muted);
       font-weight:800;
-      font-size:var(--fs-0);
+      font-size:11px;
       white-space:nowrap;
     }
     .badge .b{
@@ -299,7 +248,7 @@ select option{
     .badge.bad .b{background: rgba(251,113,133,0.95)}
     .debug{
       font-family: var(--mono);
-      font-size: var(--fs-0);
+      font-size: 11px;
       white-space: pre-wrap;
       line-height: 1.35;
       margin:0;
@@ -322,16 +271,16 @@ table.miniTable{width:100%; border-collapse:collapse; font-size:12px; min-width:
       display:flex; flex-direction:column;
     }
     .canvas-head{
-      padding:var(--space-3) var(--space-4);
+      padding:10px 12px;
       border-bottom:1px solid var(--border);
-      display:flex; align-items:center; justify-content:space-between; gap:var(--gap-row);
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
       background: rgba(255,255,255,0.02);
       z-index:2;
     }
     .canvas-head .left{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
     .canvas-head .right{display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:flex-end}
     
-/* Plot canvas sizing stability (Phase R1.1) */
+/* Plot canvas sizing stability */
 #plotPanel .canvas-wrap{ min-height:0; }
 #plotPanel #plotCanvas{
   flex: 1 1 auto;
@@ -366,6 +315,83 @@ canvas{
 #diagPanel{grid-column:1; grid-row:auto;}
 #debugPanel{grid-column:1; grid-row:auto;}
 }
+
+    /*  — Mobile stacked flow (safe: CSS-only, no logic changes) */
+    @media (max-width: 900px){
+      /* Turn the main grid into a single-column stack for small screens */
+      .grid{
+        display:flex;
+        flex-direction:column;
+        gap:12px;
+      }
+      /* Ensure panels don't try to fill "grid rows" */
+      .grid > .panel{ min-height: unset; }
+      /* Order: Plot, Controls, Diagnostics, Math, Boot/Bug */
+      #plotPanel{ order: 1; }
+      #controlsPanel{ order: 2; }
+      #diagPanel{ order: 3; }
+      #mathPanel{ order: 4; }
+      #debugPanel{ order: 5; }
+      /* Give the plot more room on phones */
+      #plotPanel #plotCanvas{ min-height: 340px; }
+      /* Mobile fix: ensure Plot panel has in-flow height (canvas-wrap is absolute on desktop) */
+      #plotPanel .canvas-wrap{
+        position: relative;
+        inset: auto;
+        height: min(62vh, 560px);
+        min-height: 380px;
+      }
+      #plotPanel #plotCanvas{ height: 100%; }
+
+/*  — Topbar + splitters on small screens (CSS-only) */
+.topbar{flex-wrap:wrap; align-items:flex-start;}
+.brand{min-width: unset; flex: 1 1 220px;}
+.subtitle{display:none;}
+.top-actions{width:100%; justify-content:flex-start; gap:8px;}
+.top-actions .btn{padding:8px 10px; border-radius:12px;}
+/* Hide splitters entirely on mobile to avoid dead UI chrome */
+.splitter{display:none !important;}
+
+      /*  — Mobile scroll fix: allow page to scroll when panels stack */
+      html, body{ height:auto; min-height:100%; overflow-y:auto; -webkit-overflow-scrolling: touch; }
+      .app{ height:auto; min-height:100%; }
+      .grid{ flex:none; min-height:unset; }
+    
+      /* : Mobile accordion (collapsible panels) */
+      html.is-mobile .panel-header{
+        cursor: pointer;
+        user-select: none;
+        -webkit-tap-highlight-color: transparent;
+      }
+      html.is-mobile .panel-header:active{
+        background: rgba(255,255,255,0.04);
+      }
+      html.is-mobile .panel-header{
+        position: relative;
+        padding-right: 34px; /* room for chevron */
+      }
+      html.is-mobile .panel-header::after{
+        content: "▾";
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        opacity: 0.8;
+        font-size: 14px;
+      }
+      html.is-mobile .panel.collapsed .panel-header::after{
+        content: "▸";
+        opacity: 0.75;
+      }
+      html.is-mobile .panel.collapsed .panel-body{
+        display: none !important;
+      }
+      html.is-mobile .panel.collapsed{
+        min-height: 0 !important;
+      }
+}
+
+
   
 .kScanCanvasWrap{border:1px solid rgba(255,255,255,0.08); border-radius:14px; background: rgba(0,0,0,0.18); overflow:hidden;}
 .kScanCanvasWrap canvas{display:block; width:100%; height:180px;}
@@ -393,7 +419,7 @@ canvas{
 .warnMini{color: rgba(255,182,182,0.95); font-weight:700;}
 
 
-/* Resizable layout splitters (Phase R1) */
+/* Resizable layout splitters */
 .splitter{
   position:absolute;
   z-index:80;
@@ -435,7 +461,7 @@ body.resizing.row{ cursor: row-resize; }
 
 #diagPanel .panel-body{position:relative;}
 
-/* Phase L: Glossary tooltips + Tour */
+/* : Glossary tooltips + Tour */
 .hidden{ display:none !important; }
 
 .term{
@@ -443,6 +469,10 @@ body.resizing.row{ cursor: row-resize; }
   cursor: help;
 }
 .term:hover{ border-bottom-color: rgba(122,162,255,0.95); }
+
+@media (pointer: coarse){
+  .term{ cursor: pointer; }
+}
 
 .glossTooltip{
   position: fixed;
@@ -523,6 +553,56 @@ body.resizing.row{ cursor: row-resize; }
   box-shadow: 0 18px 50px rgba(0,0,0,0.55);
 }
 
+
+/* M7: Safe-area + small-screen tour/modal ergonomics */
+@media (max-width: 900px){
+  .app{
+    padding:
+      calc(12px + var(--sat))
+      calc(12px + var(--sar))
+      calc(12px + var(--sab))
+      calc(12px + var(--sal));
+  }
+  .modalBox{
+    top: 50%;
+    max-height: calc(100vh - 24px - var(--sat) - var(--sab));
+    overscroll-behavior: contain;
+  }
+  .tourBox{
+    max-height: calc(100vh - 24px - var(--sat) - var(--sab));
+    overflow: auto;
+    overscroll-behavior: contain;
+  }
+}
+/* Landscape phones: keep the tour box reachable */
+@media (max-width: 900px) and (max-height: 520px){
+  .tourBox{
+    width: min(520px, calc(100vw - 24px));
+  }
+}
+
+
+/* --- Mobile + accessibility polish (tap targets, reduced motion) --- */
+html.is-coarse .btn,
+html.is-coarse .seg button{
+  touch-action: manipulation;
+}
+
+html.is-coarse .btn{ min-height: 40px; }
+html.is-coarse .seg button{ min-height: 38px; }
+
+html.is-coarse .term{
+  padding: 2px 2px; /* slightly bigger tap target without visual noise */
+  -webkit-tap-highlight-color: rgba(122,162,255,0.25);
+  touch-action: manipulation;
+}
+
+/* Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce){
+  *{ scroll-behavior:auto !important; }
+  .btn{ transition:none !important; }
+}
+
 </style>
 </head>
 <body>
@@ -533,7 +613,7 @@ body.resizing.row{ cursor: row-resize; }
       <div class="brand">
         <div class="logo" aria-hidden="true"></div>
         <div class="titlewrap">
-          <div class="title">K-Means Clustering Lab <span class="pill" id="versionPill">v0.7.6.1</span></div>
+          <div class="title">K-Means Clustering Lab <span class="pill" id="versionPill">v0.7.5.2</span></div>
           <div class="subtitle">Interactive cost-analysis explainer • click-to-create points, math steps, diagnostics, and exports</div>
         </div>
       </div>
@@ -559,7 +639,7 @@ body.resizing.row{ cursor: row-resize; }
     <!-- Main grid -->
     <div class="grid" id="mainGrid">
 
-      <!-- Layout splitters (Phase R1) -->
+      <!-- Layout splitters -->
       <div class="splitter v" id="splitColLeft" role="separator" aria-orientation="vertical" tabindex="0" title="Drag to resize Controls" aria-label="Resize Controls"></div>
       <div class="splitter v" id="splitColRight" role="separator" aria-orientation="vertical" tabindex="0" title="Drag to resize Math & Steps" aria-label="Resize Math panel"></div>
       <div class="splitter h" id="splitRowBottom" role="separator" aria-orientation="horizontal" tabindex="0" title="Drag to resize Diagnostics row" aria-label="Resize bottom row"></div>
@@ -610,16 +690,16 @@ body.resizing.row{ cursor: row-resize; }
             <div style="height:10px"></div>
 
             <div class="row">
-              <button class="btn small primary" id="btnInitialize" type="button">Initialize</button>
+              <button class="btn small" id="btnInitialize" type="button">Initialize</button>
               <button class="btn small" id="btnStep" type="button">Step</button>
-              <button class="btn small primary" id="btnRun" type="button">Auto-run</button>
-              <button class="btn small ghost" id="btnPause" type="button">Pause</button>
-              <button class="btn small ghost" id="btnReset" type="button">Reset</button>
+              <button class="btn small" id="btnRun" type="button">Auto-run</button>
+              <button class="btn small" id="btnPause" type="button">Pause</button>
+              <button class="btn small" id="btnReset" type="button">Reset</button>
             </div>
 
             <div style="height:10px"></div>
             <div class="card" style="margin-top:10px;">
-              <div class="panel-title" style="font-size:12px; margin-bottom:8px;">Visualization (Phase D)</div>
+              <div class="panel-title" style="font-size:12px; margin-bottom:8px;">Visualization</div>
               <div class="row" style="gap:10px; flex-wrap:wrap;">
                 <label class="chk">
                   <input type="checkbox" id="toggleRegions" />
@@ -636,7 +716,7 @@ body.resizing.row{ cursor: row-resize; }
             </div>
 
             <div class="card" style="margin-top:10px;">
-              <div class="panel-title" style="font-size:12px; margin-bottom:8px;">Iteration history (Phase D)</div>
+              <div class="panel-title" style="font-size:12px; margin-bottom:8px;">Iteration history</div>
               <div class="muted small" id="historyLabel">No history yet. Initialize or Step to record snapshots.</div>
               <div style="height:10px"></div>
               <input type="range" id="historySlider" min="0" max="0" value="0" step="1" style="width:100%;" disabled />
@@ -651,7 +731,7 @@ body.resizing.row{ cursor: row-resize; }
 <div class="split" id="dataSplit">
   <div class="card" id="dataToolsCard">
     <div class="panel-title" style="font-size:12px; margin-bottom:8px;">
-      Data tools (Upload • Columns • Normalize • Presets) (Phase J)
+      Data tools (Upload • Columns • Normalize • Presets)
     </div>
 
     <div class="row" style="gap:10px; flex-wrap:wrap; align-items:flex-end;">
@@ -747,15 +827,15 @@ body.resizing.row{ cursor: row-resize; }
 
   <div class="card" id="exportCard">
     <div class="panel-title" style="font-size:12px; margin-bottom:8px;">
-      Exports (Phase J)
+      Exports
     </div>
     <div class="muted small" style="line-height:1.5">
       Export is most useful after <b>Initialize</b> (so clusters are assigned). If not initialized, cluster columns will be blank.
     </div>
     <div style="height:10px"></div>
     <div class="row" style="gap:10px; flex-wrap:wrap;">
-      <button class="btn small ghost" id="btnExportPoints" type="button">Export points CSV</button>
-      <button class="btn small ghost" id="btnExportCentroids" type="button">Export centroids CSV</button>
+      <button class="btn small" id="btnExportPoints" type="button">Export points CSV</button>
+      <button class="btn small" id="btnExportCentroids" type="button">Export centroids CSV</button>
     </div>
     <div style="height:10px"></div>
     <div class="muted small">
@@ -795,8 +875,8 @@ body.resizing.row{ cursor: row-resize; }
             <div class="right">
               <button class="btn small" id="btnAddMode" type="button">Add</button>
               <button class="btn small" id="btnEraseMode" type="button">Erase</button>
-              <button class="btn small danger ghost" id="btnClearPoints" type="button">Clear</button>
-              <button class="btn small ghost" id="btnFitAxes" type="button">Fit axes</button>
+              <button class="btn small" id="btnClearPoints" type="button">Clear</button>
+              <button class="btn small" id="btnFitAxes" type="button">Fit axes</button>
             </div>
           </div>
           <canvas id="plotCanvas" aria-label="Plot canvas"></canvas>
@@ -807,8 +887,7 @@ body.resizing.row{ cursor: row-resize; }
       <section class="panel" id="mathPanel">
         <div class="panel-header">
           <div class="panel-title"><span class="dot"></span>Math & Steps</div>
-          <span class="badge"><span class="b"></span><span>Phase F + E</span></span>
-        </div>
+</div>
         <div class="panel-body">
           
         <div class="card" id="mathLiveCard">
@@ -845,7 +924,7 @@ body.resizing.row{ cursor: row-resize; }
 
 <div class="card" id="tshirtCard">
   <div class="row" style="justify-content:space-between; align-items:flex-end; gap:10px; flex-wrap:wrap;">
-    <div class="panel-title" style="font-size:12px; margin-bottom:0;">T‑Shirt sizing (Phase K)</div>
+    <div class="panel-title" style="font-size:12px; margin-bottom:0;">T‑Shirt sizing</div>
     <div class="field" style="min-width:190px; max-width:240px; margin:0;">
       <label for="tshirtMetric">Sizing metric</label>
       <select id="tshirtMetric">
@@ -975,8 +1054,8 @@ body.resizing.row{ cursor: row-resize; }
         <div class="panel-header">
           <div class="panel-title"><span class="dot"></span>Diagnostics</div>
           <div class="statusline">
-            <span class="badge"><span class="b"></span><span>K Helpers • Elbow • Silhouette • Convergence (Phase G+H)</span></span>
-            <button class="btn small ghost" id="btnDiagSnapshot" title="Copy key diagnostics to clipboard">Snapshot</button>
+            <span class="badge"><span class="b"></span><span>K Helpers • <span class="term" data-gloss="elbow">Elbow</span> • <span class="term" data-gloss="silhouette">Silhouette</span> • <span class="term" data-gloss="convergence">Convergence</span> (+H)</span></span>
+            <button class="btn small" id="btnDiagSnapshot" title="Copy key diagnostics to clipboard">Snapshot</button>
           </div>
         </div>
         <div class="panel-body">
@@ -984,7 +1063,7 @@ body.resizing.row{ cursor: row-resize; }
           <div class="diagGrid">
           <div class="card" id="kScanCard">
   <div class="row" style="justify-content:space-between; align-items:flex-end; gap:10px; flex-wrap:wrap;">
-    <div class="panel-title" style="font-size:12px; margin-bottom:0;">K selection helpers (Elbow + <span class="term" data-gloss="silhouette">Silhouette</span>) (Phase G)</div>
+    <div class="panel-title" style="font-size:12px; margin-bottom:0;">K selection helpers (<span class="term" data-gloss="elbow">Elbow</span> + <span class="term" data-gloss="silhouette">Silhouette</span>)</div>
     <div class="muted small" id="kScanStatus">Not computed.</div>
   </div>
 
@@ -1026,7 +1105,7 @@ body.resizing.row{ cursor: row-resize; }
 
   <div style="height:10px"></div>
   <div class="row" style="gap:10px; flex-wrap:wrap; align-items:center;">
-    <button class="btn primary" id="btnScanK">Scan K</button>
+    <button class="btn" id="btnScanK">Scan K</button>
     <button class="btn" id="btnApplyRecommendedK" disabled>Apply recommended</button>
     <button class="btn ghost" id="btnApplySelectedK" disabled>Apply selected</button>
     <span class="muted small" id="kScanRecommendation">Recommendation: —</span>
@@ -1072,7 +1151,7 @@ body.resizing.row{ cursor: row-resize; }
           
 <div class="card" id="runDiagCard">
   <div class="row" style="justify-content:space-between; align-items:flex-end; gap:10px; flex-wrap:wrap;">
-    <div class="panel-title" style="font-size:12px; margin-bottom:0;">Run diagnostics (Convergence + Balance) (Phase H)</div>
+    <div class="panel-title" style="font-size:12px; margin-bottom:0;">Run diagnostics (Convergence + Balance)</div>
     <div class="muted small" id="runDiagStatus">Not initialized.</div>
   </div>
 
@@ -1126,7 +1205,7 @@ body.resizing.row{ cursor: row-resize; }
 
   <div style="height:8px"></div>
   <div class="muted small" style="line-height:1.5">
-    <b>Interpretation:</b> <span class="term" data-gloss="inertia">inertia</span> should decrease; <span class="term" data-gloss="centroidShift">centroid shift</span> should shrink as the solution stabilizes. Empty clusters are a red flag.
+    <b>Interpretation:</b> <span class="term" data-gloss="inertia">inertia</span> should decrease; <span class="term" data-gloss="centroidShift">centroid shift</span> should shrink as the solution stabilizes. <span class="term" data-gloss="emptyClusters">Empty clusters</span> are a red flag.
   </div>
 </div>
 
@@ -1151,7 +1230,7 @@ body.resizing.row{ cursor: row-resize; }
     </div>
   </div>
 
-  <!-- Phase L: Glossary + Tour UI -->
+  <!-- : Glossary + Tour UI -->
   <div id="glossTooltip" class="glossTooltip hidden" role="tooltip" aria-hidden="true"></div>
 
   <div id="glossaryUI" class="modal hidden" role="dialog" aria-modal="true" aria-label="Glossary">
@@ -1201,7 +1280,7 @@ body.resizing.row{ cursor: row-resize; }
 ;(() => {
     "use strict";
 
-    const VERSION = "v0.7.6.1";
+    const VERSION = "v0.7.5.2";
     const TZ = "America/New_York";
 
     // --- App State (will expand in later phases) ---
@@ -1216,6 +1295,11 @@ body.resizing.row{ cursor: row-resize; }
         tool: "add", // add|erase
         selectedPointId: null,
         runDelayMs: 140,
+        // Device / viewport flags
+        isMobile: false,
+        pointerCoarse: false,
+        viewport: { w: 0, h: 0 },
+        _deviceSig: "",
         showRegions: false,
         showDistances: true,
         viewIndex: null,
@@ -1401,8 +1485,136 @@ body.resizing.row{ cursor: row-resize; }
       }
     }
 
+
+// --- Device / viewport detection ---
+function updateDeviceMode(reason) {
+  try {
+    const w = Math.max(0, window.innerWidth || document.documentElement.clientWidth || 0);
+    const h = Math.max(0, window.innerHeight || document.documentElement.clientHeight || 0);
+    const mm = (q) => (window.matchMedia ? window.matchMedia(q).matches : false);
+    const coarse = mm('(pointer: coarse)') || mm('(any-pointer: coarse)');
+    const narrow = mm('(max-width: 900px)');
+    // Treat as "mobile" if narrow, or if coarse pointer and not wide.
+    const isMobile = !!(narrow || (coarse && w < 1100));
+    app.ui.viewport = { w, h };
+    app.ui.pointerCoarse = coarse;
+    app.ui.isMobile = isMobile;
+
+    const sig = `${w}x${h}|m=${isMobile}|c=${coarse}`;
+    if (sig !== app.ui._deviceSig) {
+      app.ui._deviceSig = sig;
+      document.documentElement.classList.toggle('is-mobile', isMobile);
+      document.documentElement.classList.toggle('is-coarse', coarse);
+      // Log only on changes to avoid spam
+      log(`Device mode: ${isMobile ? "mobile" : "desktop"} (${w}×${h}, coarse=${coarse})${reason ? " [" + reason + "]" : ""}`);
+      scheduleBugTest('device-mode-change');
+      try { initMobileAccordion(); } catch(e) {}
+    }
+  } catch (e) {
+    // Never fail the app for device detection
+  }
+}
+
+// --- : Mobile accordion (collapsible panels) ---
+const MOBILE_PANEL_KEY = "kmeans.mobilePanels.v1";
+
+function _loadMobilePanelState() {
+  try {
+    const raw = localStorage.getItem(MOBILE_PANEL_KEY);
+    if (!raw) return null;
+    const obj = JSON.parse(raw);
+    return (obj && typeof obj === "object") ? obj : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+function _saveMobilePanelState(state) {
+  try { localStorage.setItem(MOBILE_PANEL_KEY, JSON.stringify(state || {})); } catch (e) {}
+}
+
+function initMobileAccordion() {
+  // Bind once; behavior is gated by app.ui.isMobile at runtime.
+  if (app.ui._accordionBound) return;
+  app.ui._accordionBound = true;
+
+  const panels = Array.from(document.querySelectorAll("section.panel"));
+  if (!panels.length) return;
+
+  const defaults = {
+    controlsPanel: { collapsed: false },
+    plotPanel:     { collapsed: false },
+    diagPanel:     { collapsed: true  },
+    mathPanel:     { collapsed: true  },
+    debugPanel:    { collapsed: true  }
+  };
+
+  const applyState = () => {
+    const isMobile = !!app.ui.isMobile;
+    const state = _loadMobilePanelState() || {};
+    for (const p of panels) {
+      const id = p.id || "";
+      const cfg = (state[id] ?? defaults[id]) || { collapsed: false };
+      // Only enforce collapse on mobile; never collapse on desktop automatically.
+      if (isMobile) p.classList.toggle("collapsed", !!cfg.collapsed);
+      else p.classList.remove("collapsed");
+      const header = p.querySelector(".panel-header");
+      if (header) header.setAttribute("aria-expanded", String(!(p.classList.contains("collapsed"))));
+    }
+  };
+
+  const togglePanel = (panel) => {
+    if (!app.ui.isMobile) return;
+    const id = panel.id || "";
+    const isCollapsed = panel.classList.toggle("collapsed");
+    // Persist
+    const state = _loadMobilePanelState() || {};
+    state[id] = { collapsed: isCollapsed };
+    _saveMobilePanelState(state);
+
+    const header = panel.querySelector(".panel-header");
+    if (header) header.setAttribute("aria-expanded", String(!isCollapsed));
+
+    // If plot becomes visible, redraw safely
+    if (id === "plotPanel" && !isCollapsed) {
+      setTimeout(() => { try { drawPlot(); } catch(e) {} }, 0);
+    }
+  };
+
+  for (const panel of panels) {
+    const header = panel.querySelector(".panel-header");
+    if (!header) continue;
+
+    // Accessibility affordances (safe on desktop too)
+    header.setAttribute("role", "button");
+    header.setAttribute("tabindex", "0");
+    header.setAttribute("aria-expanded", "true");
+
+    header.addEventListener("click", (ev) => {
+      // Don't toggle if the user clicked an interactive element
+      const t = ev.target;
+      if (t && t.closest && t.closest("button,input,select,textarea,a,label")) return;
+      togglePanel(panel);
+    });
+
+    header.addEventListener("keydown", (ev) => {
+      if (ev.key === "Enter" || ev.key === " ") {
+        ev.preventDefault();
+        togglePanel(panel);
+      }
+    });
+  }
+
+  // Apply immediately and whenever device mode changes
+  applyState();
+  // Re-apply on resize/orientation when mode flips (updateDeviceMode calls initMobileAccordion once, but state needs applying)
+  window.addEventListener("resize", () => { try { applyState(); } catch(e) {} }, { passive: true });
+  window.addEventListener("orientationchange", () => { try { applyState(); } catch(e) {} }, { passive: true });
+}
+
+
     
-// --- Resizable layout (Phase R1) ---
+// --- Resizable layout ---
 const LAYOUT_KEY = "kmeans.layout.v1";
 const LAYOUT_DEFAULTS = { left: 330, right: 370, bottom: 260 };
 
@@ -1706,7 +1918,50 @@ function log(msg, kind="info") {
     function phaseMBugChecks() {
   const out = { ok: true, notes: [] };
 
-  // K-scan table selection wiring
+  // : responsive sanity (informational; never fails app)
+  try {
+    const w = app.ui.viewport && typeof app.ui.viewport.w === "number" ? app.ui.viewport.w : (window.innerWidth || 0);
+    const h = app.ui.viewport && typeof app.ui.viewport.h === "number" ? app.ui.viewport.h : (window.innerHeight || 0);
+    const splitOK = (typeof canUseSplitters === "function") ? canUseSplitters() : null;
+    out.notes.push(`Responsive: viewport=${w}x${h} mobile=${!!app.ui.isMobile} coarse=${!!app.ui.pointerCoarse} splitters=${splitOK===null?"n/a":splitOK}`);
+    out.notes.push(`Glossary: mode=${app.ui.glossTapMode ? "tap" : "hover"}`);
+  } catch {}
+
+  // /M3: mobile layout sanity (only evaluated when viewport <= 900px)
+try {
+  const isSmall = (window.matchMedia && window.matchMedia("(max-width: 900px)").matches) || (window.innerWidth <= 900);
+  if (isSmall) {
+    const grid = document.querySelector('.grid');
+    if (grid) {
+      const cs = getComputedStyle(grid);
+      const okFlex = (cs.display === 'flex');
+      const okDir = (cs.flexDirection || '').startsWith('column');
+      if (okFlex && okDir) out.notes.push('Mobile layout: grid stack OK');
+      else { out.ok = false; out.notes.push(`Mobile layout: grid stack FAIL (display=${cs.display}, dir=${cs.flexDirection})`); }
+        try { /* keep */ } catch(e) {}
+
+  } else {
+    try { app.ui.glossTapMode = false; } catch(e) {}
+      out.ok = false; out.notes.push('Mobile layout: .grid not found');
+    }
+
+    const splitters = Array.from(document.querySelectorAll('.splitter'));
+    if (splitters.length) {
+      const allHidden = splitters.every(s => getComputedStyle(s).display === 'none');
+      if (allHidden) out.notes.push(`Mobile layout: splitters hidden OK (${splitters.length})`);
+      else { out.ok = false; out.notes.push('Mobile layout: splitters hidden FAIL'); }
+    } else {
+      // If none exist, that's fine (but note it)
+      out.notes.push('Mobile layout: splitters none (OK)');
+    }
+  }
+} catch (e) {
+  // Do not fail the whole test due to environment quirks
+  out.ok = false;
+  out.notes.push(`Mobile layout sanity error: ${e && e.message ? e.message : e}`);
+}
+
+// K-scan table selection wiring
   try {
     if (els.kScanTable) {
       const prevScan = app.kmeans.scan;
@@ -1807,211 +2062,6 @@ C,4,5
   return out;
 }
 
-// Phase 0B: Expand bug test coverage (layout/observers/exports/teaching tools)
-function phase0BBugChecks() {
-  const out = { ok: true, notes: [] };
-
-  // 1) Theme tokens present (future-proof for theme work)
-  try {
-    const cs = getComputedStyle(document.documentElement);
-    const req = ["--bg","--panel","--text","--accent","--border","--grid-left","--grid-right","--grid-bottom"]; 
-    const missing = req.filter(v => !String(cs.getPropertyValue(v) || "").trim());
-    if (missing.length) {
-      out.ok = false;
-      out.notes.push(`Theme tokens: FAIL (missing ${missing.join(', ')})`);
-    } else {
-      out.notes.push("Theme tokens: OK");
-    }
-  } catch (e) {
-    out.ok = false;
-    out.notes.push(`Theme tokens error: ${e && e.message ? e.message : e}`);
-  }
-
-  // 2) Splitter/layout sanity
-  try {
-    const m = getGridMetrics();
-    const midW = m.rect.width - m.col1 - m.col3 - 2*m.gapX;
-    const topH = m.rect.height - m.row2 - m.gapY;
-    const okNums = [m.col1,m.col2,m.col3,m.row1,m.row2,midW,topH].every(n => isFinite(n) && n > 0);
-    const okLimits = (m.col1 >= LAYOUT_LIMITS.leftMin) && (m.col3 >= LAYOUT_LIMITS.rightMin) && (m.row2 >= LAYOUT_LIMITS.bottomMin) && (midW >= LAYOUT_LIMITS.midMin) && (topH >= LAYOUT_LIMITS.topMin);
-
-    // Ensure top splitters don't overlap diagnostics panel
-    let overlapOk = true;
-    try {
-      const diag = els.diagPanel ? els.diagPanel.getBoundingClientRect() : null;
-      const splits = [els.splitColLeft, els.splitColRight, els.splitRowBottom].filter(Boolean);
-      if (diag && splits.length) {
-        for (const s of splits) {
-          const r = s.getBoundingClientRect();
-          const overlapX = Math.max(0, Math.min(r.right, diag.right) - Math.max(r.left, diag.left));
-          const overlapY = Math.max(0, Math.min(r.bottom, diag.bottom) - Math.max(r.top, diag.top));
-          if (overlapX * overlapY > 2) { overlapOk = false; break; }
-        }
-      }
-    } catch {}
-
-    // Diagnostics internal splitter sanity (if present)
-    let diagOk = true;
-    try {
-      const cs = getComputedStyle(document.documentElement);
-      const v = String(cs.getPropertyValue('--diag-left') || '').trim();
-      if (v.endsWith('%')) {
-        const pct = parseFloat(v);
-        if (!(pct >= 25 && pct <= 75)) diagOk = false;
-      }
-    } catch {}
-
-    if (okNums && okLimits && overlapOk && diagOk) {
-      out.notes.push("Splitters/layout: OK");
-    } else {
-      out.ok = false;
-      out.notes.push(`Splitters/layout: FAIL (nums=${okNums}, limits=${okLimits}, overlap=${overlapOk}, diagSplit=${diagOk})`);
-    }
-  } catch (e) {
-    out.ok = false;
-    out.notes.push(`Splitter/layout error: ${e && e.message ? e.message : e}`);
-  }
-
-  // 3) Plot resize observer present (axes should stay visible when resizing)
-  try {
-    const roOk = !!(app.ui && app.ui._plotResizeObs && typeof app.ui._plotResizeObs.observe === 'function');
-    if (roOk) out.notes.push("Plot resize observer: OK");
-    else { out.ok = false; out.notes.push("Plot resize observer: FAIL"); }
-  } catch (e) {
-    out.ok = false;
-    out.notes.push(`Plot resize observer error: ${e && e.message ? e.message : e}`);
-  }
-
-  // 4) Key buttons present + sensible enabled state
-  try {
-    const pointsN = (app.data.points || []).length;
-    const k = (app.kmeans && isFinite(app.kmeans.k)) ? app.kmeans.k : parseInt(els.kInput?.value || '3', 10);
-    const canInit = pointsN >= (k || 1);
-
-    const keyBtns = [
-      ['Initialize', els.btnInitialize],
-      ['Step', els.btnStep],
-      ['Auto-run', els.btnRun],
-      ['Pause', els.btnPause],
-      ['Reset', els.btnReset],
-      ['Export points', els.btnExportPoints],
-      ['Export centroids', els.btnExportCentroids],
-    ];
-
-    const missing = keyBtns.filter(([name,el]) => !el).map(x => x[0]);
-    if (missing.length) {
-      out.ok = false;
-      out.notes.push(`Key controls: FAIL (missing ${missing.join(', ')})`);
-    } else {
-      // Only enforce a small, safe rule: if enough points exist, Initialize shouldn't be disabled.
-      const initDisabledBad = !!(els.btnInitialize && els.btnInitialize.disabled && canInit);
-      if (initDisabledBad) {
-        out.ok = false;
-        out.notes.push('Key controls: FAIL (Initialize disabled with sufficient points)');
-      } else {
-        out.notes.push('Key controls: OK');
-      }
-    }
-  } catch (e) {
-    out.ok = false;
-    out.notes.push(`Key controls error: ${e && e.message ? e.message : e}`);
-  }
-
-  // 5) Export functions produce non-empty CSV (capture downloadText)
-  try {
-    const snap = {
-      points: (app.data.points || []).slice(),
-      classifications: (app.data.classifications || []).slice(),
-      k: app.kmeans.k,
-      centroids: (app.kmeans.centroids || []).map(c => ({x:c.x, y:c.y})),
-      assignments: (app.kmeans.assignments || []).slice(),
-      history: (app.kmeans.history || []).slice(),
-      viewIndex: app.ui.viewIndex,
-      tshirtMetric: app.ui.tshirtMetric
-    };
-
-    const seedIfNeeded = () => {
-      if (!(app.data.points && app.data.points.length)) {
-        app.data.points = [
-          { id: 'A', x: -1, y: -1 },
-          { id: 'B', x:  1, y:  1 },
-          { id: 'C', x:  2, y:  0 },
-        ];
-      }
-      if (!(app.kmeans.centroids && app.kmeans.centroids.length)) {
-        app.kmeans.k = 2;
-        app.kmeans.centroids = [{x:-1,y:-1},{x:1.5,y:0.5}];
-        app.kmeans.assignments = [0,1,1];
-        app.kmeans.history = [];
-        app.ui.viewIndex = null;
-      }
-    };
-
-    const captureDownload = (fn) => {
-      const orig = downloadText;
-      let cap = null;
-      try {
-        downloadText = (filename, text) => { cap = { filename, text }; };
-        fn();
-      } finally {
-        downloadText = orig;
-      }
-      return cap;
-    };
-
-    seedIfNeeded();
-    const cap1 = captureDownload(() => exportPointsCsv());
-    const cap2 = captureDownload(() => exportCentroidsCsv());
-
-    const ok1 = cap1 && typeof cap1.text === 'string' && cap1.text.trim().length > 20 && cap1.text.includes('id,x,y');
-    const ok2 = cap2 && typeof cap2.text === 'string' && cap2.text.trim().length > 20 && cap2.text.includes('cluster,centroid_x');
-
-    if (ok1 && ok2) {
-      out.notes.push('Exports (CSV build): OK');
-    } else {
-      out.ok = false;
-      out.notes.push(`Exports (CSV build): FAIL (points=${!!ok1}, centroids=${!!ok2})`);
-    }
-
-    // restore
-    app.data.points = snap.points;
-    app.data.classifications = snap.classifications;
-    app.kmeans.k = snap.k;
-    app.kmeans.centroids = snap.centroids;
-    app.kmeans.assignments = snap.assignments;
-    app.kmeans.history = snap.history;
-    app.ui.viewIndex = snap.viewIndex;
-    app.ui.tshirtMetric = snap.tshirtMetric;
-  } catch (e) {
-    out.ok = false;
-    out.notes.push(`Export CSV error: ${e && e.message ? e.message : e}`);
-  }
-
-  // 6) Tour + Glossary functions exist and can open/close without throwing
-  try {
-    const haveTour = (typeof tourStart === 'function') && (typeof tourStop === 'function');
-    const haveGloss = (typeof openGlossary === 'function') && (typeof closeGlossary === 'function');
-    if (!haveTour || !haveGloss) {
-      out.ok = false;
-      out.notes.push(`Teaching tools: FAIL (tour=${haveTour}, glossary=${haveGloss})`);
-    } else {
-      const wasTour = !!(app.tour && app.tour.active);
-      const gEl = document.getElementById('glossaryUI');
-      const wasGloss = !!(gEl && !gEl.classList.contains('hidden'));
-      try { if (!wasGloss) { openGlossary(); closeGlossary(); } } catch (e) { throw e; }
-      try { if (!wasTour) { tourStart(); tourStop(); } } catch (e) { throw e; }
-      out.notes.push('Teaching tools: OK');
-      // restore open states if needed
-      // (No restore needed: we only toggled when the tool was previously closed.)
-    }
-  } catch (e) {
-    out.ok = false;
-    out.notes.push(`Teaching tools error: ${e && e.message ? e.message : e}`);
-  }
-
-  return out;
-}
-
 function bugTest() {
       if (app.debug._bugTestRunning) return;
       app.debug._bugTestRunning = true;
@@ -2026,7 +2076,6 @@ function bugTest() {
             setBadge($("badgeWired"), `Wired: ${app.debug.wiredOk ? "OK" : "FAIL"}`, app.debug.wiredOk ? "ok" : "bad");
 
             const phaseM = phaseMBugChecks();
-            const phase0B = phase0BBugChecks();
             const report = [
               `K-Means Clustering Lab ${VERSION}`,
               `Time: ${nowLocal()}`,
@@ -2042,10 +2091,7 @@ function bugTest() {
               `KMeans: status=${app.kmeans.status} k=${app.kmeans.k} iter=${app.kmeans.iter} inertia=${app.kmeans.inertia!=null ? app.kmeans.inertia.toFixed(4) : "—"}`,
               `Engine ready: ${typeof initializeKMeans === "function" && typeof kmeansStep === "function" && typeof startAutoRun === "function" && typeof resetClustering === "function"}`,
               ``,
-              `Phase 0B checks: ${phase0B.ok ? "OK" : "FAIL"}`,
-              ...phase0B.notes.map(n => `- ${n}`),
-              ``,
-              `Phase M checks: ${phaseM.ok ? "OK" : "FAIL"}`,
+              ` checks: ${phaseM.ok ? "OK" : "FAIL"}`,
               ...phaseM.notes.map(n => `- ${n}`),
               ``,
               `Log (latest first):`,
@@ -2126,13 +2172,9 @@ function copyDiagnosticsSnapshot() {
   }
 }
 
-// --- Rendering (Phase A minimal placeholders) ---
+// --- Rendering ( minimal placeholders) ---
     function renderTopbar() {
       $("versionPill").textContent = VERSION;
-      // Keep the browser tab title consistent with VERSION
-      if (!document.title || !document.title.includes(VERSION)) {
-        document.title = `K-Means Clustering Lab (${VERSION})`;
-      }
       $("modeTeaching").classList.toggle("active", app.meta.mode === "teaching");
       $("modeAnalysis").classList.toggle("active", app.meta.mode === "analysis");
       $("modeTeaching").setAttribute("aria-selected", app.meta.mode === "teaching" ? "true" : "false");
@@ -2183,7 +2225,7 @@ function copyDiagnosticsSnapshot() {
     }
 
     
-    // --- Plot (Phase B: interactive points) ---
+    // --- Plot (: interactive points) ---
     const plot = {
       margin: { left: 52, right: 16, top: 18, bottom: 44 },
       dpr: 1,
@@ -2469,7 +2511,7 @@ function ensureStablePlotBounds(viewCentroids) {
       el.innerHTML = htmlOut;
     }
 
-// --- T-shirt sizing (Phase E) ---
+// --- T-shirt sizing ---
 function hashFNV1a32(h, x) { h ^= (x >>> 0); return Math.imul(h, 16777619) >>> 0; }
 
 function hashAssignments(assignments) {
@@ -2571,7 +2613,7 @@ function sizeLabelsForK(k) {
   return ["XS","S","M","L","XL"]; // k=5
 }
 
-// --- Phase K: Operational t-shirt sizing (thresholds + classify + exports) ---
+// --- : Operational t-shirt sizing (thresholds + classify + exports) ---
 const TSHIRT_BUCKETS = ["XS","S","M","L","XL"];
 
 function nextPointIdGlobal() {
@@ -2958,7 +3000,7 @@ function updateTshirtSizing() {
   updateTshirtClassifyTable();
 }
 
-// --- Math breakdown helpers (Phase F) ---
+// --- Math breakdown helpers ---
 function getViewState() {
   const vi = app.ui.viewIndex;
   const snap = (vi != null && app.kmeans.history && app.kmeans.history[vi]) ? app.kmeans.history[vi] : null;
@@ -3127,7 +3169,7 @@ function updateClusterMath() {
   `;
 }
 
-// --- K selection scan (Elbow + Silhouette) (Phase G) ---
+// --- K selection scan (Elbow + Silhouette) ---
 function clampInt(x, lo, hi, fallback) {
   const v = parseInt(String(x ?? ""), 10);
   if (!isFinite(v)) return fallback;
@@ -3540,7 +3582,7 @@ function drawKScan() {
 }
 
 
-// --- Data tools (Upload • Columns • Normalize • Presets • Exports) (Phase J) ---
+// --- Data tools (Upload • Columns • Normalize • Presets • Exports) ---
 function setDataStatus(msg, level) {
   if (!els.dataStatus) return;
   const col = level === "error" ? "rgba(255,182,182,0.92)"
@@ -3939,16 +3981,16 @@ function computeSizeByCluster(centroids, k, metric) {
   return sizeByCluster;
 }
 
-// Build export payloads without triggering downloads (used by Bug Test and export wrappers)
-function makePointsCsvPayload() {
+function exportPointsCsv() {
   const points = app.data.points || [];
-  if (!points.length) return null;
+  if (!points.length) { log("No points to export", "warn"); return; }
 
   const vi = app.ui.viewIndex;
   const snap = (vi != null && app.kmeans.history && app.kmeans.history[vi]) ? app.kmeans.history[vi] : null;
   const centroids = snap ? snap.centroids : app.kmeans.centroids;
   const assignments = snap ? snap.assignments : app.kmeans.assignments;
 
+  const k = app.kmeans.k;
   const metric = app.ui.tshirtMetric || "x";
   const sizeMap = (centroids && centroids.length) ? computeTshirtSizingByCluster(centroids, metric).sizeByCluster : null;
 
@@ -3963,17 +4005,20 @@ function makePointsCsvPayload() {
   const ts = new Date();
   const pad2 = (n)=>String(n).padStart(2,"0");
   const fname = `kmeans_points_${ts.getFullYear()}${pad2(ts.getMonth()+1)}${pad2(ts.getDate())}_${pad2(ts.getHours())}${pad2(ts.getMinutes())}.csv`;
-  return { filename: fname, text: out };
+  downloadText(fname, out);
+  log(`Exported points CSV: ${fname}`);
 }
 
-function makeCentroidsCsvPayload() {
+function exportCentroidsCsv() {
   const points = app.data.points || [];
+  const k = app.kmeans.k;
+
   const vi = app.ui.viewIndex;
   const snap = (vi != null && app.kmeans.history && app.kmeans.history[vi]) ? app.kmeans.history[vi] : null;
   const centroids = snap ? snap.centroids : app.kmeans.centroids;
   const assignments = snap ? snap.assignments : app.kmeans.assignments;
 
-  if (!centroids || !centroids.length) return null;
+  if (!centroids || !centroids.length) { log("Initialize to export centroids", "warn"); return; }
 
   const metric = app.ui.tshirtMetric || "x";
   const sizeMap = computeTshirtSizingByCluster(centroids, metric).sizeByCluster;
@@ -3982,9 +4027,9 @@ function makeCentroidsCsvPayload() {
   const counts = new Array(kEff).fill(0);
   if (assignments && assignments.length === points.length) {
     for (let i = 0; i < assignments.length; i++) {
-      const c = assignments[i];
-      if (c != null && c >= 0 && c < kEff) counts[c]++;
-    }
+    const c = assignments[i];
+    if (c != null && c >= 0 && c < kEff) counts[c]++;
+  }
   }
 
   let out = "cluster,centroid_x,centroid_y,n_points,tshirt_size\n";
@@ -3996,21 +4041,8 @@ function makeCentroidsCsvPayload() {
   const t = new Date();
   const pad2 = (n)=>String(n).padStart(2,"0");
   const fname = `kmeans_centroids_${t.getFullYear()}${pad2(t.getMonth()+1)}${pad2(t.getDate())}_${pad2(t.getHours())}${pad2(t.getMinutes())}.csv`;
-  return { filename: fname, text: out };
-}
-
-function exportPointsCsv() {
-  const payload = makePointsCsvPayload();
-  if (!payload) { log("No points to export", "warn"); return; }
-  downloadText(payload.filename, payload.text);
-  log(`Exported points CSV: ${payload.filename}`);
-}
-
-function exportCentroidsCsv() {
-  const payload = makeCentroidsCsvPayload();
-  if (!payload) { log("Initialize to export centroids", "warn"); return; }
-  downloadText(payload.filename, payload.text);
-  log(`Exported centroids CSV: ${payload.filename}`);
+  downloadText(fname, out);
+  log(`Exported centroids CSV: ${fname}`);
 }
 
 function updateDataToolsState() {
@@ -4022,7 +4054,7 @@ function updateDataToolsState() {
 }
 
 
-// --- Run diagnostics (Convergence + Balance) (Phase H) ---
+// --- Run diagnostics (Convergence + Balance) ---
 function drawSpark(canvas, xs, ys, opts={}) {
   if (!canvas) return;
   const ctx = canvas.getContext("2d");
@@ -4413,7 +4445,7 @@ function drawPlot() {
       }
 
 
-      // Classification marker (Phase K)
+      // Classification marker
       if (app.ui.classifyLast && isFinite(app.ui.classifyLast.x) && isFinite(app.ui.classifyLast.y)) {
         const cp = app.ui.classifyLast;
         const sp = worldToScreen(bounds, inner, cp.x, cp.y);
@@ -4447,13 +4479,17 @@ function drawPlot() {
 
       ctx.fillStyle = "rgba(232,238,252,0.95)";
       ctx.font = "900 13px " + getSans();
-      ctx.fillText("Interactive Plot (Phase B)", 14, 26);
+      ctx.textAlign = "center";
+      ctx.fillText("Interactive Plot", canvas.width/2, 24);
+      ctx.textAlign = "left";
 
       // Subtext
       ctx.fillStyle = "rgba(169,182,214,0.95)";
       ctx.font = "700 12px " + getSans();
       const modeText = (viewCentroids && viewCentroids.length) ? `k-means: ${capitalize(app.kmeans.status)} • k=${app.kmeans.k} • iter=${viewIter}${viewInertia!=null ? " • inertia=" + viewInertia.toFixed(3) : ""}${snap ? " • (viewing history)" : ""}` : (app.ui.tool === "erase" ? "Erase mode: click points to delete." : "Add mode: click empty space to add points.");
-      ctx.fillText(modeText, 14, 46);
+      ctx.textAlign = "center";
+      ctx.fillText(modeText, canvas.width/2, 44);
+      ctx.textAlign = "left";
 
       // Store latest bounds for hit-testing
       app.__plotBounds = bounds;
@@ -4895,16 +4931,37 @@ function pauseRun() {
   renderAll();
 }
 
-// --- Phase L: Tour + Glossary (teaching tool) ---
+// --- : Tour + Glossary (teaching tool) ---
 const GLOSSARY = {
   inertia: {
     term: "Inertia (SSE)",
-    def: "The sum of squared distances from each point to its assigned centroid. Lower is better; it always (weakly) decreases as k increases, which is why we use the elbow heuristic."
+    def: "The sum of squared distances from each point to its assigned centroid. Lower is better; it always (weakly) decreases as k increases, which is why we use the <span class='term' data-gloss='elbow'>elbow heuristic</span>."
   },
   silhouette: {
     term: "Silhouette score",
     def: "A [-1, 1] score comparing how close points are to their own cluster vs the nearest other cluster. Higher is better (tight clusters, good separation)."
   },
+  elbow: {
+    term: "Elbow method",
+    def: "A rule-of-thumb for choosing k: plot Inertia (SSE) vs k and look for the 'bend' where extra clusters give diminishing improvement."
+  },
+  convergence: {
+    term: "Convergence",
+    def: "When the algorithm stabilizes: assignments stop changing (or change very little) and centroid shifts shrink toward ~0."
+  },
+  emptyClusters: {
+    term: "Empty cluster",
+    def: "A cluster with no assigned points after an assignment step. This can happen with unlucky initialization; re-initialize or adjust k."
+  },
+  k: {
+    term: "k (number of clusters)",
+    def: "How many groups the algorithm tries to find. Larger k usually lowers Inertia (SSE) but can overfit and reduce interpretability."
+  },
+  centroid: {
+    term: "Centroid",
+    def: "The center of a cluster (the mean of its assigned points). k-means iterates between assigning points and recomputing centroids."
+  },
+
   centroidShift: {
     term: "Centroid shift",
     def: "How far centroids moved during the last update. As k-means converges, centroid shifts shrink toward ~0."
@@ -4993,26 +5050,72 @@ function initGlossaryBindings(){
   }
   document.getElementById("glossaryClose")?.addEventListener("click", closeGlossary);
 
-  // delegated tooltip for dynamic content (math panel updates innerHTML)
-  document.addEventListener("pointerover", (ev) => {
-    const el = ev.target?.closest?.(".term[data-gloss]");
-    if (!el) return;
-    showGlossTooltipFor(el);
-  });
-  document.addEventListener("pointerout", (ev) => {
-    const toEl = ev.relatedTarget;
-    if (_glossActiveEl && toEl && _glossActiveEl.contains(toEl)) return;
-    // if we moved to another term, pointerover will re-show
-    hideGlossTooltip();
-  });
-  document.addEventListener("focusin", (ev) => {
-    const el = ev.target?.closest?.(".term[data-gloss]");
-    if (!el) return;
-    showGlossTooltipFor(el);
-  });
-  document.addEventListener("focusout", (ev) => {
-    hideGlossTooltip();
-  });
+  const isCoarse = () => {
+    try { if (window.matchMedia && window.matchMedia("(pointer: coarse)").matches) return true; } catch(e){}
+    return !!(app?.ui?.pointerCoarse) || document.documentElement.classList.contains("is-coarse");
+  };
+
+  // Tooltips:
+  // - Desktop/fine pointer: hover + focus
+  // - Mobile/coarse pointer: tap to toggle (pinned) + tap outside to dismiss
+  if (isCoarse()){
+    try { app.ui.glossTapMode = true; } catch(e) {}
+    // Tap to toggle
+    document.addEventListener("pointerup", (ev) => {
+      const term = ev.target?.closest?.(".term[data-gloss]");
+      const tip  = document.getElementById("glossTooltip");
+
+      if (term){
+        // prevent double-trigger via synthetic mouse events
+        ev.preventDefault();
+        ev.stopPropagation();
+        if (_glossActiveEl === term){
+          hideGlossTooltip();
+        } else {
+          showGlossTooltipFor(term);
+        }
+        return;
+      }
+
+      // tap outside closes (unless interacting with tooltip itself)
+      const inTip = tip && (ev.target === tip || ev.target?.closest?.("#glossTooltip"));
+      if (!inTip && _glossActiveEl){
+        hideGlossTooltip();
+      }
+    }, { passive:false });
+
+    // Keep keyboard accessibility
+    document.addEventListener("focusin", (ev) => {
+      const el = ev.target?.closest?.(".term[data-gloss]");
+      if (!el) return;
+      showGlossTooltipFor(el);
+    });
+    // NOTE: no focusout auto-hide on coarse pointers (mobile focus is quirky)
+
+  } else {
+    try { app.ui.glossTapMode = false; } catch(e) {}
+    // delegated tooltip for dynamic content (math panel updates innerHTML)
+    document.addEventListener("pointerover", (ev) => {
+      const el = ev.target?.closest?.(".term[data-gloss]");
+      if (!el) return;
+      showGlossTooltipFor(el);
+    });
+    document.addEventListener("pointerout", (ev) => {
+      const toEl = ev.relatedTarget;
+      if (_glossActiveEl && toEl && _glossActiveEl.contains(toEl)) return;
+      // if we moved to another term, pointerover will re-show
+      hideGlossTooltip();
+    });
+    document.addEventListener("focusin", (ev) => {
+      const el = ev.target?.closest?.(".term[data-gloss]");
+      if (!el) return;
+      showGlossTooltipFor(el);
+    });
+    document.addEventListener("focusout", () => {
+      hideGlossTooltip();
+    });
+  }
+
   window.addEventListener("scroll", () => { hideGlossTooltip(); }, { passive:true });
   window.addEventListener("resize", () => {
     if (_glossActiveEl){
@@ -5022,21 +5125,21 @@ function initGlossaryBindings(){
   });
 }
 
-/* Tour */
+ /* Tour */
 const TOUR_STEPS = [
   { title: "Add points", target: "#plotPanel", body:
     `Click in the plot to add points. <span class="kbd">Alt</span> erases, and you can drag points to move them. (If “Classify new point” is enabled in T‑Shirt sizing, normal clicks classify instead.)` },
   { title: "Choose k", target: "#kInput", body:
-    `Set <b>k</b> (the number of clusters). A good k balances simplicity vs fit — use the Elbow + Silhouette helpers if you're unsure.` },
+    `Set <b><span class="term" data-gloss="k">k</span></b> (the number of clusters). A good k balances simplicity vs fit — use the <span class="term" data-gloss="elbow">Elbow</span> + <span class="term" data-gloss="silhouette">Silhouette</span> helpers if you\'re unsure.` },
   { title: "Initialize", target: "#btnInitialize", body:
     `Pick an initialization method, then click <b>Initialize</b> to place starting centroids and assign each point to its nearest centroid.` },
   { title: "Assignments", target: "#btnStep", body:
     `Each <b>Step</b> recomputes <b>assignments</b> (which centroid is closest) and then updates centroids. Watch the plot colors change as points switch clusters.` },
   { title: "Centroid update", target: "#clusterMathCard", body:
     `Centroids move to the mean of their assigned points. Use <b>Centroid update breakdown</b> to see the “show your work” math for a selected cluster.` },
-  { title: "Diagnostics", target: "#diagPanel", body:
-    `Use <b>K selection helpers</b> (Elbow + <span class="term" data-gloss="silhouette">Silhouette</span>) and <b>Run diagnostics</b> to understand fit, convergence, and empty clusters.` },
-  { title: "T‑Shirt sizing", target: "#tshirtCard", body:
+  { title: "Diagnostics", target: "#diagPanel .panel-title", body:
+    `Use <b>K selection helpers</b> (Elbow + <span class="term" data-gloss="silhouette">Silhouette</span>) and <b>Run diagnostics</b> to understand fit, <span class="term" data-gloss="convergence">convergence</span>, and <span class="term" data-gloss="emptyClusters">empty clusters</span>.` },
+  { title: "T‑Shirt sizing", target: "#tshirtCard .panel-title", body:
     `Turn cluster results into an operational summary: map clusters to XS–XL thresholds, and use <b>Classify new point</b> to assign cluster + size + confidence.` },
 ];
 
@@ -5051,7 +5154,51 @@ function tourSetTarget(tEl){
 
 function tourScrollToTargetOnce(tEl){
   if (!tEl) return;
-  try { tEl.scrollIntoView({ behavior:"smooth", block:"center", inline:"nearest" }); } catch {}
+  const prefersReduce = (() => { try { return window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch(e){ return false; } })();
+  const fast = prefersReduce || (app.ui && app.ui.isMobile) || (app.ui && app.ui.pointerCoarse);
+  const behavior = fast ? "auto" : "smooth";
+  try { tEl.scrollIntoView({ behavior, block:"center", inline:"nearest" }); } catch {}
+}
+
+function tourNudgeGeometry(){
+  if (!app.tour.active) return;
+  // Recompute geometry a few times to catch layout changes after accordion expansion / scrolling.
+  let n = 0;
+  const tick = () => {
+    if (!app.tour.active) return;
+    try { tourUpdateGeometry(); } catch(e) {}
+    if (++n < 4) requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+  // One final check shortly after (helps mobile browsers settle)
+  setTimeout(() => { try { tourUpdateGeometry(); } catch(e) {} }, 80);
+}
+
+function tourEnsureTargetVisible(tEl){
+  if (!tEl) return { changed:false };
+  // On mobile, expand the accordion panel that contains the target so highlighting is accurate.
+  if (!app.ui || !app.ui.isMobile) return { changed:false };
+  const panel = tEl.closest ? tEl.closest("section.panel") : null;
+  if (!panel) return { changed:false };
+  if (!panel.classList.contains("collapsed")) return { changed:false };
+
+  panel.classList.remove("collapsed");
+  const header = panel.querySelector(".panel-header");
+  if (header) header.setAttribute("aria-expanded", "true");
+
+  // Persist accordion state to match user expectations
+  try {
+    const raw = localStorage.getItem(MOBILE_PANEL_KEY);
+    const state = raw ? JSON.parse(raw) : {};
+    state[panel.id || ""] = { collapsed: false };
+    localStorage.setItem(MOBILE_PANEL_KEY, JSON.stringify(state));
+  } catch(e) {}
+
+  // If plot just became visible, redraw safely
+  if (panel.id === "plotPanel") {
+    setTimeout(() => { try { drawPlot(); } catch(e) {} }, 0);
+  }
+  return { changed:true, panelId: panel.id || "" };
 }
 
 function tourUpdateGeometry(){
@@ -5072,38 +5219,53 @@ function tourUpdateGeometry(){
     if (box){
       const vw = window.innerWidth, vh = window.innerHeight;
       const br = box.getBoundingClientRect();
+      const cs = getComputedStyle(document.documentElement);
+      const sat = parseFloat(cs.getPropertyValue("--sat")) || 0;
+      const sab = parseFloat(cs.getPropertyValue("--sab")) || 0;
+      const sal = parseFloat(cs.getPropertyValue("--sal")) || 0;
+      const sar = parseFloat(cs.getPropertyValue("--sar")) || 0;
       const gap = 12;
+      const gapTop = gap + sat;
+      const gapBottom = gap + sab;
+      const gapLeft = gap + sal;
+      const gapRight = gap + sar;
       const clamp = (v,min,max)=>Math.max(min,Math.min(max,v));
       let left, top;
 
       const rightX = r.right + gap;
-      if (rightX + br.width <= vw - gap){
+      if (rightX + br.width <= vw - gapRight){
         left = rightX;
-        top = clamp(r.top, gap, vh - br.height - gap);
+        top = clamp(r.top, gapTop, vh - br.height - gapBottom);
       } else {
         const leftX = r.left - br.width - gap;
-        if (leftX >= gap){
+        if (leftX >= gapLeft){
           left = leftX;
-          top = clamp(r.top, gap, vh - br.height - gap);
+          top = clamp(r.top, gapTop, vh - br.height - gapBottom);
         } else {
           const belowY = r.bottom + gap;
-          if (belowY + br.height <= vh - gap){
+          if (belowY + br.height <= vh - gapBottom){
             top = belowY;
-            left = clamp(r.left, gap, vw - br.width - gap);
+            left = clamp(r.left, gapLeft, vw - br.width - gapRight);
           } else {
             const aboveY = r.top - br.height - gap;
-            if (aboveY >= gap){
+            if (aboveY >= gapTop){
               top = aboveY;
-              left = clamp(r.left, gap, vw - br.width - gap);
+              left = clamp(r.left, gapLeft, vw - br.width - gapRight);
             } else {
-              left = vw - br.width - gap;
-              top = vh - br.height - gap;
+              left = vw - br.width - gapRight;
+              top = vh - br.height - gapBottom;
             }
           }
         }
       }
 
-      box.style.left = `${left}px`;
+      
+      // Small screens / landscape phones: keep the tour box reachable near the top
+      if (vw <= 900 && vh <= 520){
+        top = gapTop;
+        left = clamp((vw - br.width)/2, gapLeft, vw - br.width - gapRight);
+      }
+box.style.left = `${left}px`;
       box.style.top = `${top}px`;
       box.style.right = "auto";
       box.style.bottom = "auto";
@@ -5113,10 +5275,14 @@ function tourUpdateGeometry(){
   }
 }
 
-function tourTick(){
+function tourScheduleGeometry(){
   if (!app.tour.active) return;
-  tourUpdateGeometry();
-  app.tour._raf = requestAnimationFrame(tourTick);
+  if (app.tour._pendingGeom) return;
+  app.tour._pendingGeom = true;
+  requestAnimationFrame(() => {
+    app.tour._pendingGeom = false;
+    try { tourUpdateGeometry(); } catch(e) {}
+  });
 }
 
 function tourStart(){
@@ -5137,9 +5303,10 @@ function tourStart(){
   renderAll();
   tourRender();
 
-  // start a light animation loop so the highlight stays correct during resizes / panel scrolling
-  if (app.tour._raf) cancelAnimationFrame(app.tour._raf);
-  app.tour._raf = requestAnimationFrame(tourTick);
+// Keep geometry updated via scheduled updates (resize/scroll/step changes) — avoids heavy per-frame loops on mobile.
+if (app.tour._raf) cancelAnimationFrame(app.tour._raf);
+app.tour._raf = null;
+tourScheduleGeometry();
 }
 
 function tourStop(){
@@ -5181,18 +5348,27 @@ function tourRender(){
   if (metaEl) metaEl.textContent = `Step ${app.tour.step + 1} of ${TOUR_STEPS.length}`;
   if (bodyEl) bodyEl.innerHTML = step.body;
 
-  const tEl = step.target ? document.querySelector(step.target) : null;
+  let tEl = step.target ? document.querySelector(step.target) : null;
+
+  // On mobile, expand the relevant panel before measuring/highlighting.
+  const vis = tourEnsureTargetVisible(tEl);
+  if (vis.changed) {
+    // Re-query after DOM changes
+    tEl = step.target ? document.querySelector(step.target) : tEl;
+  }
 
   // Only scroll when the step changes (prevents jitter while resizing panels)
   if (app.tour._lastStep !== app.tour.step) {
     tourSetTarget(tEl);
-    tourScrollToTargetOnce(tEl);
+    // If we had to expand, defer scroll slightly so geometry is correct
+    if (vis.changed) setTimeout(() => { try { tourScrollToTargetOnce(tEl); } catch(e) {} try { tourNudgeGeometry(); } catch(e) {} }, 0);
+    else { tourScrollToTargetOnce(tEl); try { tourNudgeGeometry(); } catch(e) {} }
     app.tour._lastStep = app.tour.step;
   } else if (tEl !== app.tour._targetEl) {
     tourSetTarget(tEl);
   }
 
-  tourUpdateGeometry();
+  tourScheduleGeometry();
 
   const backBtn = document.getElementById("tourBack");
   const nextBtn = document.getElementById("tourNext");
@@ -5216,11 +5392,14 @@ function initTourBindings(){
     else tourGo(1);
   });
 
-  window.addEventListener("resize", () => { if (app.tour.active) tourUpdateGeometry(); });
-  window.addEventListener("scroll", () => { if (app.tour.active) tourUpdateGeometry(); }, { passive:true });
+  window.addEventListener("resize", () => { if (app.tour.active) tourScheduleGeometry(); });
+  // Capture scrolls from any scroll container (panel bodies, modals, etc.)
+  document.addEventListener("scroll", () => { if (app.tour.active) tourScheduleGeometry(); }, { passive:true, capture:true });
+  // Also listen to window scroll (page-level)
+  window.addEventListener("scroll", () => { if (app.tour.active) tourScheduleGeometry(); }, { passive:true });
 }
 
-function initTeachingToolsPhaseL(){
+function initTeachingTools(){
   initGlossaryBindings();
   initTourBindings();
   _fillGlossaryTable();
@@ -5239,10 +5418,10 @@ function wire() {
       // Cache elements
       REQUIRED_IDS.forEach(id => { els[id] = $(id); });
 
-// Phase L bindings (Tour + Glossary)
-initTeachingToolsPhaseL();
+//  bindings (Tour + Glossary)
+initTeachingTools();
 
-// Initialize resizable layout (Phase R1)
+// Initialize resizable layout
 initResizableLayout();
 
       if (els.btnDiagSnapshot) {
@@ -5307,7 +5486,7 @@ bindSplitter(els.splitRowBottom, "rowBottom", "row");
         renderAll();
       });
 
-      // Layout toggle (Phase A only changes a flag; responsive CSS handles the rest)
+      // Layout toggle ( only changes a flag; responsive CSS handles the rest)
       els.layoutAuto.addEventListener("click", () => {
         app.meta.layout = "auto";
         app.debug.lastRun = null;
@@ -5344,7 +5523,7 @@ els.tshirtMetric.addEventListener("change", () => {
 });
 
 
-// Phase K: T-shirt sizing operational controls
+// : T-shirt sizing operational controls
 if (els.exportTshirtMapBtn) els.exportTshirtMapBtn.addEventListener("click", () => exportTshirtMappingCsv());
 if (els.exportClassifyBtn) els.exportClassifyBtn.addEventListener("click", () => exportClassificationsCsv());
 
@@ -5401,11 +5580,11 @@ if (els.tshirtClassifyClearBtn) els.tshirtClassifyClearBtn.addEventListener("cli
         bugTest();
       });
 
-      // Phase L: Tour + Glossary
+      // : Tour + Glossary
       if (els.btnTour) els.btnTour.addEventListener("click", () => { tourStart(); });
       if (els.btnGlossary) els.btnGlossary.addEventListener("click", () => { openGlossary(); });
 
-      // Clustering controls (Phase C)
+      // Clustering controls
       els.btnInitialize.addEventListener("click", () => {
         initializeKMeans();
       });
@@ -5439,7 +5618,7 @@ if (els.tshirtClassifyClearBtn) els.tshirtClassifyClearBtn.addEventListener("cli
       ro.observe(els.plotPanel);
 
 
-      // Plot tool buttons (Phase B)
+      // Plot tool buttons
       if (!els.btnAddMode || !els.btnEraseMode || !els.btnClearPoints || !els.plotCanvas) {
         app.debug.wiredOk = false;
         throw new Error('Wiring failed: plot tool buttons or canvas missing');
@@ -5476,7 +5655,7 @@ if (els.btnFitAxes) els.btnFitAxes.addEventListener("click", () => {
 });
 
 
-      // Canvas interactions (Phase B)
+      // Canvas interactions
       const canvas = els.plotCanvas;
 
       function canvasPos(ev) {
@@ -5498,7 +5677,7 @@ if (els.btnFitAxes) els.btnFitAxes.addEventListener("click", () => {
         const hitId = hitTestPoint(sx, sy, 12);
         if (app.kmeans.status === "running") pauseRun();
 
-        // Classify mode (Phase K): click to classify a coordinate without modifying the dataset (Shift=add, Alt=erase)
+        // Classify mode: click to classify a coordinate without modifying the dataset (Shift=add, Alt=erase)
         if (app.ui.classifyMode && !ev.shiftKey && !ev.altKey) {
           let cx = null, cy = null;
           if (hitId) {
@@ -5606,7 +5785,7 @@ if (els.btnFitAxes) els.btnFitAxes.addEventListener("click", () => {
       // Default tool styling
       els.btnAddMode.classList.add("primary");
 
-      // Visualization toggles (Phase D)
+      // Visualization toggles
       els.toggleRegions.checked = !!app.ui.showRegions;
       els.toggleDistances.checked = !!app.ui.showDistances;
 
@@ -5623,7 +5802,7 @@ if (els.btnFitAxes) els.btnFitAxes.addEventListener("click", () => {
         renderAll();
       });
 
-      // History scrub (Phase D)
+      // History scrub
       window.syncHistoryUI = function syncHistoryUI() {
         const n = (app.kmeans.history || []).length;
         const has = n > 0;
@@ -5736,7 +5915,7 @@ els.kScanTable.addEventListener("click", (ev) => {
   renderAll();
 });
 
-// Data tools (Phase J)
+// Data tools
 if (els.csvFile) {
   els.csvFile.addEventListener("change", () => {
     const f = els.csvFile.files && els.csvFile.files[0] ? els.csvFile.files[0] : null;
@@ -5791,6 +5970,12 @@ if (els.btnExportCentroids) els.btnExportCentroids.addEventListener("click", exp
 // --- Boot ---
     function boot() {
       log("Boot start");
+      // : establish device flags early (no layout changes)
+      updateDeviceMode("boot");
+      window.addEventListener("resize", () => updateDeviceMode("resize"), { passive: true });
+      window.addEventListener("orientationchange", () => updateDeviceMode("orientation"), { passive: true });
+      // : enable mobile accordion bindings (safe no-op on desktop)
+      initMobileAccordion();
       // Wire and render
       wire();
       renderAll();
