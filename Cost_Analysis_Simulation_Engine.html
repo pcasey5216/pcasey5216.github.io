@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>CASE — Cost Analysis &amp; Simulation Engine (v3.0.17)</title>
+  <title>CASE — Cost Analysis &amp; Simulation Engine (v4.1.9)</title>
   <style>
     :root{
       --bg:#0b1220; --panel:#101a33; --panel2:#0f1930; --text:#e8eefc; --muted:#a9b6d6;
@@ -35,6 +35,12 @@
       --font-xl: 16px;
       --font-2xl: 18px;
 
+      /* Layout width + density (UI-only) */
+      --app-max: 1600px;
+      --app-pad-top: var(--space-4);
+      --app-pad-x: var(--space-3);
+      --app-pad-bottom: var(--space-6);
+
       --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
       --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
     }
@@ -49,8 +55,70 @@
       color-scheme: dark; background: var(--bg);
     }
     a{color:var(--accent)}
-    .app{max-width: 1400px; margin: 0 auto; padding: var(--space-5) var(--space-4) var(--space-7); display:flex; flex-direction:column; gap: var(--space-3);}
-    .topbar{
+    .app{max-width: var(--app-max); margin: 0 auto; padding: var(--app-pad-top) var(--app-pad-x) var(--app-pad-bottom); display:flex; flex-direction:column; gap: var(--space-3);}
+
+    /* Screen density / wide mode (UI-only) */
+    body.wide-mode{ --app-max: 1900px; }
+    body.density-compact{
+      --space-2: 6px;
+      --space-3: 10px;
+      --space-4: 12px;
+      --space-5: 16px;
+      --space-6: 20px;
+      --space-7: 24px;
+      --app-pad-top: var(--space-3);
+      --app-pad-x: var(--space-2);
+      --app-pad-bottom: var(--space-5);
+    }
+    body.density-compact thead th{ padding: 7px 8px; }
+    body.density-compact tbody td{ padding: 7px 8px; }
+    
+    /* Inflation index editor */
+    .inflationEditor{
+      margin-top: var(--space-3);
+      padding: var(--space-3);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 14px;
+      background: rgba(0,0,0,.10);
+    }
+
+    /* v4.1.5 UI: move inflation indices to bottom and keep it out of the way */
+    #inflationCard .inflationEditor{ margin-top:0; padding:0; border:none; background: transparent; }
+    #inflationCard .inflationTables{ margin-top: var(--space-3); }
+    #inflationCard summary .pill{ font-size: var(--font-sm); }
+    .inflationHeader{display:flex; align-items:flex-start; justify-content:space-between; gap: var(--space-3); flex-wrap:wrap;}
+    .subTitle{font-weight: 800; letter-spacing: .2px;}
+    .inflationTables{display:flex; flex-direction:column; gap: var(--space-3); margin-top: var(--space-3);}
+    .inflationTableCard{
+      border: 1px solid rgba(255,255,255,.07);
+      border-radius: 14px;
+      padding: var(--space-3);
+      background: rgba(255,255,255,.02);
+    }
+    .inflRow{display:flex; align-items:center; justify-content:space-between; gap: var(--space-3); flex-wrap:wrap;}
+    .inflMeta{display:flex; align-items:center; gap: var(--space-2); flex-wrap:wrap;}
+    .tag{
+      display:inline-flex; align-items:center; gap: 8px;
+      padding: 6px 10px; border-radius: 999px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.04);
+      font-size: var(--font-xs); color: rgba(255,255,255,.85);
+      white-space:nowrap;
+    }
+    .inflTableWrap{
+      overflow:auto;
+      margin-top: var(--space-2);
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.07);
+      -webkit-overflow-scrolling: touch;
+    }
+    .inflTableWrap table{min-width: 560px; border-collapse:collapse; width:100%;}
+    .inflTableWrap thead th{position: sticky; top: 0; z-index: 1; background: rgba(255,255,255,.03);}
+    .inflTableWrap th, .inflTableWrap td{padding: 8px 10px; border-bottom:1px solid rgba(255,255,255,.06); white-space:nowrap;}
+    .inflTableWrap input{width: 120px;}
+    body.density-compact .inflationEditor{padding: var(--space-2);}
+    body.density-compact .inflTableWrap th, body.density-compact .inflTableWrap td{padding: 6px 8px;}
+.topbar{
       display:flex; align-items:center; justify-content:space-between; gap: var(--space-3);
       padding: var(--space-4);
       background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
@@ -156,6 +224,31 @@ body.layout-stack.layout-swap .grid{grid-template-areas:"outputs" "inputs";}
     .cardHeader{padding: var(--space-3) var(--space-4); border-bottom:1px solid rgba(255,255,255,.07); display:flex; align-items:center; justify-content:space-between; gap: var(--space-2);}
     .cardHeader h2{margin:0; font-size: var(--font-lg)}
     .cardBody{padding: var(--space-3) var(--space-4)}
+
+    /* v4.1.5 UI: collapsible cards (v4.1.9: click header to collapse in Outputs) */
+    .card.collapsible > .cardHeader .cardHeaderRight{ display:flex; gap:8px; align-items:center; justify-content:flex-end; flex-wrap:wrap; }
+    .cardCollapseBtn{ width:28px; height:28px; border-radius: 999px; padding:0; display:inline-flex; align-items:center; justify-content:center; }
+    .cardCollapseBtn .chev{ display:inline-block; transform: rotate(0deg); transition: transform .15s ease; opacity:.9; }
+    .card.collapsible.collapsed .cardCollapseBtn .chev{ transform: rotate(-90deg); }
+    .card.collapsible.collapsed > :not(.cardHeader){ display:none !important; }
+    .card.collapsible.collapsed > .cardHeader{ border-bottom: none; }
+    /* v4.1.9 UI polish: consistent header layout + click-to-collapse cards in Outputs */
+    #cardOutputs .cardHeader{ align-items:center; }
+    #cardOutputs .cardHeader h2{ flex:1 1 auto; min-width:0; max-width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    #cardOutputs .cardHeader .cardHeaderRight{ min-width:0; margin-left:auto; display:flex; gap:8px; align-items:center; justify-content:flex-end; flex-wrap:wrap; }
+    #cardOutputs .cardHeader .cardHeaderRight .pill{ max-width: 420px; overflow:hidden; text-overflow:ellipsis; }
+    #cardOutputs .card.collapsible > .cardHeader{ cursor:pointer; user-select:none; }
+    #cardOutputs .card.collapsible > .cardHeader:hover{ background: rgba(255,255,255,.03); }
+
+    /* Hide native disclosure markers on card summaries */
+    details.card > summary::-webkit-details-marker{ display:none; }
+
+    /* v4.1.9 spacing: give Input checks breathing room */
+    details.health{ margin-top: 12px; }
+
+    /* v4.1.9: Lines card header spacing */
+    #linesCard{ margin-top: 12px; }
+
     .muted{color: var(--muted)}
     .small{font-size: var(--font-sm)}
     .row{display:flex; gap:10px; flex-wrap:wrap}
@@ -639,6 +732,8 @@ body.layout-stack.layout-swap .grid{grid-template-areas:"outputs" "inputs";}
     .bulkSep{ width:1px; height:26px; background: rgba(255,255,255,.12); margin: 0 var(--space-2); }
     #linesTable th.selCol, #linesTable td.selCol{ width:34px; min-width:34px; text-align:center; }
     #linesTable th.statusCol, #linesTable td.statusCol{ width:34px; min-width:34px; text-align:center; }
+    #linesTable th.colAppn, #linesTable td.colAppn{ width:96px; min-width:96px; }
+    #linesTable td.colAppn select.appnSel{ padding-left:8px; padding-right:8px; }
     tr.isSelected{ outline: 1px solid rgba(106,169,255,.35); background: rgba(106,169,255,.06); }
     .rowSelect{ width:16px; height:16px; accent-color: var(--accent); cursor:pointer; }
     input.invalid, select.invalid{ border-color: rgba(255,107,107,.65) !important; box-shadow: 0 0 0 2px rgba(255,107,107,.12); }
@@ -653,6 +748,138 @@ body.layout-stack.layout-swap .grid{grid-template-areas:"outputs" "inputs";}
     }
     .statusDot.warn{ background: rgba(255,209,102,.95); box-shadow: 0 0 0 3px rgba(255,209,102,.12); }
     .statusDot.bad{ background: rgba(255,107,107,.95); box-shadow: 0 0 0 3px rgba(255,107,107,.12); }
+
+
+    /* ----- Phase 3: Formula base cost (fx mode) ----- */
+    .baseCell{ display:flex; align-items:center; gap:6px; flex-wrap:nowrap; }
+    .fxToggle{
+      font-family: var(--mono);
+      font-size: 11px;
+      padding: 5px 8px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.10);
+      color: rgba(233,240,255,.86);
+      cursor: pointer;
+      user-select:none;
+      line-height: 1;
+    }
+    .fxToggle:hover{ border-color: rgba(255,255,255,.18); }
+    .fxToggle.active{
+      background: rgba(106,169,255,.16);
+      border-color: rgba(106,169,255,.35);
+      color: rgba(233,240,255,.92);
+    }
+    .baseExpr, .baseNum{ font-family: var(--mono); }
+    .baseEval{
+      font-size: 11px;
+      color: rgba(255,255,255,.62);
+      white-space: nowrap;
+      margin-left: 4px;
+    }
+    .baseEval.bad{ color: rgba(255,107,107,.95); }
+    .fxEditBtn{
+      padding: 5px 8px;
+      border-radius: 10px;
+      font-size: 11px;
+      line-height: 1;
+      white-space: nowrap;
+    }
+
+    /* ---- Formula editor modal ---- */
+    .fxGrid{
+      display:grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap: 12px;
+      align-items:start;
+      min-height: 0;
+    }
+    .fxGrid textarea{
+      min-height: 360px;
+      height: 360px;
+      resize: vertical;
+      font-family: var(--mono);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+    .fxPanel{
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.02);
+      border-radius: 14px;
+      padding: 10px 12px;
+      min-height: 0;
+    }
+    .fxPanel h4{ margin: 0 0 8px; font-size: 12px; letter-spacing: .2px; color: rgba(233,240,255,.92); }
+    .fxMetaRow{
+      display:flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items:center;
+      justify-content:space-between;
+      margin: 0 0 10px;
+    }
+    .fxMetaLeft{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+    .fxMetaRight{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; justify-content:flex-end; }
+    .fxPreview{
+      margin-top: 8px;
+      padding: 8px 10px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.22);
+      font-family: var(--mono);
+      font-size: 12px;
+      color: rgba(233,240,255,.90);
+      white-space: pre-wrap;
+    }
+    .fxPreview.bad{
+      border-color: rgba(255,107,107,.35);
+      background: rgba(255,107,107,.06);
+      color: rgba(255,226,226,.95);
+    }
+    .fxChips{ display:flex; gap:6px; flex-wrap:wrap; margin-top: 8px; }
+    .fxChip{
+      appearance:none;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.05);
+      color: rgba(233,240,255,.92);
+      border-radius: 999px;
+      padding: 5px 10px;
+      font-size: 11px;
+      cursor:pointer;
+      user-select:none;
+      font-family: var(--mono);
+    }
+    .fxChip:hover{ border-color: rgba(106,169,255,.45); background: rgba(106,169,255,.10); }
+    .fxVarSearch{
+      width:100%;
+      padding: 9px 10px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(10,18,34,.75);
+      color: var(--text);
+      outline:none;
+      font-size: 12px;
+      margin-bottom: 10px;
+    }
+    #fxVarTable{ min-width: 0; width: 100%; }
+    #fxVarTable thead th{ position: sticky; top: 0; z-index: 2; background: rgba(255,255,255,.03); }
+    #fxVarTable td{ vertical-align: middle; }
+    .fxVarBtn{
+      appearance:none;
+      border:none;
+      background: transparent;
+      color: var(--accent);
+      cursor:pointer;
+      font-family: var(--mono);
+      font-size: 12px;
+      padding: 0;
+      text-align:left;
+    }
+    .fxVarBtn:hover{ text-decoration: underline; }
+    @media (max-width: 860px){
+      .fxGrid{ grid-template-columns: 1fr; }
+    }
+
 
     @media (max-width: 860px){
       .bulkBar{ top: 6px; padding: var(--space-3); }
@@ -957,6 +1184,9 @@ body.layout-stack.layout-swap .grid{grid-template-areas:"outputs" "inputs";}
       cursor:pointer;
     }
     .tipMore:hover{ background: rgba(106,169,255,.16); border-color: rgba(106,169,255,.60); }
+
+    .seriesCell{display:flex; align-items:center; gap:8px}
+    .seriesCell .seriesSum{white-space:nowrap}
 </style>
 </head>
 <body>
@@ -966,7 +1196,7 @@ body.layout-stack.layout-swap .grid{grid-template-areas:"outputs" "inputs";}
         <div class="logo" aria-hidden="true"></div>
         <div class="titleWrap">
           <h1>CASE</h1>
-          <div class="sub">Cost Analysis &amp; Simulation Engine • schedule phasing + risk simulation • <span class="pill">v3.0.17</span></div>
+          <div class="sub">Cost Analysis &amp; Simulation Engine • schedule phasing + risk simulation • <span class="pill">v4.1.9</span></div>
         </div>
       </div>
 
@@ -1049,6 +1279,16 @@ body.layout-stack.layout-swap .grid{grid-template-areas:"outputs" "inputs";}
           </select>
           <button class="btn ghost xs" id="btnSwapLayout" title="Swap Inputs and Outputs positions">Swap</button>
         </span>
+
+        <span class="advBadge" id="densityBadge" title="UI-only: adjust spacing and width for large screens. Does not change calculations.">
+          <span class="dot" data-tip="density" data-help="help-ui-density" title="Adjust spacing for large monitors. Compact fits more on screen; Wide increases max width.">Density</span>:
+          <select id="densitySelect" class="miniSelect" aria-label="Density">
+            <option value="comfort">Comfortable</option>
+            <option value="compact">Compact</option>
+          </select>
+          <button class="btn ghost xs" id="btnWide" title="Toggle wide mode (more horizontal room)">Wide</button>
+        </span>
+
 </div>
       <div class="stepHint" id="stepHint">
         <span>Use the steps to jump to sections. Optional Focus mode can hide unrelated panels.</span>
@@ -1092,6 +1332,24 @@ body.layout-stack.layout-swap .grid{grid-template-areas:"outputs" "inputs";}
               </select>
               <div class="hint">LHS remains available with correlation.</div>
             </label>
+
+            <label>
+              <span class="dot" data-tip="baseYear" data-help="help-inflation" title="Base Year (BY) for dollar inputs. Inflation indexing (appropriation-based) is applied in later phases.">Base year (BY)</span>
+              <input type="number" min="1950" max="2100" step="1" id="inBaseYearFY" value="2026" />
+              <div class="hint">All $ inputs assumed in BY dollars.</div>
+            </label>
+
+            <label>
+              <span class="dot" data-tip="outputBasis" data-help="help-inflation" title="Choose whether outputs are shown in Base Year (BY) dollars or Then Year (TY) dollars. TY uses appropriation-specific indices.">Output basis</span>
+              <select id="inOutputBasis">
+                <option value="BY">BY (Base Year)</option>
+                <option value="TY">TY (Then Year)</option>
+              </select>
+              <div class="hint" id="outputBasisHint">TY conversion uses appropriation indices (see bottom of Inputs).</div>
+            </label>
+
+            <!-- Inflation indices editor moved to bottom (v4.1.5) -->
+
 
             
             
@@ -1164,6 +1422,9 @@ body.layout-stack.layout-swap .grid{grid-template-areas:"outputs" "inputs";}
                 <label class="chk" title="If off, each line uses its baseline value (deterministic point estimate).">
                   <input type="checkbox" id="chkLayerCostUnc" /> Cost uncertainty
                 </label>
+                <label class="chk" title="If off, variables use their base values (deterministic).">
+                  <input type="checkbox" id="chkLayerVarUnc" /> Variable uncertainty
+                </label>
                 <label class="chk" title="If off, cost lines are sampled independently (no copula correlation).">
                   <input type="checkbox" id="chkLayerCorr" /> Correlation
                 </label>
@@ -1235,7 +1496,13 @@ body.layout-stack.layout-swap .grid{grid-template-areas:"outputs" "inputs";}
 
 
 
-          <div class="bulkBar" id="bulkBar" role="region" aria-label="Bulk actions">
+          <details class="card" id="linesCard" open style="border-radius: 16px; margin-top:12px">
+            <summary class="cardHeader" style="cursor:pointer; list-style:none">
+              <h2 style="margin:0">Lines</h2>
+              <div class="pill" id="linesPill">—</div>
+            </summary>
+            <div class="cardBody">
+<div class="bulkBar" id="bulkBar" role="region" aria-label="Bulk actions">
             <div class="left">
               <div class="pill" id="bulkCountPill">0 selected</div>
               <div class="small muted" id="bulkHint">Select rows to enable bulk actions.</div>
@@ -1267,7 +1534,8 @@ body.layout-stack.layout-swap .grid{grid-template-areas:"outputs" "inputs";}
                   <th class="selCol"><input type="checkbox" id="linesSelAll" class="rowSelect" title="Select all lines"></th>
                   <th style="min-width:180px">Line name</th>
                   <th style="min-width:120px">WBS</th>
-                  <th style="min-width:120px">Base cost</th>
+                  <th class="colAppn" style="min-width:96px; width:96px"><span class="dot" data-tip="appn" data-help="help-inflation" title="Appropriation / color of money for this cost line. Used for appropriation-specific inflation indices.">APPN</span></th>
+                  <th style="min-width:160px"><span class="dot" data-tip="formula" data-help="help-formulas" title="Base cost can be a number or a formula (ƒx) that references Variables.">Base cost</span></th>
                   <th style="min-width:120px"><span class="dot" data-tip="distributionField" data-help="help-lineguide" title="Uncertainty distribution for this cost line. The pill below the selector explains how Low/High are interpreted.">Distribution</span></th>
                   
                   <th class="colPreview" style="min-width:130px">Preview</th>
@@ -1287,7 +1555,11 @@ body.layout-stack.layout-swap .grid{grid-template-areas:"outputs" "inputs";}
             </table>
           </div>
 
-          <details class="card" id="wbsLibraryCard" style="border-radius:16px; margin-top:12px">
+          
+            </div>
+          </details>
+
+<details class="card" id="wbsLibraryCard" style="border-radius:16px; margin-top:12px">
             <summary class="cardHeader" style="cursor:pointer; list-style:none">
               <h2 style="margin:0">WBS library</h2>
               <div class="pill" id="wbsLibPill">None</div>
@@ -1351,8 +1623,81 @@ body.layout-stack.layout-swap .grid{grid-template-areas:"outputs" "inputs";}
             </div>
           </details>
 
+          <details class="card" id="varsCard" style="border-radius:16px; margin-top:12px">
+            <summary class="cardHeader" style="cursor:pointer; list-style:none">
+              <h2 style="margin:0">Variables</h2>
+              <div class="pill" id="varsPill">0</div>
+            </summary>
+            <div class="cardBody">
+              <div class="row" style="justify-content:space-between; align-items:flex-end; gap:10px; flex-wrap:wrap">
+                <div>
+                  <div class="hint" style="margin-top:0">
+                    Add named inputs you can reference in equations (ƒx). Supports <b>Scalar</b> and <b>FY series</b>. For dollar scalar variables, you can optionally specify the <b>BY fiscal year</b> (blank = global Base Year).
+                  </div>
+                </div>
+                <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end">
+                  <button class="btn sm" id="btnVarAdd" title="Add a new variable">+ Variable</button>
+                  <button class="btn sm ghost" id="btnVarExample" title="Add a small set of example variables">Examples</button>
+                </div>
+              </div>
+
+              <div style="height:10px"></div>
+              <div class="tableWrap" style="max-height: 360px">
+                <table id="varsTable" aria-label="Variables table" style="min-width:1220px">
+                  <thead>
+                    <tr>
+                      <th style="min-width:190px"><span class="dot" data-tip="varName" data-help="help-vars" title="Unique variable name. Use A–Z, 0–9, and underscore. Example: LICENSE_UNIT_COST.">Name</span></th>
+                      <th style="min-width:120px"><span class="dot" data-tip="varType" data-help="help-vars" title="Scalar variables are single numbers. FY series variables store values by fiscal year.">Type</span></th>
+                      <th style="min-width:170px"><span class="dot" data-tip="varValue" data-help="help-vars" title="Scalar value or FY series editor. FY series can be referenced as VAR_FY2026 (specific year) or VAR (sum across FYs).">Value / Series</span></th>
+                      <th style="min-width:140px"><span class="dot" data-tip="varUnit" data-help="help-vars" title="Unit type for readability and basic validation.">Unit</span></th>
+                      <th style="min-width:120px"><span class="dot" data-tip="varBasis" data-help="help-vars" title="For dollar-like units: BY or TY. FY series currently supports BY only. Non-dollar units use N/A.">Basis</span></th>
+                      <th style="min-width:110px"><span class="dot" data-tip="varByFY" data-help="help-vars" title="Dollar-year for this variable (FY). Leave blank to use the estimate Base Year. Not used for FY series.">BY FY</span></th>
+                      <th style="min-width:180px"><span class="dot" data-tip="varDist" data-help="help-vars" title="Optional uncertainty distribution (variable uncertainty layer). For FY series, uncertainty is applied as a multiplier across the series.">Dist</span></th>
+                      <th style="min-width:90px">Low %</th>
+                      <th style="min-width:90px">High %</th>
+                      <th style="min-width:220px">Notes</th>
+                      <th style="min-width:90px">Actions</th>
+                      <th class="statusCol"><span class="dot" data-tip="varStatus" data-help="help-vars" title="Row status: green = OK, yellow = warning, red = error.">Status</span></th>
+                    </tr>
+                  </thead>
+                  <tbody id="varsTbody"></tbody>
+                </table>
+              </div>
+              <div class="hint" style="margin-top:10px">
+                Naming rule: <span class="kbd">A–Z</span>, <span class="kbd">0–9</span>, <span class="kbd">_</span> (must not start with a number). Names are case-insensitive.
+              </div>
+            </div>
+          </details>
+
           
-          <details class="health" id="healthDetails" open>
+          <div id="inflationAnchor"></div>
+          <details class="card" id="inflationCard" style="border-radius:16px; margin-top:12px">
+            <summary class="cardHeader" style="cursor:pointer; list-style:none">
+              <h2 style="margin:0">Inflation indices</h2>
+              <div class="pill" id="inflationPill">By appropriation (APPN)</div>
+            </summary>
+            <div class="cardBody">
+              <div class="hint" id="inflationByOnlyHint" style="margin-top:0">
+                Set <b>Output basis</b> to <b>TY</b> to edit appropriation indices. (You can keep this collapsed most of the time.)
+              </div>
+<div id="inflationEditor" class="inflationEditor" aria-label="Inflation indices editor">
+              <div class="inflationHeader">
+                <div>
+                  <div class="subTitle">Inflation indices (by appropriation)</div>
+                  <div class="hint">Enter <strong>index levels</strong> (any base year is fine). When Output basis = TY, CASE applies <span class="helpCode">Factor(FY)=Index(FY)/Index(BY)</span> after phasing.</div>
+                </div>
+                <div class="toolbar">
+                  <button class="btn sm ghost" id="btnInflationAdd" title="Add a new index table for another color of money.">+ Add index</button>
+                  <button class="btn sm ghost" id="btnInflationFill1" title="Fill visible FY rows with 1.000 (no inflation).">Fill 1.000</button>
+                </div>
+              </div>
+              <div id="inflationTablesWrap" class="inflationTables"></div>
+              <div class="hint" id="inflationMissingHint" style="display:none"></div>
+            </div>
+            </div>
+          </details>
+
+<details class="health" id="healthDetails" open>
             <summary>
               <span><strong>Input checks</strong> <span class="small muted" id="healthSummary">—</span></span>
               <span class="pill" id="healthPill">—</span>
@@ -1403,7 +1748,7 @@ body.layout-stack.layout-swap .grid{grid-template-areas:"outputs" "inputs";}
         <div class="footerNote">
           <span>Autosaves locally in your browser (no data leaves the page).</span>
           <span class="pill">FY = Oct 1 – Sep 30</span>
-          <span class="pill" id="buildPill">v3.0.17</span>
+          <span class="pill" id="buildPill">v4.1.9</span>
         </div>
       </div>
 
@@ -1754,7 +2099,7 @@ body.layout-stack.layout-swap .grid{grid-template-areas:"outputs" "inputs";}
   <script>
 
     /*********************
-     * CASE — Cost Analysis & Simulation Engine (v3.0.17)
+     * CASE — Cost Analysis & Simulation Engine (v4.1.5)
      * - Fixed correlation implementation (supports negative ρ when valid).
      * - Date parsing and FY mapping are UTC-stable.
      * - LocalStorage stays small (results arrays are not persisted).
@@ -1765,7 +2110,7 @@ body.layout-stack.layout-swap .grid{grid-template-areas:"outputs" "inputs";}
     
 
     // ---------- Diagnostics (Pass 1: boot/run reliability) ----------
-    const DIAG_BUILD = "v3.0.17";
+    const DIAG_BUILD = "v4.1.9";
     const diag = {
       build: DIAG_BUILD,
       lastSelfCheckAt: null,
@@ -1789,6 +2134,18 @@ body.layout-stack.layout-swap .grid{grid-template-areas:"outputs" "inputs";}
         return dt.toISOString().replace("T"," ").slice(0,19);
       }catch{ return String(d); }
     }
+
+
+    // Stable ID generator (avoids undefined references and keeps IDs unique across imports/edits)
+    function newId(){
+      try{
+        if(typeof crypto !== "undefined" && crypto && typeof crypto.randomUUID === "function"){
+          return crypto.randomUUID();
+        }
+      }catch{}
+      return "id_" + Math.random().toString(16).slice(2) + "_" + Date.now().toString(16);
+    }
+
 
     function setStatusFallback(kind, title, msg){
       try{
@@ -1896,7 +2253,19 @@ body.layout-stack.layout-swap .grid{grid-template-areas:"outputs" "inputs";}
     function resetSavedData(){
       try{
         // Keys used by the tool
-        const keys = ["costtool_v1_0_state","costtool_v0_9_state","costtool_v1_scenarios","costtool_v1_scenario_selected","costtool_wbs_collapsed"];
+        const keys = [
+          "case_v4_0_state",
+          "case_v4_0_ui_prefs",
+          "case_v4_0_scenarios",
+          "case_v4_0_scenario_selected",
+          // legacy keys (for seamless upgrades)
+          "costtool_v1_0_state",
+          "costtool_v0_9_state",
+          "costtool_v1_0_ui_prefs",
+          "costtool_v1_scenarios",
+          "costtool_v1_scenario_selected",
+          "costtool_wbs_collapsed"
+        ];
         for(const k of keys) localStorage.removeItem(k);
       }catch{}
       // In-memory resets (safe)
@@ -2499,28 +2868,29 @@ function nowStamp(){
       return x / (x + y);
     }
 
-    function sampleCost(line, u, rng){
-      const base = Number(line.baseCost)||0;
-      const lowP = (Number(line.lowPct)||0)/100;
-      const highP = (Number(line.highPct)||0)/100;
+    function sampleFromDist({base, lowPct, highPct, dist, u, rng, clampZero=true}){
+      const b0 = Number(base)||0;
+      const lowP = (Number(lowPct)||0)/100;
+      const highP = (Number(highPct)||0)/100;
+      dist = String(dist||"DET").toUpperCase();
+      const clampFn = (x)=> clampZero ? Math.max(0, x) : x;
 
-      const dist = line.dist || "DET";
-      if(dist === "DET") return Math.max(0, base);
+      if(dist === "DET") return clampFn(b0);
 
-      const min = base * (1 + lowP);
-      const max = base * (1 + highP);
-      const mode = base;
+      const min = b0 * (1 + lowP);
+      const max = b0 * (1 + highP);
+      const mode = b0;
 
       const a = Math.min(min, max, mode);
       const c = Math.max(min, max, mode);
       const b = clamp(mode, a, c);
 
-      if(dist === "UNIF") return Math.max(0, a + (c-a) * u);
+      if(dist === "UNIF") return clampFn(a + (c-a) * u);
 
       if(dist === "TRI"){
         const F = (b-a) / (c-a || 1);
-        if(u < F) return Math.max(0, a + Math.sqrt(u*(c-a)*(b-a)));
-        return Math.max(0, c - Math.sqrt((1-u)*(c-a)*(c-b)));
+        if(u < F) return clampFn(a + Math.sqrt(u*(c-a)*(b-a)));
+        return clampFn(c - Math.sqrt((1-u)*(c-a)*(c-b)));
       }
 
       if(dist === "PERT"){
@@ -2529,26 +2899,42 @@ function nowStamp(){
         const alpha = 1 + lambda * (mean - a) / (c - a || 1);
         const beta  = 1 + lambda * (c - mean) / (c - a || 1);
         const x = betaSample(alpha, beta, rng);
-        return Math.max(0, a + x*(c-a));
+        return clampFn(a + x*(c-a));
       }
 
       if(dist === "NORM"){
         const sd = Math.max(1e-9, (c-a)/4);
         const z = invNorm(u);
-        return Math.max(0, base + sd*z);
+        return clampFn(b0 + sd*z);
       }
 
       if(dist === "LOGN"){
+        // Lognormal requires positive support. If base is not positive, fall back to deterministic.
+        if(!(b0 > 0)) return clampFn(b0);
         const p10 = Math.max(1e-9, Math.min(a,b,c));
         const p90 = Math.max(p10*1.001, Math.max(a,b,c));
         const ratio = Math.max(1.001, p90/p10);
         const sigma = Math.log(ratio) / (2*1.281551565545);
-        const mu = Math.log(base > 0 ? base : Math.sqrt(p10*p90));
+        const mu = Math.log(b0);
         const z = invNorm(u);
-        return Math.max(0, Math.exp(mu + sigma*z));
+        return clampFn(Math.exp(mu + sigma*z));
       }
 
-      return Math.max(0, base);
+      return clampFn(b0);
+    }
+
+    function sampleCost(line, u, rng, baseOverride){
+      const base = Number.isFinite(Number(baseOverride)) ? Number(baseOverride) : (Number(line.baseCost)||0);
+      return sampleFromDist({base, lowPct: line.lowPct, highPct: line.highPct, dist: line.dist || "DET", u, rng, clampZero:true});
+    }
+
+    function sampleVarValue(v, rngVar){
+      const base = Number(v?.value);
+      if(!Number.isFinite(base)) return NaN;
+      const dist = String(v?.dist||"DET").toUpperCase();
+      if(dist === "DET") return base;
+      const u = Math.max(rngVar(), 1e-12);
+      return sampleFromDist({base, lowPct: v?.lowPct, highPct: v?.highPct, dist, u, rng:rngVar, clampZero:false});
     }
 
     // -------- Distribution preview (v2.12) --------
@@ -2573,25 +2959,35 @@ function nowStamp(){
       return ctx;
     }
 
-    function drawDistPreview(canvas, line){
+    function drawDistPreview(canvas, line, varMap){
       if(!canvas || !line) return;
       const W = 120, H = 26;
       const ctx = miniCtx(canvas, W, H);
       ctx.clearRect(0,0,W,H);
 
+      let _vm = varMap;
+      if(!_vm){
+        const _raw = buildVarValueMap(state);
+        const _conv = buildVarConversionFactorMap(state, [normalizeAppn(line.appn)||"3400"]);
+        _vm = makeVarLookup(_raw, line.appn, _conv);
+      }
+      const baseVal = getLineBaseDeterministic(line, _vm);
       const seed = (hash32([
-        line.id, line.name, line.wbs, line.dist, line.baseCost, line.lowPct, line.highPct
+        line.id, line.name, line.wbs, line.dist, baseVal, line.lowPct, line.highPct
       ].join("|")) ^ 0x9e3779b9) >>> 0;
 
-      const rng = mulberry32(seed);
+      const seed32 = (Number(seed)||0) >>> 0;
+      const rng = mulberry32(seed32);
+      const rngVar = mulberry32((seed32 ^ 0x9e3779b9) >>> 0);
 
       const N = 260;
       const bins = 24;
       const vals = new Array(N);
+      const tmpLine = { ...line, baseCost: (Number.isFinite(baseVal) ? baseVal : 0) };
 
       for(let i=0;i<N;i++){
         const u = rng();
-        vals[i] = sampleCost(line, u, rng);
+        vals[i] = sampleCost(tmpLine, u, rng);
       }
 
       let mn = Infinity, mx = -Infinity;
@@ -2651,12 +3047,20 @@ function nowStamp(){
 
       const tbody = $("#linesTbody");
       if(!tbody) return;
+
       const map = new Map(state.lines.map(l=>[l.id, l]));
+      const rawVar = buildVarValueMap(state);
+      const usedAppns = Array.from(new Set((state.lines||[]).map(l=> normalizeAppn(l.appn)||"3400")));
+      const conv = buildVarConversionFactorMap(state, usedAppns);
+
       for(const tr of Array.from(tbody.children)){
         const line = map.get(tr.dataset.id);
         if(!line) continue;
         const canvas = tr.querySelector("canvas.distPrev");
-        if(canvas) drawDistPreview(canvas, line);
+        if(canvas){
+          const varLookup = makeVarLookup(rawVar, line.appn, conv);
+          drawDistPreview(canvas, line, varLookup);
+        }
       }
     }
 
@@ -3083,81 +3487,140 @@ function nowStamp(){
     }
 
     // -------- App state (persist inputs only; results are in-memory) --------
-    const LS_KEY = "costtool_v1_0_state";
-    const LS_KEY_OLD = "costtool_v0_9_state";
-    const UI_PREF_KEY = "costtool_v1_0_ui_prefs";
-    const defaultState = () => ({
-      wbsTemplateId: "",
-      settings: { iterations: 10000, seed: 12345, sampling: "LHS", corrMode: "GLOBAL", rho: 0, rhoA: 0, rhoB: 0, rhoC: 0, distPreview: false, corrRationale: "", layers: { costUnc:true, corr:true, scheduleUnc:false, riskReg:false } },
-      runHistory: [],
-      lines: [
-        {
-          id: (crypto.randomUUID?.() || String(Math.random()).slice(2)),
-          name: "Software Dev (labor)",
-          wbs: "1.1.1",
-          baseCost: 3200000,
-          dist: "PERT",
-          lowPct: -10,
-          highPct: 30,
-          start: new Date().toISOString().slice(0,10),
-          end: new Date(Date.now()+1000*60*60*24*240).toISOString().slice(0,10),
-          phase: "PARTIAL_FISCAL",
-          rampPct: 20,
-          skew: 0
-        },
-        {
-          id: (crypto.randomUUID?.() || String(Math.random()).slice(2)),
-          name: "Cloud Hosting",
-          wbs: "1.2.1",
-          baseCost: 950000,
-          dist: "TRI",
-          lowPct: -5,
-          highPct: 25,
-          start: new Date().toISOString().slice(0,10),
-          end: new Date(Date.now()+1000*60*60*24*240).toISOString().slice(0,10),
-          phase: "TRAP",
-          rampPct: 25,
-          skew: 0.2
-        },
-        {
-          id: (crypto.randomUUID?.() || String(Math.random()).slice(2)),
-          name: "Test & Certification",
-          wbs: "1.3.1",
-          baseCost: 550000,
-          dist: "NORM",
-          lowPct: -20,
-          highPct: 20,
-          start: new Date(Date.now()+1000*60*60*24*120).toISOString().slice(0,10),
-          end: new Date(Date.now()+1000*60*60*24*300).toISOString().slice(0,10),
-          phase: "FISCAL_ROUND",
-          rampPct: 15,
-          skew: -0.1
-        }
-      ],
-      lastMeta: null,
-      lastSummary: null,
-      lastFy: null,
-      lastWbs: null
-    });
+    // V4 uses new keys to avoid clobbering older saved states while still offering seamless migration.
+    const LS_KEY = "case_v4_0_state";
+    const LS_KEY_OLD = "costtool_v1_0_state";
+    const LS_KEY_OLD2 = "costtool_v0_9_state";
+    const UI_PREF_KEY = "case_v4_0_ui_prefs";
+    const UI_PREF_KEY_OLD = "costtool_v1_0_ui_prefs";
 
-    let state = loadState() || defaultState();
+    const defaultState = () => {
+      const by = fiscalYearOfUTC(new Date());
+      const fyStart = new Date(Date.UTC(by - 1, 9, 1)); // Oct 1 of the prior calendar year (FY start)
+      const dayMs = 1000*60*60*24;
+      const d = (days)=> new Date(fyStart.getTime() + days*dayMs).toISOString().slice(0,10);
+      const fyKey = (y)=> `FY${y}`;
+
+      const installsSeries = {
+        [fyKey(by)]: 12,
+        [fyKey(by+1)]: 24,
+        [fyKey(by+2)]: 18
+      };
+
+      return {
+        wbsTemplateId: "mil881f_appB_electronics_avionics_generic",
+        // Pre-populated variables & indices showcase core v4 capabilities (ƒx, variable uncertainty, inflation basis)
+        vars: [
+          newVar({ name:"FTE_DEV", type:"SCALAR", unit:"COUNT", basis:"NA", value: 8, dist:"TRI", lowPct:-25, highPct:25, notes:"Dev staffing (FTE). Turn on Variable uncertainty to see impact." }),
+          newVar({ name:"LABOR_RATE", type:"SCALAR", unit:"RATE", basis:"BY", value: 185000, dist:"DET", lowPct:0, highPct:0, notes:"Loaded annual labor rate (BY). Uses estimate Base Year unless BY FY is set." }),
+          newVar({ name:"TOOL_LICENSE", type:"SCALAR", unit:"DOLLARS", basis:"BY", byFY: (by-1), value: 150000, dist:"TRI", lowPct:-10, highPct:20, notes:`Example dollar input in BY FY${by-1}. If the estimate Base Year differs, CASE converts using the line's APPN index.` }),
+          newVar({ name:"INSTALLS", type:"FY_SERIES", unit:"COUNT", basis:"NA", series: installsSeries, dist:"DET", lowPct:0, highPct:0, notes:"FY series: INSTALLS = sum; INSTALLS_FY#### = year value." }),
+          newVar({ name:"HW_UNIT_COST", type:"SCALAR", unit:"DOLLARS", basis:"BY", value: 45000, dist:"TRI", lowPct:-15, highPct:30, notes:"Hardware unit cost (BY)." })
+        ],
+        inflationTables: {
+          "3400": { label:"RDT&E, AF", levels: { [fyKey(by)]:1.000, [fyKey(by+1)]:1.030, [fyKey(by+2)]:1.060, [fyKey(by+3)]:1.090 } },
+          "3080": { label:"Other Procurement, AF", levels: { [fyKey(by)]:1.000, [fyKey(by+1)]:1.040, [fyKey(by+2)]:1.080, [fyKey(by+3)]:1.120 } },
+          "3600": { label:"O&M, AF", levels: { [fyKey(by)]:1.000, [fyKey(by+1)]:1.025, [fyKey(by+2)]:1.050, [fyKey(by+3)]:1.075 } }
+        },
+        settings: {
+          iterations: 10000,
+          seed: 12345,
+          sampling: "LHS",
+          corrMode: "GLOBAL",
+          rho: 0, rhoA: 0, rhoB: 0, rhoC: 0,
+          // Dollars: treat user inputs as Base Year (BY) in the selected base year.
+          baseYearFY: by,
+          outputBasis: "BY",
+          // UI / documentation
+          distPreview: false,
+          corrRationale: "",
+          layers: { varUnc:true, costUnc:true, corr:true, scheduleUnc:false, riskReg:false }
+        },
+        runHistory: [],
+        lines: [
+          {
+            id: newId(),
+            name: "Software Dev (ƒx: FTE × Rate + license)",
+            wbs: "1.1.3.1",
+            appn: "3400",
+            baseCost: 0,
+            baseMode: "FORMULA",
+            baseExpr: "FTE_DEV * LABOR_RATE + TOOL_LICENSE",
+            dist: "PERT",
+            lowPct: -10,
+            highPct: 30,
+            start: d(30),
+            end: d(420),
+            phase: "PARTIAL_FISCAL",
+            rampPct: 20,
+            skew: 0,
+            corrGroup: "A"
+          },
+          {
+            id: newId(),
+            name: "Subsystem Hardware (ƒx: installs × unit cost)",
+            wbs: "1.1.2.2",
+            appn: "3080",
+            baseCost: 0,
+            baseMode: "FORMULA",
+            baseExpr: "INSTALLS * HW_UNIT_COST",
+            dist: "TRI",
+            lowPct: -8,
+            highPct: 22,
+            start: d(200),
+            end: d(760),
+            phase: "TRAP",
+            rampPct: 25,
+            skew: 0.25,
+            corrGroup: "B"
+          },
+          {
+            id: newId(),
+            name: "DT&E / Qualification Test",
+            wbs: "1.5.1.2",
+            appn: "3600",
+            baseCost: 650000,
+            baseMode: "NUMBER",
+            baseExpr: "",
+            dist: "NORM",
+            lowPct: -20,
+            highPct: 20,
+            start: d(120),
+            end: d(520),
+            phase: "FISCAL_ROUND",
+            rampPct: 15,
+            skew: -0.1,
+            corrGroup: "C"
+          }
+        ],
+        lastMeta: null,
+        lastSummary: null,
+        lastFy: null,
+        lastWbs: null
+      };
+    };
+
+let state = loadState() || defaultState();
     const defaultUiState = () => ({ selectedLineIds: [], lastSelIndex: null, wbsAssignMode: false });
     state.ui = defaultUiState();
 
     // -------- Schema guard + migration (keeps older saved states working) --------
     const APP_VERSION = DIAG_BUILD;
-    const APP_SCHEMA = 1;
+    const APP_SCHEMA = 2;
     function migrateStateInPlace(){
       if(!state || typeof state !== "object") state = defaultState();
       // meta
       if(!state.meta || typeof state.meta !== "object") state.meta = {};
-      if(!Number.isFinite(state.meta.schema)) state.meta.schema = APP_SCHEMA;
+      if(!Number.isFinite(state.meta.schema) || Number(state.meta.schema) < APP_SCHEMA) state.meta.schema = APP_SCHEMA;
       if(!state.meta.firstSeenAt) state.meta.firstSeenAt = nowStamp();
       state.meta.version = APP_VERSION;
 
       // core containers
       if(!state.settings || typeof state.settings !== "object") state.settings = {};
       if(!Array.isArray(state.lines)) state.lines = [];
+      if(!Array.isArray(state.vars)) state.vars = [];
+      state.vars = (state.vars||[]).slice(0,500).map(x=> newVar(x));
+      if(!state.inflationTables || typeof state.inflationTables !== "object") state.inflationTables = {};
 
       // settings defaults (non-breaking)
       const s = state.settings;
@@ -3169,11 +3632,17 @@ function nowStamp(){
       if(typeof s.rhoA === "undefined") s.rhoA = 0;
       if(typeof s.rhoB === "undefined") s.rhoB = 0;
       if(typeof s.rhoC === "undefined") s.rhoC = 0;
+      if(typeof s.baseYearFY === "undefined") s.baseYearFY = fiscalYearOfUTC(new Date());
+      if(typeof s.outputBasis === "undefined") s.outputBasis = "BY";
+      // normalize basis
+      s.outputBasis = (String(s.outputBasis||"BY").toUpperCase()==="TY") ? "TY" : "BY";
+      s.baseYearFY = clampInt(s.baseYearFY, 1950, 2100);
       if(typeof s.distPreview === "undefined") s.distPreview = false;
       if(typeof s.corrRationale === "undefined") s.corrRationale = "";
       // CSRUH layered runs (non-breaking defaults)
-      if(!s.layers || typeof s.layers !== "object") s.layers = { costUnc:true, corr:true, scheduleUnc:false, riskReg:false };
-      if(typeof s.layers.costUnc === "undefined") s.layers.costUnc = true;
+      if(!s.layers || typeof s.layers !== "object") s.layers = { varUnc:true, costUnc:true, corr:true, scheduleUnc:false, riskReg:false };
+      if(typeof s.layers.varUnc === "undefined") s.layers.varUnc = true;
+if(typeof s.layers.costUnc === "undefined") s.layers.costUnc = true;
       if(typeof s.layers.corr === "undefined") s.layers.corr = true;
       if(typeof s.layers.scheduleUnc === "undefined") s.layers.scheduleUnc = false;
       if(typeof s.layers.riskReg === "undefined") s.layers.riskReg = false;
@@ -3190,7 +3659,16 @@ function nowStamp(){
         if(!ln.id) ln.id = (crypto.randomUUID?.() || String(Math.random()).slice(2));
         if(typeof ln.name === "undefined") ln.name = "Line";
         if(typeof ln.wbs === "undefined") ln.wbs = "";
+        if(typeof ln.appn === "undefined") ln.appn = "3400";
+        ln.appn = (function(v){
+          const s = String(v||"").trim();
+          return (/^\d{4}$/.test(s) ? s : "3400");
+        })(ln.appn);
         if(typeof ln.baseCost === "undefined") ln.baseCost = 0;
+        if(typeof ln.baseMode === "undefined") ln.baseMode = "NUMBER";
+        ln.baseMode = normalizeBaseMode(ln.baseMode);
+        if(typeof ln.baseExpr === "undefined" || ln.baseExpr == null) ln.baseExpr = "";
+        if(ln.baseMode === "FORMULA" && typeof ln.baseExpr !== "string") ln.baseExpr = String(ln.baseExpr||"");
         if(typeof ln.dist === "undefined") ln.dist = "PERT";
         if(typeof ln.lowPct === "undefined") ln.lowPct = -10;
         if(typeof ln.highPct === "undefined") ln.highPct = 30;
@@ -3202,8 +3680,62 @@ function nowStamp(){
         // optional corrGroup default
         if(typeof ln.corrGroup === "undefined") ln.corrGroup = "";
       }
+
+      // variable defaults (v4.0.x: scalar-only)
+      const cleanName = (raw)=>{
+        let s = String(raw||"").trim().toUpperCase();
+        // Replace invalid characters with underscore, then trim underscores.
+        s = s.replace(/[^A-Z0-9_]/g, "_");
+        s = s.replace(/^_+/, "");
+        return s;
+      };
+      const usesBasis = (unit)=> (unit==="DOLLARS" || unit==="RATE");
+      const normUnit = (u)=>{
+        const s = String(u||"").trim().toUpperCase();
+        return (["DOLLARS","COUNT","RATE","PERCENT","OTHER"].includes(s)) ? s : "DOLLARS";
+      };
+      const normBasis = (b, unit)=>{
+        if(!usesBasis(unit)) return "NA";
+        const s = String(b||"BY").trim().toUpperCase();
+        return (s==="TY") ? "TY" : "BY";
+      };
+
+      for(const v of (state.vars||[])){
+        if(!v || typeof v !== "object") continue;
+        if(!v.id) v.id = (crypto.randomUUID?.() || String(Math.random()).slice(2));
+        if(typeof v.name === "undefined") v.name = "";
+        v.name = cleanName(v.name);
+        if(typeof v.value === "undefined") v.value = 0;
+        if(typeof v.unit === "undefined") v.unit = "DOLLARS";
+        v.unit = normUnit(v.unit);
+        if(typeof v.basis === "undefined") v.basis = usesBasis(v.unit) ? "BY" : "NA";
+        v.basis = normBasis(v.basis, v.unit);
+        if(typeof v.dist === "undefined") v.dist = "DET";
+        if(typeof v.lowPct === "undefined") v.lowPct = 0;
+        if(typeof v.highPct === "undefined") v.highPct = 0;
+        if(typeof v.notes === "undefined") v.notes = "";
+      }
     }
     migrateStateInPlace();
+
+    // If a saved state exists but has no lines/vars (common after schema upgrades or manual clearing),
+    // seed a small, capability-showcasing example so the tool is runnable immediately.
+    try{
+      const seed = defaultState();
+      if(!Array.isArray(state.lines) || state.lines.length===0){
+        state.lines = (seed.lines||[]).map(ln=>({ ...ln, id: ln.id || newId() }));
+      }
+      if(!Array.isArray(state.vars) || state.vars.length===0){
+        state.vars = (seed.vars||[]).slice(0,500).map(x=> newVar(x));
+      } else {
+        state.vars = (state.vars||[]).slice(0,500).map(x=> newVar(x));
+      }
+      if(!state.wbsTemplateId) state.wbsTemplateId = String(seed.wbsTemplateId||"");
+      if(!state.inflationTables || typeof state.inflationTables !== "object" || Object.keys(state.inflationTables).length===0){
+        state.inflationTables = (seed.inflationTables && typeof seed.inflationTables==="object") ? seed.inflationTables : {};
+      }
+    }catch{}
+
 
     state.settings = state.settings || {};
     state.uiPrefs = loadUiPrefs() || { activeStep:"setup", showAdvanced:false, focusMode:false, layoutMode:"split", swapPanes:false };
@@ -3216,6 +3748,7 @@ function nowStamp(){
         // Prefer current key; fall back to previous key for seamless upgrades.
         let raw = localStorage.getItem(LS_KEY);
         if(!raw && typeof LS_KEY_OLD !== "undefined") raw = localStorage.getItem(LS_KEY_OLD);
+        if(!raw && typeof LS_KEY_OLD2 !== "undefined") raw = localStorage.getItem(LS_KEY_OLD2);
         if(!raw) return null;
         const parsed = JSON.parse(raw);
         if(!parsed || typeof parsed !== "object") return null;
@@ -3230,6 +3763,8 @@ function nowStamp(){
           wbsTemplateId: state.wbsTemplateId || "",
           meta: state.meta || null,
           settings: state.settings,
+          vars: state.vars,
+          inflationTables: state.inflationTables,
           lines: state.lines,
           lastMeta: state.lastMeta || null,
           lastSummary: state.lastSummary || null,
@@ -3244,7 +3779,7 @@ function nowStamp(){
 
     
     // -------- Import/Export (Scenario Pack + CSV) --------
-    const PACK_SCHEMA_VERSION = "1.0";
+    const PACK_SCHEMA_VERSION = "1.1";
 
     function csvSplitLine(line){
       // Simple CSV splitter supporting quoted fields with commas and double-quotes.
@@ -3354,6 +3889,8 @@ function nowStamp(){
         const phase = phaseFromAny(ln.phase ?? ln.Phasing ?? ln.phasing);
         const rampPct = Number(ln.rampPct ?? ln.RampPct ?? ln.ramp ?? 20);
         const skew = Number(ln.skew ?? ln.Skew ?? 0);
+        const apRaw = String(ln.appn ?? ln.APPN ?? ln.Appn ?? ln.appropriation ?? ln.appropriationcode ?? ln.colorofmoney ?? "").trim();
+        const appn = (/^\d{4}$/.test(apRaw) ? apRaw : "3400");
         const cgRaw = String(ln.corrGroup ?? ln.CorrGroup ?? ln.corr_group ?? ln.group ?? "").trim().toUpperCase();
         const corrGroup = (cgRaw==="A"||cgRaw==="B"||cgRaw==="C") ? cgRaw : "";
 
@@ -3365,9 +3902,12 @@ function nowStamp(){
         }
 
         out.push({
-          id: (crypto.randomUUID?.() || String(Math.random()).slice(2)),
+          id: newId(),
           name, wbs,
+          appn,
           baseCost: Number.isFinite(base) ? base : 0,
+          baseMode: "NUMBER",
+          baseExpr: "",
           dist,
           lowPct: Number.isFinite(lowPct)? lowPct : 0,
           highPct: Number.isFinite(highPct)? highPct : 0,
@@ -3396,10 +3936,12 @@ function nowStamp(){
         payload: {
           wbsTemplateId: String(state.wbsTemplateId||""),
           settings: { ...state.settings },
+          vars: Array.isArray(state.vars) ? state.vars : [],
+          inflationTables: (state.inflationTables && typeof state.inflationTables === "object") ? state.inflationTables : {},
           lines: state.lines.map(l=>({
-            name:l.name, wbs:l.wbs||"", baseCost:l.baseCost, dist:l.dist,
+            name:l.name, wbs:l.wbs||"", appn: String(l.appn||"3400"), baseCost:l.baseCost, baseMode: normalizeBaseMode(l.baseMode), baseExpr: String(l.baseExpr||""), dist:l.dist,
             lowPct:l.lowPct, highPct:l.highPct, start:l.start, end:l.end,
-            phase:l.phase, rampPct:l.rampPct, skew:l.skew
+            phase:l.phase, rampPct:l.rampPct, skew:l.skew, corrGroup:(l.corrGroup||"")
           }))
         }
       };
@@ -3493,6 +4035,7 @@ function nowStamp(){
       if(importPending.kind === "Scenario Pack"){
         addP(`<b>Pack schema:</b> ${escapeHtml(String(meta.schemaVersion||"unknown"))} • <b>Exported:</b> ${escapeHtml(String(meta.exportedAt||""))}`);
         addP(`<b>Includes settings:</b> Yes`);
+        addP(`<b>Variables:</b> ${escapeHtml(String((importPending.vars||[]).length))}`);
         addP(`<b>Active WBS template:</b> ${escapeHtml(String(importPending.wbsTemplateId||"(none)"))}`);
       }else{
         addP(`<b>Includes settings:</b> No (CSV only imports lines)`);
@@ -3503,7 +4046,7 @@ function nowStamp(){
         const sNew = importPending.settings;
         const sOld = state.settings || {};
         const diffs = [];
-        ["iterations","seed","sampling","rho"].forEach(k=>{
+        ["iterations","seed","sampling","baseYearFY","outputBasis","corrMode","rho","rhoA","rhoB","rhoC"].forEach(k=>{
           if(String(sNew[k]) !== String(sOld[k])) diffs.push({k, from:sOld[k], to:sNew[k]});
         });
         if(diffs.length){
@@ -3556,12 +4099,20 @@ function nowStamp(){
             iterations: clampInt(payload.settings.iterations, 200, 200000),
             seed: clampInt(payload.settings.seed, 0, 999999999),
             sampling: (payload.settings.sampling === "MC" ? "MC" : "LHS"),
-            rho: Number(payload.settings.rho) || 0
+            corrMode: (String(payload.settings.corrMode||"GLOBAL").toUpperCase()==="GROUPS" ? "GROUPS" : "GLOBAL"),
+            rho: Number(payload.settings.rho) || 0,
+            rhoA: Number(payload.settings.rhoA) || 0,
+            rhoB: Number(payload.settings.rhoB) || 0,
+            rhoC: Number(payload.settings.rhoC) || 0,
+            baseYearFY: clampInt(payload.settings.baseYearFY, 1950, 2100),
+            outputBasis: (String(payload.settings.outputBasis||"BY").toUpperCase()==="TY") ? "TY" : "BY"
           };
         }
         wbsTemplateId = validWbsTemplateId(String(payload.wbsTemplateId || ""));
+        const vars = Array.isArray(payload.vars) ? payload.vars : [];
+        const inflationTables = (payload.inflationTables && typeof payload.inflationTables === "object") ? payload.inflationTables : {};
         const lines = sanitizeLinesForImport(payload.lines || [], errs);
-        importPending = { kind, lines, settings, wbsTemplateId, errors: errs, rawMeta: obj };
+        importPending = { kind, lines, settings, wbsTemplateId, vars, inflationTables, errors: errs, rawMeta: obj };
       }else{
         importPending = { kind, lines: [], settings: null, wbsTemplateId:"", errors: errs, rawMeta: obj };
       }
@@ -3584,6 +4135,7 @@ function nowStamp(){
 
       const cName = col(["linename","name","line"]);
       const cWbs = col(["wbs","wbscode"]);
+      const cAppn = col(["appn","appropriation","appropriationcode","colorofmoney","funding"]);
       const cBase = col(["basecost","base","cost"]);
       const cDist = col(["dist","distribution"]);
       const cLow = col(["lowpct","low"]);
@@ -3608,6 +4160,7 @@ function nowStamp(){
         linesRaw.push({
           name: get(cName),
           wbs: get(cWbs),
+          appn: get(cAppn),
           baseCost: get(cBase),
           dist: get(cDist),
           lowPct: get(cLow),
@@ -3688,7 +4241,14 @@ function nowStamp(){
         state.wbsTemplateId = validWbsTemplateId(importPending.wbsTemplateId || "");
       }
 
+      // Apply variables/inflation tables only on REPLACE mode (packs/payloads)
+      if(mode === "REPLACE"){
+        if(Array.isArray(importPending.vars)) state.vars = importPending.vars.slice(0,500).map(x=> newVar(x));
+        if(importPending.inflationTables && typeof importPending.inflationTables === "object") state.inflationTables = importPending.inflationTables;
+      }
+
       state.lines = newLines.map(l=>({ ...l, id: l.id || (crypto.randomUUID?.() || String(Math.random()).slice(2)) }));
+      migrateStateInPlace();
       saveState();
       render();
       clearResultsForNewInputs();
@@ -3696,8 +4256,10 @@ function nowStamp(){
       setStatus("good","Import applied.","Your inputs were updated. Press Run to refresh outputs.");
     }
 // -------- Scenario Manager (localStorage) --------
-    const SCN_KEY = "costtool_v1_scenarios";
-    const SCN_SEL_KEY = "costtool_v1_scenario_selected";
+    const SCN_KEY = "case_v4_0_scenarios";
+    const SCN_SEL_KEY = "case_v4_0_scenario_selected";
+    const SCN_KEY_OLD = "costtool_v1_scenarios";
+    const SCN_SEL_KEY_OLD = "costtool_v1_scenario_selected";
 
     // -------- WBS Template Library (MIL-STD-881F) --------
     const WBS_TEMPLATES = {
@@ -3748,9 +4310,28 @@ function wbsTitleFor(key){
     }
 
     function loadScenarios(){
-      const raw = localStorage.getItem(SCN_KEY);
+      let raw = localStorage.getItem(SCN_KEY);
+      if(!raw && typeof SCN_KEY_OLD !== "undefined") raw = localStorage.getItem(SCN_KEY_OLD);
       const parsed = safeParseJSON(raw || "[]");
       if(!Array.isArray(parsed)) return [];
+
+      // Seed a built-in example scenario on first run (so Scenarios isn't empty).
+      if(parsed.length === 0){
+        const seed = defaultState();
+        const payload = sanitizeScenarioPayload({
+          wbsTemplateId: seed.wbsTemplateId,
+          settings: seed.settings,
+          vars: seed.vars,
+          inflationTables: seed.inflationTables,
+          lines: seed.lines
+        });
+        const id = "example_v4_1";
+        const list = [{ id, name: "Example: Variables + ƒx + Inflation", createdAt: scenarioNowIso(), updatedAt: scenarioNowIso(), payload }];
+        try{ saveScenarios(list); }catch{}
+        try{ if(!getSelectedScenarioId()) setSelectedScenarioId(id); }catch{}
+        return list;
+      }
+
       return parsed
         .filter(s => s && typeof s === "object" && typeof s.id === "string" && typeof s.name === "string" && s.payload)
         .map(s => ({
@@ -3772,9 +4353,13 @@ function wbsTitleFor(key){
 
     function sanitizeScenarioPayload(p){
       // Only keep settings + lines (no results).
-      const out = { wbsTemplateId: "", settings: { ...defaultState().settings }, lines: [] };
+      const out = { wbsTemplateId: "", settings: { ...defaultState().settings }, vars: [], inflationTables: {}, lines: [] };
       if(p && typeof p === "object"){
         out.wbsTemplateId = validWbsTemplateId(String(p.wbsTemplateId||""));
+
+        // Variables + inflation tables are introduced in v4 (safe placeholders for now)
+        if(Array.isArray(p.vars)) out.vars = p.vars.slice(0, 500);
+        if(p.inflationTables && typeof p.inflationTables === "object") out.inflationTables = p.inflationTables;
 
         if(p.settings && typeof p.settings === "object"){
           out.settings = {
@@ -3785,15 +4370,20 @@ function wbsTitleFor(key){
             rho: Number(p.settings.rho) || 0,
             rhoA: Number(p.settings.rhoA) || 0,
             rhoB: Number(p.settings.rhoB) || 0,
-            rhoC: Number(p.settings.rhoC) || 0
+            rhoC: Number(p.settings.rhoC) || 0,
+            baseYearFY: clampInt(p.settings.baseYearFY, 1950, 2100),
+            outputBasis: (String(p.settings.outputBasis||"BY").toUpperCase()==="TY") ? "TY" : "BY"
           };
         }
         if(Array.isArray(p.lines)){
           out.lines = p.lines.map(ln => ({
-            id: (crypto.randomUUID?.() || String(Math.random()).slice(2)),
+            id: String(ln.id || newId()),
             name: String(ln.name || "Line"),
             wbs: String(ln.wbs || ""),
+            appn: (/^\d{4}$/.test(String(ln.appn||ln.APPN||"")) ? String(ln.appn||ln.APPN).trim() : "3400"),
             baseCost: Number(ln.baseCost)||0,
+            baseMode: normalizeBaseMode(ln.baseMode),
+            baseExpr: String(ln.baseExpr||""),
             dist: String(ln.dist || "TRI"),
             lowPct: Number(ln.lowPct)||0,
             highPct: Number(ln.highPct)||0,
@@ -3813,7 +4403,7 @@ function wbsTitleFor(key){
     function scenarioNowIso(){ return new Date().toISOString(); }
 
     function getSelectedScenarioId(){
-      return localStorage.getItem(SCN_SEL_KEY) || "";
+      return localStorage.getItem(SCN_SEL_KEY) || (typeof SCN_SEL_KEY_OLD !== "undefined" ? (localStorage.getItem(SCN_SEL_KEY_OLD) || "") : "");
     }
     function setSelectedScenarioId(id){
       try{ localStorage.setItem(SCN_SEL_KEY, id || ""); }catch{}
@@ -3826,7 +4416,13 @@ function wbsTitleFor(key){
     }
 
     function currentPayload(){
-      return sanitizeScenarioPayload({ wbsTemplateId: state.wbsTemplateId||"", settings: state.settings, lines: state.lines });
+      return sanitizeScenarioPayload({
+        wbsTemplateId: state.wbsTemplateId||"",
+        settings: state.settings,
+        vars: state.vars,
+        inflationTables: state.inflationTables,
+        lines: state.lines
+      });
     }
 
     function clearResultsForNewInputs(){
@@ -3881,6 +4477,7 @@ function wbsTitleFor(key){
 
       sel.value = has ? selected : "";
       $("#scenarioPill").textContent = has ? "Selected" : "None";
+      try{ const lp = $("#linesPill"); if(lp) lp.textContent = (state.lines?.length||0) + " lines"; }catch{}
     }
 
     function scenarioLoadSelected(){
@@ -3898,7 +4495,10 @@ function wbsTitleFor(key){
       }
       state.settings = { ...state.settings, ...s.payload.settings };
       state.wbsTemplateId = validWbsTemplateId(String(s.payload.wbsTemplateId||""));
+      state.vars = Array.isArray(s.payload.vars) ? s.payload.vars : [];
+      state.inflationTables = (s.payload.inflationTables && typeof s.payload.inflationTables === "object") ? s.payload.inflationTables : {};
       state.lines = s.payload.lines.map(ln=>({ ...ln, id:(crypto.randomUUID?.()||String(Math.random()).slice(2)) }));
+      migrateStateInPlace();
       saveState();
       render();
       clearResultsForNewInputs();
@@ -4043,6 +4643,231 @@ function wbsTitleFor(key){
         ["LOGN","Lognormal"],
         ["UNIF","Uniform"]
       ];
+    }
+
+    function appnOptions(){
+      // Common Air Force colors of money (expandable to other services/appropriations).
+      // Note: APPN codes may repeat across services; indices are user-provided per table.
+      const base = [
+        ["3400","3400 — RDT&E, AF"],
+        ["3600","3600 — O&M, AF"],
+        ["3080","3080 — Other Procurement, AF"]
+      ];
+      // Include any additional APPNs already present in lines or inflation tables.
+      const seen = new Set(base.map(x=>x[0]));
+      for(const ln of (state.lines||[])){
+        const c = normalizeAppn(ln.appn);
+        if(c && !seen.has(c)){ base.push([c, `${c} — Custom / other service`]); seen.add(c); }
+      }
+      for(const c of Object.keys(state.inflationTables||{})){
+        const cc = normalizeAppn(c);
+        if(cc && !seen.has(cc)){
+          const lbl = String((state.inflationTables||{})[cc]?.label || "").trim();
+          base.push([cc, lbl ? `${cc} — ${lbl}` : `${cc} — Custom / other service`]);
+          seen.add(cc);
+        }
+      }
+      return base;
+    }
+
+    function normalizeAppn(v){
+      const s = String(v||"").trim();
+      return (/^\d{4}$/.test(s) ? s : "");
+    }
+    function appnCommonLabel(code){
+      const c = normalizeAppn(code);
+      if(c==="3400") return "RDT&E, AF";
+      if(c==="3600") return "O&M, AF";
+      if(c==="3080") return "Other Procurement, AF";
+      const t = (state.inflationTables||{})[c];
+      return String(t?.label||"Custom / other service").trim() || "Custom / other service";
+    }
+
+    function ensureInflationTable(code){
+      const c = normalizeAppn(code);
+      if(!c) return null;
+      if(!state.inflationTables || typeof state.inflationTables !== "object") state.inflationTables = {};
+      if(!state.inflationTables[c] || typeof state.inflationTables[c] !== "object"){
+        state.inflationTables[c] = { label: appnCommonLabel(c), levels: {} };
+      } else {
+        if(typeof state.inflationTables[c].label === "undefined") state.inflationTables[c].label = appnCommonLabel(c);
+        if(!state.inflationTables[c].levels || typeof state.inflationTables[c].levels !== "object") state.inflationTables[c].levels = {};
+      }
+      // seed BY as 1.000 if absent
+      const byKey = `FY${clampInt(state.settings?.baseYearFY ?? fiscalYearOfUTC(new Date()), 1950, 2100)}`;
+      if(typeof state.inflationTables[c].levels[byKey] === "undefined") state.inflationTables[c].levels[byKey] = 1.0;
+      return state.inflationTables[c];
+    }
+
+    function getGlobalFyKeysForInflation(st){
+      const fySet = new Set();
+      // from schedule phasing
+      for(const ln of (st.lines||[])){
+        try{
+          const ph = buildPhasingWeights({
+            start: ln.start, end: ln.end,
+            method: ln.phase === "TRAP" ? "TRAP" : (ln.phase || "PARTIAL_FISCAL"),
+            rampPct: ln.rampPct, skew: ln.skew
+          });
+          for(const k of (ph.fyKeys||[])) fySet.add(k);
+        } catch {}
+      }
+      // always include BY key
+      const byFY = clampInt(st.settings?.baseYearFY ?? fiscalYearOfUTC(new Date()), 1950, 2100);
+      fySet.add(`FY${byFY}`);
+      // fallback if empty
+      if(fySet.size===0){
+        for(let y=byFY;y<byFY+5;y++) fySet.add(`FY${y}`);
+      }
+      return Array.from(fySet).sort((a,b)=>Number(a.slice(2))-Number(b.slice(2)));
+    }
+
+    function inflationCoverageReport(st, fyKeys){
+      const warnings = [];
+      const s = st.settings || {};
+      const outBasis = (String(s.outputBasis||"BY").toUpperCase()==="TY") ? "TY" : "BY";
+      if(outBasis!=="TY") return {warnings, missing:false, detail:""};
+      const byKey = `FY${clampInt(s.baseYearFY ?? fiscalYearOfUTC(new Date()), 1950, 2100)}`;
+      const used = new Set();
+      for(const ln of (st.lines||[])){
+        const c = normalizeAppn(ln.appn) || "3400";
+        used.add(c);
+      }
+      const missingBits = [];
+      for(const appn of Array.from(used).sort()){
+        const t = ensureInflationTable(appn);
+        if(!t){ missingBits.push(`${appn}: no table`); continue; }
+        if(typeof t.levels[byKey] === "undefined") missingBits.push(`${appn}: missing ${byKey}`);
+        // warn if any FY key missing (we will forward-fill from nearest when running)
+        let missCount = 0;
+        for(const fy of fyKeys){
+          if(typeof t.levels[fy] === "undefined") missCount++;
+        }
+        if(missCount>0) missingBits.push(`${appn}: missing ${missCount}/${fyKeys.length} FY levels`);
+      }
+      if(missingBits.length){
+        warnings.push("Inflation (TY): some index levels are missing. CASE will forward‑fill from the nearest available year; fill the table for best accuracy.");
+      }
+      return {warnings, missing: missingBits.length>0, detail: missingBits.join(" • ")};
+    }
+
+    function renderInflationEditor(){
+      const editor = $("#inflationEditor");
+      const wrap = $("#inflationTablesWrap");
+      if(!editor || !wrap) return;
+
+      const outBasis = (String(state.settings.outputBasis||"BY").toUpperCase()==="TY") ? "TY" : "BY";
+      const byOnly = $("#inflationByOnlyHint");
+      if(byOnly) byOnly.style.display = (outBasis==="TY") ? "none" : "";
+      editor.style.display = (outBasis==="TY") ? "" : "none";
+      if(outBasis!=="TY") return;
+
+      const fyKeys = getGlobalFyKeysForInflation(state);
+      // Ensure tables exist for any used APPN (and seed BY)
+      const used = new Set();
+      for(const ln of (state.lines||[])){
+        used.add(normalizeAppn(ln.appn) || "3400");
+      }
+      // Also include tables already configured
+      for(const k of Object.keys(state.inflationTables||{})) used.add(normalizeAppn(k));
+      // Always include the three common AF ones
+      ["3400","3600","3080"].forEach(x=> used.add(x));
+
+      wrap.innerHTML = "";
+      const sorted = Array.from(used).filter(Boolean).sort();
+      for(const appn of sorted){
+        const t = ensureInflationTable(appn);
+        const label = String(t.label || appnCommonLabel(appn)).trim() || appnCommonLabel(appn);
+
+        const card = document.createElement("div");
+        card.className = "inflationTableCard";
+        card.innerHTML = `
+          <div class="inflRow">
+            <div class="inflMeta">
+              <span class="tag"><strong>${escapeHtml(appn)}</strong></span>
+              <span class="tag">${escapeHtml(label)}</span>
+              <span class="hint">Index levels (ratio vs BY is used)</span>
+            </div>
+            <div class="cellActions">
+              <button class="iconBtn" data-action="inflFillOne" data-appn="${escapeHtml(appn)}" title="Fill this table with 1.000"><span class="ico">1</span></button>
+              <button class="iconBtn" data-action="inflDelete" data-appn="${escapeHtml(appn)}" title="Remove this table (does not change line APPN)."><span class="ico">×</span></button>
+            </div>
+          </div>
+          <div class="inflTableWrap">
+            <table>
+              <thead><tr><th>Fiscal year</th><th>Index level</th></tr></thead>
+              <tbody>
+                ${fyKeys.map(fy=>{
+                  const v = t.levels[fy];
+                  const vv = (typeof v === "number" && Number.isFinite(v)) ? String(v) : "";
+                  const isBY = (fy === `FY${clampInt(state.settings.baseYearFY,1950,2100)}`);
+                  return `<tr>
+                    <td>${escapeHtml(fy)}${isBY ? ' <span class="muted">(BY)</span>' : ''}</td>
+                    <td><input type="number" step="0.0001" min="0" data-inflation="idx" data-appn="${escapeHtml(appn)}" data-fy="${escapeHtml(fy)}" value="${escapeHtml(vv)}" placeholder="e.g., 1.0340" /></td>
+                  </tr>`;
+                }).join("")}
+              </tbody>
+            </table>
+          </div>
+        `;
+        wrap.appendChild(card);
+      }
+
+      // missing hint
+      const rep = inflationCoverageReport(state, fyKeys);
+      const h = $("#inflationMissingHint");
+      if(h){
+        if(rep.missing){
+          h.style.display = "";
+          h.textContent = rep.detail ? `Missing / partial tables: ${rep.detail}` : "Some index levels are missing.";
+        } else {
+          h.style.display = "none";
+          h.textContent = "";
+        }
+      }
+    }
+
+    function getIndexLevelForFY(st, appn, fyKey){
+      const c = normalizeAppn(appn) || "3400";
+      const t = (st.inflationTables||{})[c] || ensureInflationTable(c);
+      const levels = t?.levels || {};
+      if(typeof levels[fyKey] === "number" && Number.isFinite(levels[fyKey])) return levels[fyKey];
+
+      // Forward-fill: nearest previous, else nearest next.
+      const target = Number(String(fyKey).slice(2));
+      let bestPrev = null, bestPrevFY = -Infinity;
+      let bestNext = null, bestNextFY = Infinity;
+      for(const k of Object.keys(levels)){
+        if(!/^FY\d{4}$/.test(k)) continue;
+        const y = Number(k.slice(2));
+        const val = levels[k];
+        if(!(typeof val === "number" && Number.isFinite(val))) continue;
+        if(y <= target && y > bestPrevFY){ bestPrevFY = y; bestPrev = val; }
+        if(y >= target && y < bestNextFY){ bestNextFY = y; bestNext = val; }
+      }
+      if(bestPrev!=null) return bestPrev;
+      if(bestNext!=null) return bestNext;
+      return 1.0;
+    }
+
+    function buildInflationFactorCache(st, fyKeys){
+      const byFY = clampInt(st.settings?.baseYearFY ?? fiscalYearOfUTC(new Date()), 1950, 2100);
+      const byKey = `FY${byFY}`;
+      const used = new Set();
+      for(const ln of (st.lines||[])) used.add(normalizeAppn(ln.appn) || "3400");
+      // include configured tables too
+      for(const k of Object.keys(st.inflationTables||{})) used.add(normalizeAppn(k));
+      const out = new Map();
+      for(const appn of Array.from(used).filter(Boolean)){
+        const denom = Math.max(1e-12, getIndexLevelForFY(st, appn, byKey));
+        const vec = new Float64Array(fyKeys.length);
+        for(let i=0;i<fyKeys.length;i++){
+          const num = getIndexLevelForFY(st, appn, fyKeys[i]);
+          vec[i] = (Number.isFinite(num) ? (num/denom) : 1.0);
+        }
+        out.set(appn, vec);
+      }
+      return out;
     }
 
     function distSemantics(dist){
@@ -4436,17 +5261,36 @@ function setStatus(kind, title, msg){
       }
     }
 
-    function lineValidation(ln){
-      const bad = { name:false, baseCost:false, lowPct:false, highPct:false, start:false, end:false, rampPct:false, skew:false };
-      const warn = { wbs:false, corrGroup:false };
+    function lineValidation(ln, varMap){
+      const bad = { name:false, baseCost:false, baseExpr:false, lowPct:false, highPct:false, start:false, end:false, rampPct:false, skew:false };
+      const warn = { wbs:false, corrGroup:false, appn:false };
 
       const errs = [];
 
       const name = String(ln?.name||"").trim();
       if(!name){ bad.name = true; errs.push("Name"); }
 
-      const base = Number(ln?.baseCost);
-      if(!Number.isFinite(base) || base < 0){ bad.baseCost = true; errs.push("Base cost"); }
+      const mode = normalizeBaseMode(ln?.baseMode);
+      let base = NaN;
+
+      if(mode === "FORMULA"){
+        const expr = String(ln?.baseExpr||"").trim();
+        if(!expr){
+          bad.baseExpr = true;
+          errs.push("Formula");
+        }else{
+          const r = tryEvalExpr(expr, varMap || buildVarValueMap(state));
+          if(!r.ok || !Number.isFinite(r.value) || r.value < 0){
+            bad.baseExpr = true;
+            errs.push("Formula");
+          }else{
+            base = r.value;
+          }
+        }
+      }else{
+        base = Number(ln?.baseCost);
+        if(!Number.isFinite(base) || base < 0){ bad.baseCost = true; errs.push("Base cost"); }
+      }
 
       const low = Number(ln?.lowPct), high = Number(ln?.highPct);
       if(!Number.isFinite(low)){ bad.lowPct = true; errs.push("Low %"); }
@@ -4466,20 +5310,26 @@ function setStatus(kind, title, msg){
       const wbs = String(ln?.wbs||"").trim();
       if(!wbs) warn.wbs = true;
 
+      const appn = String(ln?.appn||"").trim();
+      if(appn){
+        const ok = appnOptions().some(([code])=>code===appn);
+        if(!ok) warn.appn = true;
+      }
+
       const g = String(ln?.corrGroup||"").trim().toUpperCase();
       if(g && !["A","B","C"].includes(g)) warn.corrGroup = true;
 
-      const level = errs.length ? "bad" : ((warn.wbs || warn.corrGroup) ? "warn" : "ok");
+      const level = errs.length ? "bad" : ((warn.wbs || warn.corrGroup || warn.appn) ? "warn" : "ok");
       const msg = errs.length ? (`Fix: ${errs.slice(0,4).join(", ")}${errs.length>4?"…":""}`) :
         (warn.wbs && warn.corrGroup) ? "Optional: WBS blank; Corr Group should be A/B/C." :
         (warn.wbs) ? "Optional: WBS blank." :
         (warn.corrGroup) ? "Optional: Corr Group should be A/B/C." : "OK";
-      return { level, msg, bad, warn };
+      return { level, msg, bad, warn, base };
     }
 
-    function applyLineRowUI(tr, ln){
+function applyLineRowUI(tr, ln, varMap){
       if(!tr || !ln) return;
-      const v = lineValidation(ln);
+      const v = lineValidation(ln, varMap);
 
       const setField = (k, isBad, isWarn)=>{
         const el = tr.querySelector(`[data-k="${k}"]`);
@@ -4490,7 +5340,9 @@ function setStatus(kind, title, msg){
 
       setField("name", v.bad.name, false);
       setField("wbs", false, v.warn.wbs);
+      setField("appn", false, v.warn.appn);
       setField("baseCost", v.bad.baseCost, false);
+      setField("baseExpr", v.bad.baseExpr, false);
       setField("lowPct", v.bad.lowPct, false);
       setField("highPct", v.bad.highPct, false);
       setField("start", v.bad.start, false);
@@ -4508,6 +5360,1073 @@ function setStatus(kind, title, msg){
       }
     }
 
+
+    // -------- Variables (v4.0.x: scalar-only) --------
+    function unitOptions(){
+      return [
+        ["DOLLARS","Dollars ($)"],
+        ["COUNT","Count"],
+        ["RATE","Rate ($/unit)"],
+        ["PERCENT","Percent (%)"],
+        ["OTHER","Other"]
+      ];
+    }
+    function varUsesBasis(unit){
+      const u = String(unit||"").trim().toUpperCase();
+      return (u==="DOLLARS" || u==="RATE");
+    }
+    function normalizeVarUnit(unit){
+      const u = String(unit||"").trim().toUpperCase();
+      return unitOptions().some(([k])=>k===u) ? u : "DOLLARS";
+    }
+    function normalizeVarBasis(basis, unit){
+      if(!varUsesBasis(unit)) return "NA";
+      const b = String(basis||"BY").trim().toUpperCase();
+      return (b==="TY") ? "TY" : "BY";
+    }
+
+    function normalizeVarType(type){
+      const t = String(type||"SCALAR").trim().toUpperCase();
+      return (t==="FY_SERIES" || t==="FYSERIES" || t==="FY") ? "FY_SERIES" : "SCALAR";
+    }
+    function varTypeOptions(){
+      return [
+        ["SCALAR","Scalar"],
+        ["FY_SERIES","FY series"]
+      ];
+    }
+    function sanitizeVarSeries(series){
+      const out = Object.create(null);
+      if(!series || typeof series !== "object") return out;
+      for(const [k0,v0] of Object.entries(series)){
+        const k = String(k0||"").trim().toUpperCase();
+        if(!/^FY\d{4}$/.test(k)) continue;
+        const v = Number(v0);
+        if(!Number.isFinite(v)) continue;
+        out[k] = v;
+      }
+      return out;
+    }
+    function sumVarSeries(series){
+      if(!series || typeof series !== "object") return 0;
+      let s = 0;
+      for(const v of Object.values(series)){
+        const n = Number(v);
+        if(Number.isFinite(n)) s += n;
+      }
+      return s;
+    }
+    function fmtByUnit(x, unit){
+      const u = normalizeVarUnit(unit||"DOLLARS");
+      if(!Number.isFinite(Number(x))) return "—";
+      const n = Number(x);
+      if(u==="DOLLARS" || u==="RATE") return fmtMoney(n);
+      if(u==="PERCENT") return (n*100).toFixed(1) + "%";
+      // COUNT/OTHER
+      if(Math.abs(n) >= 1e6) return (n/1e6).toFixed(2) + "M";
+      if(Math.abs(n) >= 1e3) return (n/1e3).toFixed(2) + "K";
+      return String(Math.round(n*1000)/1000);
+    }
+
+    function cleanVarName(raw){
+      let s = String(raw||"").trim().toUpperCase();
+      s = s.replace(/[^A-Z0-9_]/g, "_");
+      // must not start with a number; also trim leading underscores
+      s = s.replace(/^_+/, "");
+      return s;
+    }
+    function isValidVarName(name){
+      const s = String(name||"").trim().toUpperCase();
+      return /^[A-Z_][A-Z0-9_]*$/.test(s);
+    }
+    function suggestVarName(base){
+      const used = new Set((state.vars||[]).map(v=>String(v?.name||"").trim().toUpperCase()).filter(Boolean));
+      const b = cleanVarName(base||"VAR");
+      if(!used.has(b) && isValidVarName(b)) return b;
+      let i=1;
+      while(i<9999){
+        const cand = `${b}_${i}`;
+        if(!used.has(cand) && isValidVarName(cand)) return cand;
+        i++;
+      }
+      return (crypto.randomUUID?.() || String(Math.random()).slice(2)).toUpperCase().slice(0,10);
+    }
+    function newVar(seed){
+      const v = (seed && typeof seed==="object") ? seed : {};
+      const type = normalizeVarType(v.type || "SCALAR");
+      const unit = normalizeVarUnit(v.unit||"DOLLARS");
+      const basis0 = normalizeVarBasis(v.basis, unit);
+      const series = (type==="FY_SERIES") ? sanitizeVarSeries(v.series || v.value) : Object.create(null);
+      const scalarVal = Number.isFinite(Number(v.value)) ? Number(v.value) : 0;
+      return {
+        id: String(v.id || newId()),
+        type,
+        name: cleanVarName(v.name || suggestVarName("VAR")),
+        // SCALAR uses value; FY_SERIES uses series (and we compute sums on the fly)
+        value: (type==="SCALAR") ? scalarVal : scalarVal,
+        series,
+        unit,
+        // FY series supports BY only for dollar-like units (values assumed in estimate BY dollars)
+        basis: (type==="FY_SERIES" && varUsesBasis(unit)) ? "BY" : basis0,
+        byFY: (type==="SCALAR" && varUsesBasis(unit) && basis0==="BY" && Number.isFinite(Number(v.byFY))) ? clampInt(Number(v.byFY), 1950, 2100) : null,
+        dist: (String(v.dist||"DET").toUpperCase()),
+        lowPct: Number.isFinite(Number(v.lowPct)) ? Number(v.lowPct) : 0,
+        highPct: Number.isFinite(Number(v.highPct)) ? Number(v.highPct) : 0,
+        notes: String(v.notes||"")
+      };
+    }
+
+    function varNameCounts(){
+      const counts = new Map();
+      for(const v of (state.vars||[])){
+        const k = String(v?.name||"").trim().toUpperCase();
+        if(!k) continue;
+        counts.set(k, (counts.get(k)||0)+1);
+      }
+      return counts;
+    }
+
+    function varValidation(v, counts){
+      const bad = { name:false, type:false, value:false, series:false, basis:false, byFY:false, lowPct:false, highPct:false };
+      const warn = { negDollar:false, distDetIgnores:false, byFY:false, basis:false, seriesEmpty:false };
+      const errs = [];
+
+      const nm = String(v?.name||"").trim().toUpperCase();
+      if(!nm){ bad.name = true; errs.push("Name"); }
+      else{
+        if(!isValidVarName(nm)){ bad.name = true; errs.push("Name format"); }
+        if(counts && counts.get(nm)>1){ bad.name = true; errs.push("Duplicate"); }
+      }
+
+      const type = normalizeVarType(v?.type);
+
+      const unit = normalizeVarUnit(v?.unit||"DOLLARS");
+      let basis = normalizeVarBasis(v?.basis, unit);
+
+      // Type-specific value validation
+      if(type === "SCALAR"){
+        const val = Number(v?.value);
+        if(!Number.isFinite(val)){ bad.value = true; errs.push("Value"); }
+        if(varUsesBasis(unit) && unit==="DOLLARS" && Number.isFinite(val) && val < 0) warn.negDollar = true;
+      } else {
+        const series = sanitizeVarSeries(v?.series);
+        if(Object.keys(series).length === 0) warn.seriesEmpty = true;
+        // FY series currently supports BY only for dollar-like units
+        if(varUsesBasis(unit) && basis === "TY"){
+          bad.basis = true; errs.push("Basis (FY series)");
+        }
+      }
+
+      // Basis validation (dollar-like only)
+      if(varUsesBasis(unit)){
+        if(!(basis==="BY" || basis==="TY")){ bad.basis = true; errs.push("Basis"); }
+      } else {
+        if(String(v?.basis||"NA").toUpperCase()!=="NA") warn.basis = true;
+      }
+
+      // Optional base-year FY for scalar dollar variables in BY
+      if(type==="SCALAR" && varUsesBasis(unit) && basis==="BY"){
+        if(v && v.byFY != null && v.byFY !== ""){
+          const y = Number(v.byFY);
+          if(!Number.isFinite(y) || y<1950 || y>2100){ bad.byFY = true; errs.push("BY FY"); }
+        }
+      } else {
+        if(v && v.byFY != null && v.byFY !== "") warn.byFY = true;
+      }
+
+      const low = Number(v?.lowPct), high = Number(v?.highPct);
+      if(!Number.isFinite(low)){ bad.lowPct = true; errs.push("Low %"); }
+      if(!Number.isFinite(high)){ bad.highPct = true; errs.push("High %"); }
+      if(Number.isFinite(low) && Number.isFinite(high) && high < low){ bad.lowPct=true; bad.highPct=true; errs.push("Low/High order"); }
+
+      const dist = String(v?.dist||"DET").toUpperCase();
+      if(dist==="DET" && (Math.abs(low)>1e-9 || Math.abs(high)>1e-9)) warn.distDetIgnores = true;
+
+      const level = errs.length ? "bad" : ((warn.negDollar || warn.distDetIgnores || warn.basis || warn.byFY || warn.seriesEmpty) ? "warn" : "ok");
+      const msg = errs.length ? (`Fix: ${errs.slice(0,4).join(", ")}${errs.length>4?"…":""}`) :
+        (warn.seriesEmpty) ? "Warning: FY series is empty." :
+        (warn.negDollar) ? "Warning: dollar value is negative." :
+        (warn.distDetIgnores) ? "Warning: DET ignores Low/High %." :
+        (warn.byFY) ? "Warning: BY FY is ignored unless Type is Scalar and Unit is dollars/rate and Basis is BY." :
+        (warn.basis) ? "Warning: non-dollar units use Basis = N/A." : "OK";
+      return { level, msg, bad, warn };
+    }
+
+
+
+    function applyVarRowUI(tr, v, counts){
+      if(!tr || !v) return;
+      const r = varValidation(v, counts);
+
+      const setField = (k, isBad)=>{
+        const el = tr.querySelector(`[data-k="${k}"]`);
+        if(!el) return;
+        el.classList.toggle("invalid", !!isBad);
+      };
+
+      setField("name", r.bad.name);
+      setField("type", r.bad.type);
+      setField("value", r.bad.value);
+      setField("basis", r.bad.basis);
+      setField("byFY", r.bad.byFY);
+      setField("lowPct", r.bad.lowPct);
+      setField("highPct", r.bad.highPct);
+
+      const dot = tr.querySelector(".statusDot");
+      if(dot){
+        dot.classList.remove("warn","bad");
+        if(r.level==="warn") dot.classList.add("warn");
+        if(r.level==="bad") dot.classList.add("bad");
+        dot.title = r.msg;
+      }
+    }
+
+    function renderVarsTable(){
+      const tbody = $("#varsTbody");
+      const pill = $("#varsPill");
+      if(!tbody || !pill) return;
+      if(!Array.isArray(state.vars)) state.vars = [];
+      state.vars = (state.vars||[]).slice(0,500).map(x=> newVar(x));
+      pill.textContent = String(state.vars.length);
+
+      const counts = varNameCounts();
+
+      tbody.innerHTML = "";
+      for(let i=0;i<state.vars.length;i++){
+        const v = state.vars[i];
+        const tr = document.createElement("tr");
+        tr.dataset.id = v.id;
+        tr.dataset.idx = String(i);
+
+        const type = normalizeVarType(v.type);
+        const isSeries = (type === "FY_SERIES");
+
+        const unit = normalizeVarUnit(v.unit||"DOLLARS");
+        const usesB = varUsesBasis(unit);
+
+        const basis = isSeries && usesB ? "BY" : normalizeVarBasis(v.basis, unit);
+        const basisHtml = usesB
+          ? (`<option value="BY" ${basis==="BY"?"selected":""}>BY</option>` +
+             `<option value="TY" ${basis==="TY"?"selected":""}>TY</option>`)
+          : `<option value="NA" selected>N/A</option>`;
+
+        const seriesSum = isSeries ? sumVarSeries(v.series) : NaN;
+        const valueCell = isSeries
+          ? (`<div class="seriesCell">
+                <button class="btn sm ghost" data-act="series" title="Edit fiscal year values">Edit…</button>
+                <span class="seriesSum muted small" title="Sum across FY series (available as ${escapeHtml(String(v.name||"").trim().toUpperCase())})">Σ ${escapeHtml(fmtByUnit(seriesSum, unit))}</span>
+              </div>`)
+          : (`<input data-k="value" type="number" step="1" value="${Number(v.value||0)}" style="width:100%">`);
+
+        tr.innerHTML = `
+          <td><input data-k="name" value="${escapeHtml(String(v.name||""))}" placeholder="e.g., LICENSE_UNIT_COST" style="width:100%; font-family:var(--mono)"></td>
+          <td>
+            <select data-k="type" style="width:100%">
+              ${varTypeOptions().map(([k,l])=>`<option value="${k}" ${k===type?'selected':''}>${escapeHtml(l)}</option>`).join("")}
+            </select>
+          </td>
+          <td>${valueCell}</td>
+          <td>
+            <select data-k="unit" style="width:100%">
+              ${unitOptions().map(([k,l])=>`<option value="${k}" ${k===unit?'selected':''}>${escapeHtml(l)}</option>`).join("")}
+            </select>
+          </td>
+          <td>
+            <select data-k="basis" style="width:100%" ${(usesB && !isSeries) ? "" : "disabled"}>${basisHtml}</select>
+          </td>
+          <td>
+            <input data-k="byFY" type="number" step="1" min="1950" max="2100"
+              value="${(!isSeries && v.byFY!=null && v.byFY!=='') ? escapeHtml(String(v.byFY)) : ''}"
+              placeholder="FY${clampInt(state.settings.baseYearFY,1950,2100)}"
+              style="width:100%"
+              ${(!isSeries && usesB && basis==="BY") ? "" : "disabled"}>
+          </td>
+          <td>
+            <select data-k="dist" style="width:100%">
+              ${distOptions().map(([k,l])=>`<option value="${k}" ${String(v.dist||"DET").toUpperCase()===k?'selected':''}>${l}</option>`).join("")}
+            </select>
+          </td>
+          <td><input data-k="lowPct" type="number" step="1" value="${Number(v.lowPct||0)}"></td>
+          <td><input data-k="highPct" type="number" step="1" value="${Number(v.highPct||0)}"></td>
+          <td><input data-k="notes" value="${escapeHtml(String(v.notes||""))}" placeholder="optional" style="width:100%"></td>
+          <td class="cellActions">
+            <button class="iconBtn" data-act="dup" title="Duplicate variable">⧉</button>
+            <button class="iconBtn" data-act="del" title="Delete variable">🗑</button>
+          </td>
+          <td class="statusCol"><span class="statusDot" title="OK"></span></td>
+        `;
+        tbody.appendChild(tr);
+        applyVarRowUI(tr, v, counts);
+      }
+
+      if(state.vars.length===0){
+        const tr=document.createElement("tr");
+        tr.innerHTML = `<td colspan="12" class="muted small">No variables yet. Click <b>+ Variable</b> to add one.</td>`;
+        tbody.appendChild(tr);
+      }
+    }
+
+
+
+
+
+    
+    // -------- FY series variable editor (Phase 6) --------
+    let _varSeriesEditId = null;
+    let _varSeriesDraft = null;
+    let _varSeriesFyList = [];
+
+    function deriveFyListForSeries(){
+      const baseFY = clampInt(state.settings?.baseYearFY ?? fiscalYearOfUTC(new Date()), 1950, 2100);
+      let minFY = baseFY;
+      let maxFY = baseFY + 5;
+
+      for(const ln of (state.lines||[])){
+        try{
+          const s = parseDateLoose(ln.start) || null;
+          const e = parseDateLoose(ln.end) || null;
+          if(s) minFY = Math.min(minFY, fiscalYearOfUTC(new Date(s)));
+          if(e) maxFY = Math.max(maxFY, fiscalYearOfUTC(new Date(e)));
+        }catch{}
+      }
+      // guard
+      minFY = clampInt(minFY, 1950, 2100);
+      maxFY = clampInt(maxFY, 1950, 2100);
+      if(maxFY < minFY) maxFY = minFY;
+
+      // keep editor sane
+      if(maxFY - minFY > 20) maxFY = minFY + 20;
+
+      const list = [];
+      for(let y=minFY; y<=maxFY; y++){
+        list.push(`FY${y}`);
+      }
+      return list;
+    }
+
+    function openVarSeriesModal(varId){
+      const v = (state.vars||[]).find(x=>x.id===varId);
+      if(!v) return;
+      const type = normalizeVarType(v.type);
+      if(type !== "FY_SERIES"){
+        setStatus("warn","Not an FY series variable.","Switch Type to FY series first.");
+        return;
+      }
+      _varSeriesEditId = varId;
+      _varSeriesDraft = sanitizeVarSeries(v.series);
+      _varSeriesFyList = deriveFyListForSeries();
+
+      // ensure all FYs exist in draft (default 0)
+      for(const fy of _varSeriesFyList){
+        if(!Object.prototype.hasOwnProperty.call(_varSeriesDraft, fy)) _varSeriesDraft[fy] = 0;
+      }
+
+      renderVarSeriesModal();
+      const bd = $("#varSeriesBackdrop");
+      if(bd){
+        bd.classList.add("open");
+        bd.setAttribute("aria-hidden","false");
+      }
+    }
+
+    function closeVarSeriesModal(){
+      const bd = $("#varSeriesBackdrop");
+      if(bd){
+        bd.classList.remove("open");
+        bd.setAttribute("aria-hidden","true");
+      }
+      _varSeriesEditId = null;
+      _varSeriesDraft = null;
+      _varSeriesFyList = [];
+    }
+
+    function renderVarSeriesModal(){
+      const v = (state.vars||[]).find(x=>x.id===_varSeriesEditId);
+      const title = $("#varSeriesTitle");
+      const sub = $("#varSeriesSubtitle");
+      const tbody = $("#varSeriesTbody");
+      const sumEl = $("#varSeriesSum");
+      if(!v || !tbody) return;
+      if(title) title.textContent = `Edit FY series — ${String(v.name||"").trim().toUpperCase()}`;
+      if(sub){
+        sub.textContent = `Reference in formulas as ${String(v.name||"").trim().toUpperCase()} (sum) or ${String(v.name||"").trim().toUpperCase()}_FY2026 (specific year).`;
+      }
+
+      tbody.innerHTML = "";
+      for(const fy of _varSeriesFyList){
+        const tr = document.createElement("tr");
+        const val = (_varSeriesDraft && Object.prototype.hasOwnProperty.call(_varSeriesDraft, fy)) ? Number(_varSeriesDraft[fy]) : 0;
+        tr.innerHTML = `
+          <td style="min-width:120px; font-family:var(--mono)">${escapeHtml(fy)}</td>
+          <td><input class="seriesIn" data-fy="${escapeHtml(fy)}" type="number" step="1" value="${Number.isFinite(val)?val:0}" style="width:100%"></td>
+        `;
+        tbody.appendChild(tr);
+      }
+      const total = sumVarSeries(_varSeriesDraft);
+      if(sumEl) sumEl.textContent = `Σ ${fmtByUnit(total, v.unit)}`;
+    }
+
+    function applyVarSeriesDraft(){
+      const v = (state.vars||[]).find(x=>x.id===_varSeriesEditId);
+      if(!v) return;
+      v.series = sanitizeVarSeries(_varSeriesDraft);
+      saveState();
+      renderVarsTable();
+      renderHealth();
+      scheduleFormulaPreviewRefresh();
+      setStatus("good","FY series saved.","");
+    }
+
+
+// -------- Phase 3: Formulas (safe expression engine; no eval) --------
+    const _exprCache = new Map(); // expr -> {rpn}
+    const _exprAllowedFuncs = new Map([
+      ["MIN", (args)=> Math.min(...args)],
+      ["MAX", (args)=> Math.max(...args)],
+      ["ABS", (args)=> Math.abs(args[0] ?? 0)],
+      ["ROUND", (args)=> Math.round(args[0] ?? 0)],
+      ["CEIL", (args)=> Math.ceil(args[0] ?? 0)],
+      ["FLOOR", (args)=> Math.floor(args[0] ?? 0)]
+    ]);
+
+    function normalizeBaseMode(mode){
+      return (String(mode||"NUMBER").trim().toUpperCase()==="FORMULA") ? "FORMULA" : "NUMBER";
+    }
+
+    function buildVarValueMap(st=state){
+      const map = Object.create(null);
+      for(const v0 of (st?.vars||[])){
+        const v = newVar(v0);
+        const k = String(v?.name||"").trim().toUpperCase();
+        if(!k) continue;
+        const type = normalizeVarType(v.type);
+        if(type === "FY_SERIES"){
+          const series = sanitizeVarSeries(v.series);
+          // Provide VAR as sum across FYs, and VAR_FY2026 as year-specific entries.
+          let s = 0;
+          for(const [fy,val0] of Object.entries(series)){
+            const val = Number(val0);
+            if(!Number.isFinite(val)) continue;
+            map[`${k}_${fy}`] = val;
+            s += val;
+          }
+          map[k] = s;
+        } else {
+          const val = Number(v?.value);
+          if(Number.isFinite(val)) map[k] = val;
+        }
+      }
+      return map;
+    }
+
+    function hasAnyVarUncertainty(st=state){
+      const vars = (st && Array.isArray(st.vars)) ? st.vars : [];
+      for(const v of vars){
+        const dist = String(v?.dist||"DET").toUpperCase();
+        if(dist !== "DET") return true;
+      }
+      return false;
+    }
+
+    function sampleVarMultiplier(v, rngVar){
+      const dist = String(v?.dist||"DET").toUpperCase();
+      if(dist === "DET") return 1;
+      const u = Math.max(rngVar(), 1e-12);
+      // Apply uncertainty as a multiplier around 1.0 using Low/High %
+      const m = sampleFromDist({base:1, lowPct: v?.lowPct, highPct: v?.highPct, dist, u, rng:rngVar, clampZero:false});
+      return Number.isFinite(m) ? m : 1;
+    }
+
+    function buildVarSampleValueMap(st, rngVar){
+      const map = Object.create(null);
+      const vars = (st && Array.isArray(st.vars)) ? st.vars : [];
+      for(const v0 of vars){
+        const v = newVar(v0);
+        const k = String(v?.name||"").trim().toUpperCase();
+        if(!k) continue;
+        const type = normalizeVarType(v.type);
+        if(type === "FY_SERIES"){
+          const series = sanitizeVarSeries(v.series);
+          const mult = sampleVarMultiplier(v, rngVar);
+          let s = 0;
+          for(const [fy,val0] of Object.entries(series)){
+            const val = Number(val0);
+            if(!Number.isFinite(val)) continue;
+            const vv = val * mult;
+            map[`${k}_${fy}`] = vv;
+            s += vv;
+          }
+          map[k] = s;
+        } else {
+          const val = sampleVarValue(v, rngVar);
+          if(Number.isFinite(val)) map[k] = val;
+        }
+      }
+      return map;
+    }
+
+
+    // Variable dollar-year conversion:
+    // If a scalar variable is entered as BY dollars in a different FY than the estimate Base Year,
+    // convert it to the estimate Base Year using the line's APPN index series.
+    function buildVarConversionFactorMap(st, usedAppns){
+      const out = Object.create(null); // VAR_NAME -> {APPN: factor}
+      const baseFY = clampInt(st.settings?.baseYearFY ?? fiscalYearOfUTC(new Date()), 1950, 2100);
+      const toKey = `FY${baseFY}`;
+      const appns = Array.isArray(usedAppns) ? usedAppns : [];
+      const vars = (st && Array.isArray(st.vars)) ? st.vars : [];
+      for(const v of vars){
+        const nm = String(v?.name||"").trim().toUpperCase();
+        if(!nm) continue;
+        const unit = normalizeVarUnit(v?.unit||"DOLLARS");
+        const basis = normalizeVarBasis(v?.basis, unit);
+        if(!varUsesBasis(unit) || basis!=="BY") continue;
+        const fromFY = (v && v.byFY!=null && v.byFY!=="") ? clampInt(Number(v.byFY), 1950, 2100) : baseFY;
+        if(!Number.isFinite(fromFY) || fromFY===baseFY) continue;
+        const fromKey = `FY${fromFY}`;
+        const per = Object.create(null);
+        for(const a0 of appns){
+          const a = normalizeAppn(a0) || "3400";
+          const denom = Math.max(1e-12, getIndexLevelForFY(st, a, fromKey));
+          const num = getIndexLevelForFY(st, a, toKey);
+          per[a] = (Number.isFinite(num) ? num : 1.0) / denom;
+        }
+        out[nm] = per;
+      }
+      return out;
+    }
+
+    function makeVarLookup(rawMap, appn, conv){
+      const a = normalizeAppn(appn) || "3400";
+      return (name)=>{
+        const k = String(name||"").trim().toUpperCase();
+        const raw = (rawMap && Object.prototype.hasOwnProperty.call(rawMap, k)) ? rawMap[k] : undefined;
+        if(!Number.isFinite(raw)) return NaN;
+
+        let c = (conv && Object.prototype.hasOwnProperty.call(conv, k)) ? conv[k] : null;
+        // FY series entries are exposed as VAR_FY2026; conversion factors are keyed by base var name (VAR)
+        if(!c && k.includes("_FY")){
+          const base = k.split("_FY")[0];
+          c = (conv && Object.prototype.hasOwnProperty.call(conv, base)) ? conv[base] : null;
+        }
+        if(c && Number.isFinite(c[a])) return raw * c[a];
+        return raw;
+      };
+    }
+
+    
+    function buildLineVarLookup(line){
+      const rawVar = buildVarValueMap(state);
+      const usedAppns = Array.from(new Set((state.lines||[]).map(l=> normalizeAppn(l.appn)||"3400")));
+      const conv = buildVarConversionFactorMap(state, usedAppns);
+      return makeVarLookup(rawVar, line?.appn, conv);
+    }
+
+function _tokenizeExpr(expr){
+      const s = String(expr||"");
+      const out = [];
+      let i = 0;
+      const isWs = (c)=> c===" "||c==="\t"||c==="\n"||c==="\r";
+      const isDigit = (c)=> c>="0" && c<="9";
+      const isAlpha = (c)=> (c>="A"&&c<="Z") || (c>="a"&&c<="z") || c==="_";
+      const isAlnum = (c)=> isAlpha(c) || isDigit(c);
+
+      while(i < s.length){
+        const c = s[i];
+        if(isWs(c)){ i++; continue; }
+
+        // number (supports decimals + scientific notation)
+        if(isDigit(c) || (c==="." && isDigit(s[i+1]||""))){
+          let j = i+1;
+          while(j<s.length && (isDigit(s[j]) || s[j]===".")) j++;
+          if(j<s.length && (s[j]==="e" || s[j]==="E")){
+            let k = j+1;
+            if(s[k]==="+" || s[k]==="-") k++;
+            let any=false;
+            while(k<s.length && isDigit(s[k])){ k++; any=true; }
+            if(any) j = k;
+          }
+          const numStr = s.slice(i,j);
+          const val = Number(numStr);
+          if(!Number.isFinite(val)) throw new Error(`Bad number: ${numStr}`);
+          out.push({t:"num", v: val});
+          i = j;
+          continue;
+        }
+
+        // identifier (variable or function)
+        if(isAlpha(c)){
+          let j = i+1;
+          while(j<s.length && isAlnum(s[j])) j++;
+          const name = s.slice(i,j);
+          out.push({t:"id", v: name});
+          i = j;
+          continue;
+        }
+
+        // operators / punctuation
+        if("+-*/^(),".includes(c)){
+          out.push({t:c, v:c});
+          i++;
+          continue;
+        }
+
+        throw new Error(`Unexpected character: "${c}"`);
+      }
+      return out;
+    }
+
+    function _compileExprToRpn(expr){
+      const tokens = _tokenizeExpr(expr);
+      const output = [];
+      const ops = [];
+      const fnStack = []; // {name, argc}
+      const prec = {"u-":5, "^":4, "*":3, "/":3, "+":2, "-":2};
+      const rightAssoc = {"^":true, "u-":true};
+
+      const pushOp = (op)=>{
+        while(ops.length){
+          const top = ops[ops.length-1];
+          if(top.t !== "op") break;
+          const pTop = prec[top.v];
+          const pOp = prec[op];
+          if(pTop > pOp || (pTop===pOp && !rightAssoc[op])){
+            output.push(ops.pop());
+          }else break;
+        }
+        ops.push({t:"op", v: op});
+      };
+
+      let prevType = "start";
+      for(let i=0;i<tokens.length;i++){
+        const tok = tokens[i];
+
+        if(tok.t==="num"){
+          output.push(tok);
+          prevType = "value";
+          continue;
+        }
+
+        if(tok.t==="id"){
+          // function if next token is '('
+          const next = tokens[i+1];
+          const nm = String(tok.v||"").trim();
+          const upper = nm.toUpperCase();
+          if(next && next.t==="(" && _exprAllowedFuncs.has(upper)){
+            ops.push({t:"fn", v: upper});
+            fnStack.push({name: upper, argc: 1});
+            prevType = "fn";
+          }else{
+            // variable
+            output.push({t:"var", v: upper});
+            prevType = "value";
+          }
+          continue;
+        }
+
+        if(tok.t==="("){
+          ops.push({t:"("});
+          prevType = "lp";
+          continue;
+        }
+
+        if(tok.t===")"){
+          while(ops.length && ops[ops.length-1].t!=="("){
+            output.push(ops.pop());
+          }
+          if(!ops.length) throw new Error("Mismatched parentheses");
+          ops.pop(); // pop '('
+
+          // If top is function, pop it and emit with argc
+          if(ops.length && ops[ops.length-1].t==="fn"){
+            const fnTok = ops.pop();
+            const fnMeta = fnStack.pop() || {argc:1};
+            output.push({t:"fn", v: fnTok.v, argc: fnMeta.argc});
+          }
+          prevType = "value";
+          continue;
+        }
+
+        if(tok.t===","){
+          // function arg separator: pop until '('
+          while(ops.length && ops[ops.length-1].t!=="("){
+            output.push(ops.pop());
+          }
+          if(!ops.length) throw new Error("Misplaced comma");
+          // bump argc for latest function
+          if(fnStack.length) fnStack[fnStack.length-1].argc += 1;
+          prevType = "comma";
+          continue;
+        }
+
+        if(["+","-","*","/","^"].includes(tok.t)){
+          let op = tok.t;
+          // unary minus
+          if(op==="-" && (prevType==="start" || prevType==="op" || prevType==="lp" || prevType==="comma" || prevType==="fn")){
+            op = "u-";
+          }
+          pushOp(op);
+          prevType = "op";
+          continue;
+        }
+
+        throw new Error("Parse error");
+      }
+
+      while(ops.length){
+        const top = ops.pop();
+        if(top.t==="(") throw new Error("Mismatched parentheses");
+        if(top.t==="fn"){
+          const fnMeta = fnStack.pop() || {argc:1};
+          output.push({t:"fn", v: top.v, argc: fnMeta.argc});
+        }else{
+          output.push(top);
+        }
+      }
+      return output;
+    }
+
+    function evalExpr(expr, varMap){
+      const key = String(expr||"").trim();
+      if(!key) throw new Error("Formula is blank");
+      let compiled = _exprCache.get(key);
+      if(!compiled){
+        const rpn = _compileExprToRpn(key);
+        compiled = {rpn};
+        _exprCache.set(key, compiled);
+      }
+      const st = [];
+      const rpn = compiled.rpn;
+
+      for(const tok of rpn){
+        if(tok.t==="num"){ st.push(tok.v); continue; }
+        if(tok.t==="var"){
+          let v;
+          if(typeof varMap === "function"){
+            v = varMap(tok.v);
+          } else if(varMap && typeof varMap.get === "function"){
+            v = varMap.get(tok.v);
+          } else {
+            v = (varMap && Object.prototype.hasOwnProperty.call(varMap, tok.v)) ? varMap[tok.v] : undefined;
+          }
+          if(!Number.isFinite(v)) throw new Error(`Unknown variable: ${tok.v}`);
+          st.push(Number(v));
+          continue;
+        }
+        if(tok.t==="op"){
+          if(tok.v==="u-"){
+            if(st.length<1) throw new Error("Unary minus missing operand");
+            st.push(-st.pop());
+            continue;
+          }
+          if(st.length<2) throw new Error(`Operator ${tok.v} missing operand`);
+          const b = st.pop();
+          const a = st.pop();
+          let r = 0;
+          switch(tok.v){
+            case "+": r = a + b; break;
+            case "-": r = a - b; break;
+            case "*": r = a * b; break;
+            case "/": r = a / b; break;
+            case "^": r = Math.pow(a, b); break;
+            default: throw new Error(`Bad operator: ${tok.v}`);
+          }
+          if(!Number.isFinite(r)) throw new Error("Non-finite result");
+          st.push(r);
+          continue;
+        }
+        if(tok.t==="fn"){
+          const fn = _exprAllowedFuncs.get(tok.v);
+          if(!fn) throw new Error(`Function not allowed: ${tok.v}`);
+          const argc = Math.max(0, Number(tok.argc)||0);
+          if(st.length < argc) throw new Error(`${tok.v} needs ${argc} arg(s)`);
+          const args = st.splice(st.length-argc, argc);
+          const r = fn(args);
+          if(!Number.isFinite(r)) throw new Error("Non-finite result");
+          st.push(r);
+          continue;
+        }
+      }
+      if(st.length !== 1) throw new Error("Formula did not reduce to a single value");
+      return st[0];
+    }
+
+    function tryEvalExpr(expr, varMap){
+      try{
+        const v = evalExpr(expr, varMap);
+        return {ok:true, value:v, msg:""};
+      }catch(err){
+        return {ok:false, value:NaN, msg:(err && err.message) ? String(err.message) : String(err)};
+      }
+    }
+
+    function getLineBaseDeterministic(ln, varMap){
+      const mode = normalizeBaseMode(ln?.baseMode);
+      if(mode === "FORMULA"){
+        const r = tryEvalExpr(String(ln?.baseExpr||""), varMap || buildVarValueMap(state));
+        return r.ok ? r.value : NaN;
+      }
+      return Number(ln?.baseCost);
+    }
+
+    function renderBaseCell(line, varMap){
+      const mode = normalizeBaseMode(line?.baseMode);
+      if(mode === "FORMULA"){
+        const expr = String(line?.baseExpr||"");
+        const r = tryEvalExpr(expr, varMap);
+        const ok = r.ok && Number.isFinite(r.value) && r.value >= 0;
+        const evalText = ok ? (`= ${fmtMoney(r.value)}`) : "⚠";
+        const title = ok ? `Evaluated base: ${r.value}` : `Formula error: ${r.msg}`;
+        return `
+          <td>
+            <div class="baseCell">
+              <button class="fxToggle active" data-act="fx" title="Formula mode (click to switch back to number)">ƒx</button>
+              <button class="btn xs ghost fxEditBtn" data-act="fxedit" title="Edit formula: ${escapeHtml(expr || "(empty)")}">Edit</button>
+              <span class="baseEval ${ok?"":"bad"}" title="${escapeHtml(title)}">${escapeHtml(evalText)}</span>
+            </div>
+          </td>
+        `;
+      }
+      return `
+        <td>
+          <div class="baseCell">
+            <button class="fxToggle" data-act="fx" title="Use a formula (ƒx) instead of a number">ƒx</button>
+            <input data-k="baseCost" class="baseNum" type="number" min="0" step="1000" value="${Number(line?.baseCost||0)}" style="width:100%">
+          </div>
+        </td>
+      `;
+    }
+
+    function updateBaseEvalInRow(tr, line, varMap){
+      if(!tr || !line) return;
+      const mode = normalizeBaseMode(line.baseMode);
+      const span = tr.querySelector(".baseEval");
+      if(mode !== "FORMULA" || !span) return;
+      const r = tryEvalExpr(String(line.baseExpr||""), varMap);
+      const ok = r.ok && Number.isFinite(r.value) && r.value >= 0;
+      span.textContent = ok ? (`= ${fmtMoney(r.value)}`) : "⚠";
+      span.classList.toggle("bad", !ok);
+      span.title = ok ? `Evaluated base: ${r.value}` : `Formula error: ${r.msg}`;
+    }
+
+    function refreshFormulaPreviews(){
+      const tbody = $("#linesTbody");
+      if(!tbody) return;
+
+      const rawVar = buildVarValueMap(state);
+      const usedAppns = Array.from(new Set((state.lines||[]).map(l=> normalizeAppn(l.appn)||"3400")));
+      const conv = buildVarConversionFactorMap(state, usedAppns);
+
+      const lineMap = new Map((state.lines||[]).map(l=>[l.id, l]));
+      for(const tr of Array.from(tbody.children)){
+        const ln = lineMap.get(tr.dataset.id);
+        if(!ln) continue;
+
+        const varLookup = makeVarLookup(rawVar, ln.appn, conv);
+
+        if(normalizeBaseMode(ln.baseMode) === "FORMULA"){
+          updateBaseEvalInRow(tr, ln, varLookup);
+          // preview updates (if enabled)
+          if(state.settings?.distPreview){
+            const canvas = tr.querySelector("canvas.distPrev");
+            if(canvas) drawDistPreview(canvas, ln, varLookup);
+          }
+        }
+        applyLineRowUI(tr, ln, varLookup);
+      }
+    }
+
+    
+    // -------- Formula editor modal (bigger ƒx input) --------
+    let _fxEditLineId = null;
+    let _fxDraftExpr = "";
+    let _fxLastLookup = null;
+
+    function isFxOpen(){
+      const back = $("#fxBackdrop");
+      return !!(back && back.style && back.style.display !== "none");
+    }
+
+    function openFxModal(lineId){
+      const ln = (state.lines||[]).find(x=>x.id===lineId);
+      if(!ln) return;
+
+      // Ensure formula mode so this aligns with row validation + preview behavior.
+      ln.baseMode = "FORMULA";
+      if(typeof ln.baseExpr === "undefined" || ln.baseExpr == null) ln.baseExpr = "";
+
+      _fxEditLineId = lineId;
+      _fxDraftExpr = String(ln.baseExpr||"");
+
+      const ta = $("#fxText");
+      if(ta) ta.value = _fxDraftExpr;
+
+      const nm = $("#fxLineName"); if(nm) nm.textContent = String(ln.name||"").trim() || "Untitled line";
+      const ap = $("#fxLineAppn"); if(ap) ap.textContent = String(normalizeAppn(ln.appn)||"3400");
+
+      renderFxFnChips();
+      rebuildFxVarLookupForLine(ln);
+      renderFxVarTable(ln);
+      updateFxPreview(ln);
+
+      const back = $("#fxBackdrop");
+      if(back){
+        back.style.display = "flex";
+      }
+      syncBodyScrollLock();
+
+      // Focus after paint
+      requestAnimationFrame(()=>{ try{ ta?.focus(); ta?.setSelectionRange(ta.value.length, ta.value.length); }catch{} });
+    }
+
+    function closeFxModal(){
+      const back = $("#fxBackdrop");
+      if(back) back.style.display = "none";
+      _fxEditLineId = null;
+      _fxDraftExpr = "";
+      _fxLastLookup = null;
+      const s = $("#fxVarSearch"); if(s) s.value = "";
+      syncBodyScrollLock();
+    }
+
+    function rebuildFxVarLookupForLine(ln){
+      const rawVar = buildVarValueMap(state);
+      const usedAppns = Array.from(new Set((state.lines||[]).map(l=> normalizeAppn(l.appn)||"3400")));
+      const conv = buildVarConversionFactorMap(state, usedAppns);
+      _fxLastLookup = makeVarLookup(rawVar, ln?.appn, conv);
+    }
+
+    function fmtFxValue(x){
+      if(!Number.isFinite(x)) return "—";
+      // Avoid currency symbols here; formulas are numeric.
+      const abs = Math.abs(x);
+      if(abs >= 1e9) return x.toExponential(4);
+      if(abs >= 1000) return x.toLocaleString(undefined, {maximumFractionDigits: 4});
+      return String(Number(x.toFixed(6))).replace(/\.?0+$/,"");
+    }
+
+    function deriveFxVarRows(){
+      const list = [];
+      const fyList = deriveFyListForSeries(); // e.g., ["FY2026", ...]
+      const lookup = _fxLastLookup || ((k)=> NaN);
+      for(const v0 of (state.vars||[])){
+        const v = newVar(v0);
+        const name = String(v?.name||"").trim().toUpperCase();
+        if(!name) continue;
+        const type = normalizeVarType(v.type);
+        if(type === "FY_SERIES"){
+          // Sum across FYs:
+          list.push({name, type:"FY series (sum)", value: lookup(name)});
+          // Year-specific:
+          for(const fy of fyList){
+            const nm = `${name}_${fy}`;
+            list.push({name:nm, type:`FY series (${fy})`, value: lookup(nm)});
+          }
+        } else {
+          list.push({name, type:"Scalar", value: lookup(name)});
+        }
+      }
+      // Sort stable
+      list.sort((a,b)=> a.name.localeCompare(b.name));
+      return list;
+    }
+
+    function renderFxVarTable(ln){
+      const tbody = $("#fxVarTbody");
+      if(!tbody) return;
+      const q = String($("#fxVarSearch")?.value||"").trim().toUpperCase();
+      const rows = deriveFxVarRows().filter(r=>{
+        if(!q) return true;
+        return r.name.includes(q) || r.type.toUpperCase().includes(q) || fmtFxValue(r.value).toUpperCase().includes(q);
+      });
+
+      tbody.innerHTML = "";
+      if(rows.length===0){
+        const tr=document.createElement("tr");
+        tr.innerHTML = `<td colspan="3" class="muted small">No matches.</td>`;
+        tbody.appendChild(tr);
+        return;
+      }
+
+      for(const r of rows){
+        const tr=document.createElement("tr");
+        const val = Number.isFinite(r.value) ? fmtFxValue(r.value) : "—";
+        tr.innerHTML = `
+          <td><button class="fxVarBtn" data-insert="${escapeHtml(r.name)}" title="Insert ${escapeHtml(r.name)}">${escapeHtml(r.name)}</button></td>
+          <td class="muted small">${escapeHtml(r.type)}</td>
+          <td style="font-family:var(--mono)">${escapeHtml(val)}</td>
+        `;
+        tbody.appendChild(tr);
+      }
+    }
+
+    function renderFxFnChips(){
+      const wrap = $("#fxFnChips");
+      if(!wrap) return;
+      const names = Array.from(_exprAllowedFuncs.keys());
+      wrap.innerHTML = names.map(n=> `<button class="fxChip" data-fn="${escapeHtml(n)}" title="Insert ${escapeHtml(n)}()">${escapeHtml(n)}()</button>`).join("");
+    }
+
+    function insertIntoFxText(token){
+      const ta = $("#fxText");
+      if(!ta) return;
+      const s = String(ta.value||"");
+      const a = ta.selectionStart ?? s.length;
+      const b = ta.selectionEnd ?? s.length;
+      const ins = String(token||"");
+      ta.value = s.slice(0,a) + ins + s.slice(b);
+      const caret = a + ins.length;
+      try{ ta.focus(); ta.setSelectionRange(caret, caret); }catch{}
+      scheduleFxPreviewRefresh();
+    }
+
+    let _fxPrevRAF = null;
+    function scheduleFxPreviewRefresh(){
+      if(_fxPrevRAF != null) cancelAnimationFrame(_fxPrevRAF);
+      _fxPrevRAF = requestAnimationFrame(()=>{
+        _fxPrevRAF = null;
+        const ln = (state.lines||[]).find(x=>x.id===_fxEditLineId);
+        if(!ln) return;
+        rebuildFxVarLookupForLine(ln);
+        renderFxVarTable(ln);
+        updateFxPreview(ln);
+      });
+    }
+
+    function updateFxPreview(ln){
+      const box = $("#fxPreview");
+      const ta = $("#fxText");
+      if(!box || !ta) return;
+
+      const expr = String(ta.value||"").trim();
+      const lookup = _fxLastLookup || ((k)=> NaN);
+
+      if(!expr){
+        box.textContent = "Formula is blank.";
+        box.classList.add("bad");
+        return;
+      }
+
+      const r = tryEvalExpr(expr, lookup);
+      if(r.ok && Number.isFinite(r.value) && r.value >= 0){
+        box.textContent = `OK  →  ${fmtFxValue(r.value)}   (evaluated base; used as the point estimate for this line)`;
+        box.classList.remove("bad");
+      }else{
+        box.textContent = `Error  →  ${r.msg || "Invalid formula"}`;
+        box.classList.add("bad");
+      }
+    }
+
+
+    let _formulaPrevRAF = null;
+    function scheduleFormulaPreviewRefresh(){
+      if(_formulaPrevRAF != null) cancelAnimationFrame(_formulaPrevRAF);
+      _formulaPrevRAF = requestAnimationFrame(()=>{
+        _formulaPrevRAF = null;
+        refreshFormulaPreviews();
+      });
+    }
+
     function updateDistSem(tr, ln){
       const cell = tr.querySelector('select[data-k="dist"]')?.parentElement;
       if(!cell) return;
@@ -4522,12 +6441,20 @@ function setStatus(kind, title, msg){
       // Phase 5: workflow UI (apply visibility before drawing so canvases size correctly)
       renderStepper();
       applyLayoutUI();
+      applyDensityUI();
+      applyRightCardCollapseUI();
       applyAdvancedUI();
       applyLayerUI();
       applyStepUI({scroll:false});
       $("#inIterations").value = state.settings.iterations;
       $("#inSeed").value = state.settings.seed;
       $("#inSampling").value = state.settings.sampling;
+      const _by = $("#inBaseYearFY");
+      if(_by) _by.value = String(clampInt(state.settings.baseYearFY, 1950, 2100));
+      const _ob = $("#inOutputBasis");
+      if(_ob) _ob.value = (String(state.settings.outputBasis||"BY").toUpperCase()==="TY") ? "TY" : "BY";
+      renderInflationEditor();
+
       $("#inCorrMode").value = (state.settings.corrMode||"GLOBAL");
       $("#inRho").value = state.settings.rho;
       $("#inRhoA").value = Number(state.settings.rhoA||0);
@@ -4542,10 +6469,14 @@ function setStatus(kind, title, msg){
       ensureUi();
       pruneSelectedIds();
       const selIds = selectedSet();
+      const rawVar = buildVarValueMap(state);
+      const usedAppns = Array.from(new Set((state.lines||[]).map(l=> normalizeAppn(l.appn)||"3400")));
+      const conv = buildVarConversionFactorMap(state, usedAppns);
 
       tbody.innerHTML = "";
       for(let i=0;i<(state.lines||[]).length;i++){
         const line = state.lines[i];
+        const varLookup = makeVarLookup(rawVar, line.appn, conv);
         const tr = document.createElement("tr");
         tr.dataset.id = line.id;
         tr.dataset.idx = String(i);
@@ -4557,7 +6488,12 @@ function setStatus(kind, title, msg){
           <td class="selCol"><input type="checkbox" class="rowSelect" ${isSel ? "checked" : ""} aria-label="Select line"></td>
           <td><input data-k="name" value="${escapeHtml(line.name||"")}" placeholder="e.g., Integration / SW" style="width:100%"></td>
           <td><input data-k="wbs" value="${escapeHtml(line.wbs||"")}" placeholder="e.g., 1.2.3" style="width:100%"></td>
-          <td><input data-k="baseCost" type="number" min="0" step="1000" value="${Number(line.baseCost||0)}" style="width:100%"></td>
+          <td class="colAppn">
+            <select data-k="appn" class="appnSel" style="width:100%" title="Appropriation / color of money. Used for inflation indices.">
+              ${appnOptions().map(([v,l])=>`<option value="${v}" title="${escapeHtml(l)}" ${String(line.appn||"3400")===v?'selected':''}>${escapeHtml(v)}</option>`).join("")}
+            </select>
+          </td>
+          ${renderBaseCell(line, varLookup)}
           <td>
             <select data-k="dist" style="width:100%">
               ${distOptions().map(([v,l])=>`<option value="${v}" ${v===line.dist?'selected':''}>${l}</option>`).join("")}
@@ -4586,11 +6522,12 @@ function setStatus(kind, title, msg){
         tbody.appendChild(tr);
 
         setRampSkewEnabled(tr, line.phase === "TRAP");
-        applyLineRowUI(tr, line);
+        applyLineRowUI(tr, line, varLookup);
+        updateBaseEvalInRow(tr, line, varLookup);
 
         if(state.settings.distPreview){
           const canvas = tr.querySelector("canvas.distPrev");
-          if(canvas) drawDistPreview(canvas, line);
+          if(canvas) drawDistPreview(canvas, line, varLookup);
         }
       }
 
@@ -4678,6 +6615,7 @@ renderHealth();
 
       // WBS library UI
       renderWbsLibrary();
+      renderVarsTable();
       refreshWbsFocusHighlights();
 
     }
@@ -4689,14 +6627,31 @@ renderHealth();
 
     function loadUiPrefs(){
       try{
-        const raw = localStorage.getItem(UI_PREF_KEY);
+        let raw = localStorage.getItem(UI_PREF_KEY);
+        if(!raw && typeof UI_PREF_KEY_OLD !== "undefined") raw = localStorage.getItem(UI_PREF_KEY_OLD);
         if(!raw) return null;
         const obj = JSON.parse(raw);
         if(!obj || typeof obj !== "object") return null;
+
         const step = isWorkflowStep(String(obj.activeStep||"")) ? String(obj.activeStep) : "setup";
         const layoutMode = (String(obj.layoutMode||obj.layout||"split") === "stack") ? "stack" : "split";
         const swapPanes = !!(obj.swapPanes ?? obj.swap ?? false);
-        return { activeStep: step, showAdvanced: !!obj.showAdvanced, focusMode: !!obj.focusMode, layoutMode, swapPanes };
+        const density = (String(obj.density||obj.uiDensity||"comfort") === "compact") ? "compact" : "comfort";
+        const wideMode = !!(obj.wideMode ?? obj.wide ?? false);
+
+        const rightCardsRaw = obj.rightCards;
+        const rightCards = (rightCardsRaw && typeof rightCardsRaw === "object") ? rightCardsRaw : null;
+
+        return {
+          activeStep: step,
+          showAdvanced: !!obj.showAdvanced,
+          focusMode: !!obj.focusMode,
+          layoutMode,
+          swapPanes,
+          density,
+          wideMode,
+          rightCards
+        };
       }catch{ return null; }
     }
 
@@ -4708,7 +6663,10 @@ renderHealth();
           showAdvanced: !!state.uiPrefs.showAdvanced,
           focusMode: !!state.uiPrefs.focusMode,
           layoutMode: (state.uiPrefs.layoutMode === "stack") ? "stack" : "split",
-          swapPanes: !!state.uiPrefs.swapPanes
+          swapPanes: !!state.uiPrefs.swapPanes,
+          density: (String(state.uiPrefs.density||"comfort") === "compact") ? "compact" : "comfort",
+          wideMode: !!state.uiPrefs.wideMode,
+          rightCards: state.uiPrefs.rightCards || {}
         }));
       }catch{}
     }
@@ -4728,12 +6686,20 @@ renderHealth();
     }
 
     function ensureUiPrefs(){
-      if(!state.uiPrefs) state.uiPrefs = { activeStep:"setup", showAdvanced:false, focusMode:false, layoutMode:"split", swapPanes:false };
+      if(!state.uiPrefs) state.uiPrefs = { activeStep:"setup", showAdvanced:false, focusMode:false, layoutMode:"split", swapPanes:false, density:"comfort", wideMode:false, rightCards:{} };
       if(!isWorkflowStep(String(state.uiPrefs.activeStep||""))) state.uiPrefs.activeStep = "setup";
       state.uiPrefs.showAdvanced = !!state.uiPrefs.showAdvanced;
       state.uiPrefs.focusMode = !!state.uiPrefs.focusMode;
       state.uiPrefs.layoutMode = (String(state.uiPrefs.layoutMode||"split") === "stack") ? "stack" : "split";
       state.uiPrefs.swapPanes = !!state.uiPrefs.swapPanes;
+      state.uiPrefs.density = (String(state.uiPrefs.density||"comfort") === "compact") ? "compact" : "comfort";
+      state.uiPrefs.wideMode = !!state.uiPrefs.wideMode;
+
+      if(!state.uiPrefs.rightCards || typeof state.uiPrefs.rightCards !== "object") state.uiPrefs.rightCards = {};
+      // Normalize to boolean map
+      for(const k of Object.keys(state.uiPrefs.rightCards)){
+        state.uiPrefs.rightCards[k] = !!state.uiPrefs.rightCards[k];
+      }
     }
 
     function computeStepStatuses(){
@@ -4750,7 +6716,17 @@ renderHealth();
       if(lines.length === 0){
         st.lines = "warn";
       }else{
-        const ok = lines.every(l => String(l.name||"").trim().length>0 && Number.isFinite(Number(l.baseCost)));
+        const varMap = buildVarValueMap(state);
+        const ok = lines.every(l => {
+          if(String(l.name||"").trim().length===0) return false;
+          const mode = normalizeBaseMode(l.baseMode);
+          if(mode === "FORMULA"){
+            const r = tryEvalExpr(String(l.baseExpr||""), varMap);
+            return r.ok && Number.isFinite(r.value) && r.value >= 0;
+          }
+          const b = Number(l.baseCost);
+          return Number.isFinite(b) && b >= 0;
+        });
         st.lines = ok ? "done" : "warn";
       }
 
@@ -4858,6 +6834,114 @@ renderHealth();
       if(swapBtn) swapBtn.classList.toggle("active", swap);
     }
 
+    function applyDensityUI(){
+      ensureUiPrefs();
+      const dens = (state.uiPrefs.density === "compact") ? "compact" : "comfort";
+      const wide = !!state.uiPrefs.wideMode;
+      document.body.classList.toggle("density-compact", dens === "compact");
+      document.body.classList.toggle("wide-mode", wide);
+      const sel = $("#densitySelect");
+      if(sel) sel.value = dens;
+      const btn = $("#btnWide");
+      if(btn) btn.classList.toggle("active", wide);
+    }
+
+
+    // -------- UI: Collapsible cards on Outputs (right) panel --------
+    const RIGHT_CARD_IDS = [
+      "compareCard",
+      "chartHistCard",
+      "chartCdfCard",
+      "chartFyCard",
+      "chartConvCard",
+      "briefingToolsCard",
+      "lineResultsCard",
+      "wbsRollupCard",
+      "resultsTableCard"
+    ];
+
+    function ensureHeaderRightWrap(header){
+      if(!header) return null;
+      let right = header.querySelector(":scope > .cardHeaderRight");
+      if(right) return right;
+      const kids = Array.from(header.children);
+      right = document.createElement("div");
+      right.className = "cardHeaderRight";
+      // Move all children after the first into the right container
+      for(let i=1;i<kids.length;i++){
+        right.appendChild(kids[i]);
+      }
+      header.appendChild(right);
+      return right;
+    }
+
+    function applyRightCardCollapseUI(){
+      ensureUiPrefs();
+      const map = state.uiPrefs.rightCards || {};
+      for(const id of RIGHT_CARD_IDS){
+        const card = document.getElementById(id);
+        if(!card) continue;
+        card.classList.add("collapsible");
+        const collapsed = !!map[id];
+        card.classList.toggle("collapsed", collapsed);
+        const header = card.querySelector(":scope > .cardHeader");
+        if(header) header.setAttribute("aria-expanded", collapsed ? "false" : "true");
+      }
+    }
+
+    function toggleRightCard(id){
+      ensureUiPrefs();
+      if(!state.uiPrefs.rightCards || typeof state.uiPrefs.rightCards !== "object") state.uiPrefs.rightCards = {};
+      state.uiPrefs.rightCards[id] = !state.uiPrefs.rightCards[id];
+      saveUiPrefs();
+      applyRightCardCollapseUI();
+      // On expand/collapse, re-render so canvases/layout adjust correctly
+      requestAnimationFrame(()=>{ try{ render(); }catch{} });
+    }
+
+    function initRightCardCollapsers(){
+      ensureUiPrefs();
+      state.uiPrefs.rightCards = state.uiPrefs.rightCards && typeof state.uiPrefs.rightCards === 'object' ? state.uiPrefs.rightCards : {};
+
+      const isInteractive = (el)=>{
+        if(!el || !el.closest) return false;
+        return !!el.closest('button,a,input,select,textarea,details.menuDetails,summary,[role="menu"],.menuPanel,.menuItem');
+      };
+
+      for(const id of RIGHT_CARD_IDS){
+        const card = document.getElementById(id);
+        if(!card) continue;
+        card.classList.add('collapsible');
+        const header = card.querySelector(':scope > .cardHeader');
+        if(!header) continue;
+        if(header.dataset.hasCollapse === '1') continue;
+        header.dataset.hasCollapse = '1';
+
+        // Normalize header structure so all actions live on the right.
+        ensureHeaderRightWrap(header);
+
+        // Make the entire header behave like the left-side collapsible <details> summaries.
+        header.setAttribute('role','button');
+        header.tabIndex = 0;
+        header.setAttribute('aria-controls', id);
+
+        const doToggle = (ev)=>{
+          if(ev && ev.defaultPrevented) return;
+          if(ev && isInteractive(ev.target)) return; // don't collapse when clicking actual controls
+          toggleRightCard(id);
+        };
+
+        header.addEventListener('click', doToggle);
+        header.addEventListener('keydown', (ev)=>{
+          if(ev.key === 'Enter' || ev.key === ' '){
+            ev.preventDefault();
+            doToggle(ev);
+          }
+        });
+      }
+      applyRightCardCollapseUI();
+    }
+
     function applyAdvancedUI(){
       ensureUiPrefs();
       const show = !!state.uiPrefs.showAdvanced;
@@ -4888,9 +6972,10 @@ renderHealth();
     
     // -------- CSRUH: Layer toggles + run compare --------
     function normalizeLayers(l){
-      const base = { costUnc:true, corr:true, scheduleUnc:false, riskReg:false };
+      const base = { varUnc:true, costUnc:true, corr:true, scheduleUnc:false, riskReg:false };
       if(!l || typeof l !== "object") return base;
       return {
+        varUnc: (typeof l.varUnc === "undefined") ? true : !!l.varUnc,
         costUnc: (typeof l.costUnc === "undefined") ? true : !!l.costUnc,
         corr: (typeof l.corr === "undefined") ? true : !!l.corr,
         scheduleUnc: (typeof l.scheduleUnc === "undefined") ? false : !!l.scheduleUnc,
@@ -4900,9 +6985,18 @@ renderHealth();
     function layersLabel(layers){
       const L = normalizeLayers(layers);
       const parts = [];
-      if(L.costUnc) parts.push("Cost Unc"); else parts.push("Deterministic");
-      if(L.corr) parts.push("Corr"); else parts.push("No Corr");
-      if(L.scheduleUnc) parts.push("Sched"); 
+      const varOn = !!L.varUnc;
+      const costOn = !!L.costUnc;
+
+      if(!varOn && !costOn){
+        parts.push("Deterministic");
+      }else{
+        parts.push(varOn ? "Var Unc" : "Vars Det");
+        parts.push(costOn ? "Cost Unc" : "Cost Det");
+      }
+
+      parts.push(L.corr ? "Corr" : "No Corr");
+      if(L.scheduleUnc) parts.push("Sched");
       if(L.riskReg) parts.push("Risk");
       return parts.join(" + ");
     }
@@ -4910,6 +7004,9 @@ renderHealth();
       state.settings = state.settings || {};
       state.settings.layers = normalizeLayers(state.settings.layers);
       const L = state.settings.layers;
+
+      const cv = $("#chkLayerVarUnc");
+      if(cv){ cv.checked = !!L.varUnc; }
 
       const c0 = $("#chkLayerCostUnc");
       if(c0){ c0.checked = !!L.costUnc; }
@@ -5070,10 +7167,13 @@ function applyStepUI(opts={}){
       const today = new Date();
       const end = new Date(Date.now()+1000*60*60*24*180);
       return {
-        id: (crypto.randomUUID?.() || String(Math.random()).slice(2)),
+        id: newId(),
         name: "New line",
         wbs: "",
+        appn: "3400",
         baseCost: 500000,
+        baseMode: "NUMBER",
+        baseExpr: "",
         dist: "TRI",
         lowPct: -10,
         highPct: 25,
@@ -5092,6 +7192,8 @@ function applyStepUI(opts={}){
 
       let hasNormSem = false;
       let hasLognSem = false;
+
+      const varMap = buildVarValueMap(state);
 
       const nLines = Array.isArray(state.lines) ? state.lines.length : 0;
       if(nLines < 1) errors.push("At least one cost line is required.");
@@ -5147,8 +7249,24 @@ function applyStepUI(opts={}){
         const tag = `Line ${i+1}`;
         if(!ln.name || String(ln.name).trim()==="") errors.push(`${tag}: name is required.`);
 
-        const base = Number(ln.baseCost);
-        if(!Number.isFinite(base) || base < 0) errors.push(`${tag}: base cost must be ≥ 0.`);
+        const mode = normalizeBaseMode(ln.baseMode);
+        let base = NaN;
+        if(mode === "FORMULA"){
+          const expr = String(ln.baseExpr||"").trim();
+          if(!expr){
+            errors.push(`${tag}: formula is blank.`);
+          }else{
+            const r = tryEvalExpr(expr, varMap);
+            if(!r.ok || !Number.isFinite(r.value) || r.value < 0){
+              errors.push(`${tag}: formula error (${r.msg}).`);
+            }else{
+              base = r.value;
+            }
+          }
+        }else{
+          base = Number(ln.baseCost);
+          if(!Number.isFinite(base) || base < 0) errors.push(`${tag}: base cost must be ≥ 0.`);
+        }
 
         const start = parseDateUTC(ln.start);
         const end = parseDateUTC(ln.end);
@@ -5178,10 +7296,53 @@ function applyStepUI(opts={}){
         }
       });
 
+      // Variable checks (v4.0.x: scalar-only)
+      const vars = Array.isArray(state.vars) ? state.vars : [];
+      const vCounts = new Map();
+      for(const v of vars){
+        const k = String(v?.name||"").trim().toUpperCase();
+        if(!k) continue;
+        vCounts.set(k, (vCounts.get(k)||0)+1);
+      }
+      for(const [k,c] of vCounts.entries()){
+        if(c>1) errors.push(`Variables: duplicate name "${k}".`);
+      }
+      vars.forEach((v,i)=>{
+        const tag = `Var ${i+1}`;
+        const nm = String(v?.name||"").trim().toUpperCase();
+        if(!nm) errors.push(`${tag}: name is required.`);
+        else if(!/^[A-Z_][A-Z0-9_]*$/.test(nm)) errors.push(`${tag}: name must use A–Z, 0–9, _ and not start with a number.`);
+        const val = Number(v?.value);
+        if(!Number.isFinite(val)) errors.push(`${tag}: value must be numeric.`);
+        const unit = String(v?.unit||"DOLLARS").trim().toUpperCase();
+        const usesB = (unit==="DOLLARS" || unit==="RATE");
+        const basis = String(v?.basis||"").trim().toUpperCase();
+        if(usesB){
+          if(!(basis==="BY" || basis==="TY")) errors.push(`${tag}: basis must be BY or TY for dollar-like units.`);
+          if(unit==="DOLLARS" && Number.isFinite(val) && val < 0) warnings.push(`${tag}: dollar value is negative.`);
+        }else{
+          if(basis && basis!=="NA") warnings.push(`${tag}: non-dollar units use Basis = N/A.`);
+        }
+        const low = Number(v?.lowPct), high = Number(v?.highPct);
+        if(!Number.isFinite(low) || !Number.isFinite(high)) errors.push(`${tag}: low/high % must be numbers.`);
+        if(Number.isFinite(low) && Number.isFinite(high) && high < low) errors.push(`${tag}: high % should be ≥ low %.`);
+        const dist = String(v?.dist||"DET").toUpperCase();
+        if(dist==="DET" && (Math.abs(low)>1e-9 || Math.abs(high)>1e-9)) warnings.push(`${tag}: DET ignores Low/High %.`);
+      });
+
+
       if(hasNormSem) warnings.push("Normal distribution uses σ ≈ (max−min)/4 (Low/High treated as bounds around the mean). ");
       if(hasLognSem) warnings.push("Lognormal treats base cost as the median; Low/High are treated as P10/P90 to infer spread.");
 
-      return {errors, warnings, bounds:{minRhoGlobal, maxRho, counts, minRhoA, minRhoB, minRhoC, corrMode}};
+      
+      // Inflation index table coverage (only when Output basis = TY)
+      try{
+        const fyKeys = getGlobalFyKeysForInflation(state);
+        const rep = inflationCoverageReport(state, fyKeys);
+        for(const w of rep.warnings) warnings.push(w);
+      } catch {}
+
+return {errors, warnings, bounds:{minRhoGlobal, maxRho, counts, minRhoA, minRhoB, minRhoC, corrMode}};
     }
 
     function validateState(){
@@ -5725,9 +7886,10 @@ function applyStepUI(opts={}){
       for(const n of candidates){
         if(existingExact.has(n.key)) continue; // avoid duplicates by default
         newLines.push({
-          id: (crypto.randomUUID?.() || String(Math.random()).slice(2)),
+          id: newId(),
           name: n.title,
           wbs: n.key,
+          appn: String(first.appn||"3400"),
           baseCost: 0,
           dist: "TRI",
           lowPct: -10,
@@ -5736,7 +7898,8 @@ function applyStepUI(opts={}){
           end: baseEnd,
           phase: basePhase,
           rampPct: baseRamp,
-          skew: baseSkew
+          skew: baseSkew,
+          corrGroup: ""
         });
       }
 
@@ -5772,7 +7935,7 @@ function applyStepUI(opts={}){
       }
       const first = (state.lines && state.lines[0]) ? state.lines[0] : newLine();
       state.lines.push({
-        id: (crypto.randomUUID?.() || String(Math.random()).slice(2)),
+        id: newId(),
         name: title || exact,
         wbs: exact,
         baseCost: 0,
@@ -5808,7 +7971,7 @@ function applyStepUI(opts={}){
         if(existingExact.has(exact)) continue;
         const n = t.nodesByKey.get(k);
         state.lines.push({
-          id: (crypto.randomUUID?.() || String(Math.random()).slice(2)),
+          id: newId(),
           name: n?.title || exact,
           wbs: exact,
           baseCost: 0,
@@ -6042,9 +8205,12 @@ async function copyTSV(lines){
     function simulate(st, layersArg){
       const n = st.settings.iterations;
       const seed = st.settings.seed;
-      const rng = mulberry32(seed);
+      const seed32 = (Number(seed)||0) >>> 0;
+      const rng = mulberry32(seed32);
+      const rngVar = mulberry32((seed32 ^ 0x9e3779b9) >>> 0);
 
       const layers = normalizeLayers(layersArg || (st.settings && st.settings.layers));
+      const enableVarUnc = !!layers.varUnc;
       const enableCostUnc = !!layers.costUnc;
       const enableCorr = !!layers.corr;
       const lines = st.lines.map(ln=>({
@@ -6058,17 +8224,41 @@ async function copyTSV(lines){
         })
       }));
 
+      // Variable context: deterministic map + optional per-iteration sampling (Layer: Variable uncertainty).
+      // Note: scalar dollar variables may specify a BY fiscal year; if different from the estimate Base Year,
+      // they are converted to the estimate Base Year using the line's APPN index series.
+      const varMapDetRaw = buildVarValueMap(st);
+      const usedAppns = Array.from(new Set(lines.map(ln=> normalizeAppn(ln.appn)||"3400")));
+      const varConv = buildVarConversionFactorMap(st, usedAppns);
+
+      const lineIsFormula = lines.map(ln=> normalizeBaseMode(ln.baseMode)==="FORMULA");
+      const needsVarSampling = enableVarUnc && hasAnyVarUncertainty(st) && lineIsFormula.some(Boolean);
+
+      const baseDet = lines.map(ln=>{
+        const lookup = makeVarLookup(varMapDetRaw, ln.appn, varConv);
+        const b = getLineBaseDeterministic(ln, lookup);
+        return (Number.isFinite(b) ? b : 0);
+      });
+
       // Union FY keys
       const fySet = new Set();
       for(const ln of lines) for(const k of ln.phasing.fyKeys) fySet.add(k);
       const fyKeys = Array.from(fySet).sort((a,b)=>Number(a.slice(2))-Number(b.slice(2)));
 
-      // Per-line fy weight vectors
+      // Per-line FY weight vectors
       const lineFyW = lines.map(ln=>{
         const v = new Float64Array(fyKeys.length);
         for(let i=0;i<fyKeys.length;i++) v[i] = ln.phasing.fyWeights.get(fyKeys[i]) || 0;
         return v;
       });
+
+      // Inflation / basis (convert BY->TY after phasing using APPN-specific index factors)
+      const outputBasis = (String(st.settings.outputBasis||"BY").toUpperCase()==="TY") ? "TY" : "BY";
+      const onesFy = new Float64Array(fyKeys.length); onesFy.fill(1);
+      const inflCache = (outputBasis==="TY") ? buildInflationFactorCache(st, fyKeys) : null;
+      const lineInflF = (outputBasis==="TY")
+        ? lines.map(ln=> (inflCache.get(normalizeAppn(ln.appn)||"3400") || onesFy))
+        : null;
 
       // WBS roll-up model (hierarchy derived from each line's WBS code)
       const wbsModel = buildWbsModel(lines, getWbsTemplate(validWbsTemplateId(String(st.wbsTemplateId||""))));
@@ -6212,27 +8402,47 @@ async function copyTSV(lines){
         const fyAcc = new Float64Array(fyKeys.length);
         wAcc.fill(0);
 
+        const varMapIterRaw = needsVarSampling ? buildVarSampleValueMap(st, rngVar) : varMapDetRaw;
+
         for(let i=0;i<m;i++){
           const u = normCdf(y[i]);
-          const c = enableCostUnc ? sampleCost(lines[i], u, rng) : Math.max(0, Number(lines[i].baseCost)||0);
+          let base = baseDet[i];
+          if(needsVarSampling && lineIsFormula[i]){
+            base = getLineBaseDeterministic(lines[i], makeVarLookup(varMapIterRaw, lines[i].appn, varConv));
+            if(!Number.isFinite(base)) base = 0;
+          }
+          const cBy = enableCostUnc ? sampleCost(lines[i], u, rng, base) : Math.max(0, base);
 
-          // WBS accumulation (for roll-up stats)
+          // Convert to output basis (BY or TY) and accumulate fiscal-year buckets.
+          const w = lineFyW[i];
+          let cOut = cBy;
+          if(outputBasis==="TY"){
+            cOut = 0;
+            const f = lineInflF[i] || onesFy;
+            for(let k=0;k<fyKeys.length;k++){
+              const a = cBy * w[k] * f[k];
+              fyAcc[k] += a;
+              cOut += a;
+            }
+          } else {
+            for(let k=0;k<fyKeys.length;k++) fyAcc[k] += cBy * w[k];
+          }
+
+          // WBS accumulation (for roll-up stats) — in output basis
           const wIdxs = wbsModel.lineNodeIdx[i];
-          for(let t=0;t<wIdxs.length;t++) wAcc[wIdxs[t]] += c;
+          for(let t=0;t<wIdxs.length;t++) wAcc[wIdxs[t]] += cOut;
 
-          // update per-line stats
+          // update per-line stats — in output basis
           const st = perLine[i];
           st.n++;
-          const d = c - st.mean;
+          const d = cOut - st.mean;
           st.mean += d / st.n;
-          st.m2 += d * (c - st.mean);
-          if(c < st.min) st.min = c;
-          if(c > st.max) st.max = c;
-          if((j % stride) === 0) st.samples.push(c);
+          st.m2 += d * (cOut - st.mean);
+          if(cOut < st.min) st.min = cOut;
+          if(cOut > st.max) st.max = cOut;
+          if((j % stride) === 0) st.samples.push(cOut);
 
-          total += c;
-          const w = lineFyW[i];
-          for(let k=0;k<fyKeys.length;k++) fyAcc[k] += c * w[k];
+          total += cOut;
         }
 
         for(let wi=0; wi<wn; wi++){
@@ -6306,7 +8516,24 @@ async function copyTSV(lines){
       let s2=0; for(const v of sorted){ const d=v-mean; s2 += d*d; }
       const stdev = Math.sqrt(s2/Math.max(1, sorted.length-1));
       // CSRUH alignment: point estimate (sum of baselines) + its percentile in the simulated total distribution
-      const pe = lines.reduce((acc, ln)=> acc + (Number(ln.baseCost)||0), 0);
+      // CSRUH alignment: point estimate (sum of baselines) + its percentile in the simulated total distribution
+      // PE is expressed in the selected output basis (BY or TY).
+      const pe = (()=>{
+        let s=0;
+        for(let i=0;i<m;i++){
+          const b = Number(baseDet[i])||0;
+          if(outputBasis==="TY"){
+            const w = lineFyW[i];
+            const f = lineInflF[i] || onesFy;
+            let t=0;
+            for(let k=0;k<fyKeys.length;k++) t += b * w[k] * f[k];
+            s += t;
+          } else {
+            s += b;
+          }
+        }
+        return s;
+      })();
       const pePctl = percentileOfValue(sorted, pe);
 
       const cv = (isFiniteNumber(mean) && Math.abs(mean) > 1e-12) ? (stdev/Math.abs(mean)) : 0;
@@ -6370,9 +8597,9 @@ return { summary, totals: sorted, fy: {keys: fyKeys, mean: fyMean, p80: fyP80}, 
       try{
         if(lastResultsFull){
           const res = lastResultsFull;
-          drawHistogram($("#histCanvas"), res.totals, {bins: 34, titleNote: "Histogram of total cost simulations"});
-          drawCdf($("#cdfCanvas"), res.totals, {titleNote: "S‑curve from sorted simulation totals"});
-          drawFyProfile($("#fyCanvas"), res.fy.keys, res.fy.mean, res.fy.p80, {titleNote:"FY profile: mean (bars) and P80 (line)"});
+          drawHistogram($("#histCanvas"), res.totals, {bins: 34, titleNote: `Histogram of total cost simulations (${(String(res.meta.outputBasis||"BY").toUpperCase()==="TY")?"TY":`BY (FY${res.meta.baseYearFY})`})`});
+          drawCdf($("#cdfCanvas"), res.totals, {titleNote: `S‑curve from sorted simulation totals (${(String(res.meta.outputBasis||"BY").toUpperCase()==="TY")?"TY":`BY (FY${res.meta.baseYearFY})`})`});
+          drawFyProfile($("#fyCanvas"), res.fy.keys, res.fy.mean, res.fy.p80, {titleNote:`FY profile (${(String(res.meta.outputBasis||"BY").toUpperCase()==="TY")?"TY":`BY (FY${res.meta.baseYearFY})`}) — mean (bars) and P80 (line)`});
       if($("#convCanvas")) drawConvergence($("#convCanvas"), res.conv, {titleNote:"Checkpoints track percentile stability"});
           drawConvergence($("#convCanvas"), res.conv, {titleNote:"Checkpoints track percentile stability"});
         } else {
@@ -6403,9 +8630,9 @@ function applyResults(res){
           if(Math.abs(m.rhoC||0)>1e-9) parts.push(`ρC=${Number(m.rhoC).toFixed(2)}`);
           if(parts.length) corr = ` • ${parts.join(" ")}`;
         }
-        return `${it} iters • ${samp} • ${mode}${corr}`;
+        return `${it} iters • ${samp} • ${mode}${corr} • ${(String(m.outputBasis||"BY").toUpperCase()==="TY")?"TY":`BY (FY${m.baseYearFY})`}`;
       })();
-      $("#cdfNote").textContent = `P50 ${fmtMoney(res.summary.p50)} • P80 ${fmtMoney(res.summary.p80)}`;
+      $("#cdfNote").textContent = (()=>{ const b=(String(res.meta.outputBasis||"BY").toUpperCase()==="TY")?"TY":`BY (FY${res.meta.baseYearFY})`; return `P50 ${fmtMoney(res.summary.p50)} • P80 ${fmtMoney(res.summary.p80)} • ${b}`; })();
       $("#fyNote").textContent = `Bars: mean • Line: P80`;
 
       // Convergence summary
@@ -6451,9 +8678,9 @@ function applyResults(res){
 
       renderKpiExtras(res.summary);
 
-      drawHistogram($("#histCanvas"), res.totals, {bins: 34, titleNote: "Histogram of total cost simulations"});
-      drawCdf($("#cdfCanvas"), res.totals, {titleNote: "S‑curve from sorted simulation totals"});
-      drawFyProfile($("#fyCanvas"), res.fy.keys, res.fy.mean, res.fy.p80, {titleNote:"FY profile: mean (bars) and P80 (line)"});
+      drawHistogram($("#histCanvas"), res.totals, {bins: 34, titleNote: `Histogram of total cost simulations (${(String(res.meta.outputBasis||"BY").toUpperCase()==="TY")?"TY":`BY (FY${res.meta.baseYearFY})`})`});
+      drawCdf($("#cdfCanvas"), res.totals, {titleNote: `S‑curve from sorted simulation totals (${(String(res.meta.outputBasis||"BY").toUpperCase()==="TY")?"TY":`BY (FY${res.meta.baseYearFY})`})`});
+      drawFyProfile($("#fyCanvas"), res.fy.keys, res.fy.mean, res.fy.p80, {titleNote:`FY profile (${(String(res.meta.outputBasis||"BY").toUpperCase()==="TY")?"TY":`BY (FY${res.meta.baseYearFY})`}) — mean (bars) and P80 (line)`});
       if($("#convCanvas")) drawConvergence($("#convCanvas"), res.conv, {titleNote:"Checkpoints track percentile stability"});
       renderResultsTables(res.summary, res.fy);
       renderLineResults(res.lines, res.summary);
@@ -6510,7 +8737,7 @@ function applyResults(res){
             rhoB: Number(state.settings.rhoB)||0,
             rhoC: Number(state.settings.rhoC)||0,
             corrRationale: String(state.settings.corrRationale||""),
-          layers: normalizeLayers(state.settings.layers)
+            layers: normalizeLayers(state.settings.layers)
           }
         };
       }
@@ -6553,10 +8780,10 @@ function applyResults(res){
 
     function exportLinesCSVSection(){
       const out = [];
-      out.push(["LineName","WBS","BaseCost","Dist","LowPct","HighPct","Start","End","Phasing","RampPct","Skew","CorrGroup"].join(","));
+      out.push(["LineName","WBS","APPN","BaseMode","BaseCost","BaseExpr","Dist","LowPct","HighPct","Start","End","Phasing","RampPct","Skew","CorrGroup"].join(","));
       for(const ln of (state.lines||[])){
         out.push([
-          csvSafe(ln.name), csvSafe(ln.wbs||""), ln.baseCost, ln.dist, ln.lowPct, ln.highPct,
+          csvSafe(ln.name), csvSafe(ln.wbs||""), csvSafe(String(ln.appn||"3400")), csvSafe(ln.baseMode||"NUMBER"), ln.baseCost, csvSafe(ln.baseExpr||""), ln.dist, ln.lowPct, ln.highPct,
           ln.start, ln.end, ln.phase, ln.rampPct, ln.skew, (ln.corrGroup||"")
         ].join(","));
       }
@@ -6617,6 +8844,8 @@ function exportCSV(){
       out.push(["P90", res.summary.p90].join(","));
       out.push(["Iterations", res.meta.iterations].join(","));
       out.push(["Sampling", res.meta.sampling].join(","));
+      out.push(["BaseYearFY", res.meta.baseYearFY ?? ""].join(","));
+      out.push(["OutputBasis", res.meta.outputBasis ?? ""].join(","));
       out.push(["CorrelationMode", res.meta.corrMode||"GLOBAL"].join(","));
       out.push(["GlobalRho", res.meta.rho].join(","));
       out.push(["RhoA", res.meta.rhoA||0].join(","));
@@ -6632,7 +8861,31 @@ function exportCSV(){
       out.push("");
 
       out.push(["InputsSnapshot"].join(","));
-      
+
+      // Variables snapshot
+      out.push("");
+      out.push("Variables");
+      out.push(["VarName","Type","Unit","Basis","ByFY","Value","Dist","LowPct","HighPct","Notes"].join(","));
+      for(const v of (state.vars||[])){
+        const val = (typeof v.value==="number" || typeof v.value==="string") ? v.value : JSON.stringify(v.value||"");
+        out.push([csvSafe(v.name), csvSafe(v.type||"SCALAR"), csvSafe(v.unit||""), csvSafe(v.basis||""), csvSafe(v.byFY??""), csvSafe(val), csvSafe(v.dist||"DET"), v.lowPct??"", v.highPct??"", csvSafe(v.notes||"")].join(","));
+      }
+
+      // Inflation index tables
+      out.push("");
+      out.push("InflationIndices");
+      out.push(["APPN","Label","FiscalYear","IndexLevel"].join(","));
+      const itab = state.inflationTables || {};
+      for(const appn of Object.keys(itab).sort()){
+        const t = itab[appn]||{};
+        const label = String(t.label||appnCommonLabel(appn)).trim();
+        const lv = t.levels || {};
+        const keys = Object.keys(lv).filter(k=>/^FY\d{4}$/.test(k)).sort((a,b)=>Number(a.slice(2))-Number(b.slice(2)));
+        for(const fy of keys){
+          out.push([csvSafe(appn), csvSafe(label), fy, lv[fy]].join(","));
+        }
+      }
+
       // WBS roll-up
       if(res.wbs && res.wbs.model && res.wbs.stats){
         out.push("");
@@ -6651,10 +8904,10 @@ function exportCSV(){
           out.push([csvSafe(wbsLabel(k)), mean, p50, p80, p90, sd, model.nodes[i].nLines||0].join(","));
         }
       }
-out.push(["LineName","WBS","BaseCost","Dist","LowPct","HighPct","Start","End","Phasing","RampPct","Skew","CorrGroup"].join(","));
+out.push(["LineName","WBS","APPN","BaseMode","BaseCost","BaseExpr","Dist","LowPct","HighPct","Start","End","Phasing","RampPct","Skew","CorrGroup"].join(","));
       for(const ln of state.lines){
         out.push([
-          csvSafe(ln.name), csvSafe(ln.wbs||""), ln.baseCost, ln.dist, ln.lowPct, ln.highPct,
+          csvSafe(ln.name), csvSafe(ln.wbs||""), csvSafe(String(ln.appn||"3400")), csvSafe(ln.baseMode||"NUMBER"), ln.baseCost, csvSafe(ln.baseExpr||""), ln.dist, ln.lowPct, ln.highPct,
           ln.start, ln.end, ln.phase, ln.rampPct, ln.skew, (ln.corrGroup||"")
         ].join(","));
       }
@@ -6717,8 +8970,11 @@ out.push(["LineName","WBS","BaseCost","Dist","LowPct","HighPct","Start","End","P
       state.settings.iterations = clampInt($("#inIterations").value, 200, 200000);
       state.settings.seed = clampInt($("#inSeed").value, 0, 999999999);
       state.settings.sampling = $("#inSampling").value;
+      state.settings.baseYearFY = clampInt($("#inBaseYearFY")?.value, 1950, 2100);
+      state.settings.outputBasis = (String($("#inOutputBasis")?.value||state.settings.outputBasis||"BY").toUpperCase()==="TY") ? "TY" : "BY";
       // CSRUH layers (if present)
       state.settings.layers = normalizeLayers(state.settings.layers);
+      const lv = $("#chkLayerVarUnc"); if(lv) state.settings.layers.varUnc = !!lv.checked;
       const lc = $("#chkLayerCostUnc"); if(lc) state.settings.layers.costUnc = !!lc.checked;
       const lco = $("#chkLayerCorr"); if(lco) state.settings.layers.corr = !!lco.checked;
 
@@ -6734,6 +8990,14 @@ out.push(["LineName","WBS","BaseCost","Dist","LowPct","HighPct","Start","End","P
       diag.lastError = null;
       
       const errs = validateState();
+
+      if(!Array.isArray(state.lines) || state.lines.length === 0){
+        diag.lastRunOk = false;
+        diag.lastError = "No cost lines.";
+        setStatus("warn","Add at least one cost line.","Use + Add line, Load WBS, or load the Example scenario.");
+        renderHealth();
+        return;
+      }
       // reflect clamped rho to UI
       $("#inRho").value = state.settings.rho;
       renderHealth();
@@ -6759,6 +9023,9 @@ out.push(["LineName","WBS","BaseCost","Dist","LowPct","HighPct","Start","End","P
           ms: Math.round(t1 - t0),
           iterations: state.settings.iterations,
           sampling: state.settings.sampling,
+          layers: normalizeLayers(state.settings.layers),
+          baseYearFY: state.settings.baseYearFY,
+          outputBasis: state.settings.outputBasis,
           corrMode: (String(state.settings.corrMode||"GLOBAL").toUpperCase()==="GROUPS" ? "GROUPS" : "GLOBAL"),
           rho: Number(state.settings.rho)||0,
           rhoA: Number(state.settings.rhoA)||0,
@@ -6842,6 +9109,30 @@ out.push(["LineName","WBS","BaseCost","Dist","LowPct","HighPct","Start","End","P
           setStatus("good", "Layout " + (state.uiPrefs.swapPanes ? "swapped." : "reset."), "UI-only preference saved.");
         });
       }
+
+
+      // Density / wide wiring (UI-only)
+      const densitySel = $("#densitySelect");
+      if(densitySel){
+        densitySel.addEventListener("change", ()=>{
+          ensureUiPrefs();
+          state.uiPrefs.density = (densitySel.value === "compact") ? "compact" : "comfort";
+          saveUiPrefs();
+          render(); // applyDensityUI + redraw charts/tables for new geometry
+          setStatus("good", "Density set to " + (state.uiPrefs.density==="compact" ? "Compact." : "Comfortable."), "UI-only preference saved.");
+        });
+      }
+      const wideBtn = $("#btnWide");
+      if(wideBtn){
+        wideBtn.addEventListener("click", ()=>{
+          ensureUiPrefs();
+          state.uiPrefs.wideMode = !state.uiPrefs.wideMode;
+          saveUiPrefs();
+          render();
+          setStatus("good", "Wide mode " + (state.uiPrefs.wideMode ? "enabled." : "disabled."), "UI-only preference saved.");
+        });
+      }
+
 
 
 
@@ -6934,6 +9225,179 @@ $("#btnReset").addEventListener("click", ()=>{
       });
 
 
+
+      // Variables (scalar-only)
+      $("#btnVarAdd")?.addEventListener("click", ()=>{
+        if(!Array.isArray(state.vars)) state.vars = [];
+      state.vars = (state.vars||[]).slice(0,500).map(x=> newVar(x));
+        state.vars.push(newVar());
+        saveState();
+        renderVarsTable();
+        renderHealth();
+        scheduleFormulaPreviewRefresh();
+        setStatus("good","Variable added.","You can reference variables in line formulas (ƒx) now.");
+      });
+
+      $("#btnVarExample")?.addEventListener("click", ()=>{
+        if(!Array.isArray(state.vars)) state.vars = [];
+      state.vars = (state.vars||[]).slice(0,500).map(x=> newVar(x));
+        const examples = [
+          { name:"LICENSE_UNIT_COST", value: 12000, unit:"DOLLARS", basis:"BY", dist:"DET", lowPct:0, highPct:0, notes:"Example: annual license unit cost (BY)" },
+          { name:"FTE_DEV", value: 8, unit:"COUNT", basis:"NA", dist:"DET", lowPct:0, highPct:0, notes:"Example: development staffing (scalar)" },
+          { name:"INSTALLS", type:"FY_SERIES", series: { "FY2026": 12, "FY2027": 24, "FY2028": 18 }, unit:"COUNT", basis:"NA", dist:"DET", lowPct:0, highPct:0, notes:"Example: installs per FY (FY series)" },
+          { name:"LABOR_RATE", value: 185000, unit:"RATE", basis:"BY", dist:"DET", lowPct:0, highPct:0, notes:"Example: loaded annual rate (BY)" }
+        ];
+        for(const ex of examples){
+          const v = newVar(ex);
+          // ensure unique name
+          v.name = suggestVarName(v.name);
+          state.vars.push(v);
+        }
+        saveState();
+        renderVarsTable();
+        renderHealth();
+        scheduleFormulaPreviewRefresh();
+        setStatus("good","Example variables added.","Edit or delete them as needed.");
+      });
+
+      $("#varsTbody")?.addEventListener("input", (e)=>{
+        const tr = e.target.closest("tr");
+        const id = tr?.dataset?.id;
+        if(!id) return;
+        const v = (state.vars||[]).find(x=>x.id===id);
+        if(!v) return;
+        const k = e.target.dataset.k;
+        if(!k) return;
+
+        if(["value","lowPct","highPct"].includes(k)) v[k] = Number(e.target.value);
+        else if(k==="byFY"){
+          const s = String(e.target.value||"").trim();
+          if(!s){ v.byFY = null; }
+          else {
+            const y = Number(s);
+            v.byFY = Number.isFinite(y) ? clampInt(y, 1950, 2100) : null;
+          }
+        }
+        else v[k] = e.target.value;
+
+        // Lightweight UI feedback (no full rerender while typing)
+        const counts = varNameCounts();
+        applyVarRowUI(tr, v, counts);
+        saveState();
+        renderHealth();
+        scheduleFormulaPreviewRefresh();
+      });
+
+      $("#varsTbody")?.addEventListener("change", (e)=>{
+        const tr = e.target.closest("tr");
+        const id = tr?.dataset?.id;
+        if(!id) return;
+        const v = (state.vars||[]).find(x=>x.id===id);
+        if(!v) return;
+        const k = e.target.dataset.k;
+        if(!k) return;
+
+        if(k === "name"){
+          v.name = cleanVarName(e.target.value);
+          e.target.value = v.name;
+        }
+
+        if(k === "type"){
+          v.type = normalizeVarType(e.target.value);
+          if(v.type === "FY_SERIES"){
+            v.series = sanitizeVarSeries(v.series);
+            v.byFY = null;
+            // FY series supports BY only for dollar-like units
+            if(varUsesBasis(v.unit)) v.basis = "BY";
+          } else {
+            // scalar
+            if(!Number.isFinite(Number(v.value))) v.value = 0;
+            if(!varUsesBasis(v.unit)) v.basis = "NA";
+          }
+        }
+
+        if(k === "unit"){
+          v.unit = normalizeVarUnit(e.target.value);
+          // Basis rules depend on type
+          if(normalizeVarType(v.type) === "FY_SERIES"){
+            v.basis = varUsesBasis(v.unit) ? "BY" : "NA";
+            v.byFY = null;
+          } else {
+            v.basis = normalizeVarBasis(v.basis, v.unit);
+          }
+        }
+
+        if(k === "basis"){
+          if(normalizeVarType(v.type) === "FY_SERIES"){
+            // FY series supports BY only (for dollar-like units)
+            v.basis = varUsesBasis(v.unit) ? "BY" : "NA";
+          } else {
+            v.basis = normalizeVarBasis(e.target.value, v.unit);
+          }
+        }
+
+        // Maintain/clear variable BY FY when not applicable
+        const usesB = varUsesBasis(v.unit);
+        if(!(normalizeVarType(v.type)==="SCALAR" && usesB && String(v.basis||"BY").toUpperCase()==="BY")){
+          v.byFY = null;
+        }
+
+        if(k === "byFY"){
+          const s = String(e.target.value||"").trim();
+          if(!s) v.byFY = null;
+          else {
+            const y = Number(s);
+            v.byFY = Number.isFinite(y) ? clampInt(y, 1950, 2100) : null;
+          }
+        }
+
+        if(k === "dist"){
+          v.dist = String(e.target.value||"DET").toUpperCase();
+        }
+
+        saveState();
+        renderVarsTable(); // ensures duplicate-name status updates across rows + type/basis UI changes
+        renderHealth();
+        scheduleFormulaPreviewRefresh();
+      });
+
+      $("#varsTbody")?.addEventListener("click", (e)=>{
+        const btn = e.target.closest("button[data-act]");
+        if(!btn) return;
+        const act = btn.dataset.act;
+        const tr = btn.closest("tr");
+        const id = tr?.dataset?.id;
+        if(!id) return;
+        const idx = (state.vars||[]).findIndex(x=>x.id===id);
+        if(idx<0) return;
+
+        if(act==="series"){
+          openVarSeriesModal(id);
+          return;
+        }
+
+        if(act==="del"){
+          state.vars.splice(idx,1);
+          saveState();
+          renderVarsTable();
+          renderHealth();
+          scheduleFormulaPreviewRefresh();
+          setStatus("good","Variable removed.","");
+        }else if(act==="dup"){
+          const src = state.vars[idx];
+          const copy = JSON.parse(JSON.stringify(src));
+          copy.id = (crypto.randomUUID?.() || String(Math.random()).slice(2));
+          copy.name = suggestVarName(String(src.name||"VAR") + "_COPY");
+          state.vars.splice(idx+1, 0, copy);
+          saveState();
+          renderVarsTable();
+          renderHealth();
+          scheduleFormulaPreviewRefresh();
+          setStatus("good","Variable duplicated.","");
+        }
+
+      });
+
       // Modal wiring
       $("#btnWbsModalClose")?.addEventListener("click", ()=> closeWbsModal());
       $("#btnWbsModalCancel")?.addEventListener("click", ()=> closeWbsModal());
@@ -6942,8 +9406,120 @@ $("#btnReset").addEventListener("click", ()=>{
       $("#wbsModalLevel")?.addEventListener("change", ()=> updateWbsModalPreview());
       $("#btnWbsModalApply")?.addEventListener("click", ()=> applyWbsLoad());
 
+      // Variable FY series modal wiring
+      $("#btnVarSeriesClose")?.addEventListener("click", ()=> closeVarSeriesModal());
+      $("#btnVarSeriesCancel")?.addEventListener("click", ()=> closeVarSeriesModal());
+      $("#btnVarSeriesApply")?.addEventListener("click", ()=>{
+        applyVarSeriesDraft();
+        closeVarSeriesModal();
+      });
+      $("#varSeriesBackdrop")?.addEventListener("click", (e)=>{ if(e.target && e.target.id === "varSeriesBackdrop") closeVarSeriesModal(); });
+
+      $("#varSeriesTbody")?.addEventListener("input", (e)=>{
+        const inp = e.target.closest("input.seriesIn");
+        if(!inp || !_varSeriesDraft) return;
+        const fy = String(inp.dataset.fy||"").trim().toUpperCase();
+        if(!/^FY\d{4}$/.test(fy)) return;
+        const val = Number(inp.value);
+        _varSeriesDraft[fy] = Number.isFinite(val) ? val : 0;
+        // update sum
+        const v = (state.vars||[]).find(x=>x.id===_varSeriesEditId);
+        const sumEl = $("#varSeriesSum");
+        if(v && sumEl) sumEl.textContent = `Σ ${fmtByUnit(sumVarSeries(_varSeriesDraft), v.unit)}`;
+      });
+
+      $("#btnVarSeriesFill")?.addEventListener("click", ()=>{
+        if(!_varSeriesDraft) return;
+        const c = Number($("#varSeriesFillConst")?.value);
+        const val = Number.isFinite(c) ? c : 0;
+        for(const fy of _varSeriesFyList){ _varSeriesDraft[fy] = val; }
+        renderVarSeriesModal();
+      });
+      $("#btnVarSeriesZero")?.addEventListener("click", ()=>{
+        if(!_varSeriesDraft) return;
+        for(const fy of _varSeriesFyList){ _varSeriesDraft[fy] = 0; }
+        renderVarSeriesModal();
+      });
+
+
 
       $("#btnExport").addEventListener("click", ()=> exportCSV());
+
+      // Inflation indices editor (Phase 5)
+      $("#btnInflationAdd")?.addEventListener("click", ()=>{
+        const code = normalizeAppn(prompt("Enter 4-digit APPN code (e.g., 3400, 3600, 3080):", "3400"));
+        if(!code) return;
+        const label = prompt("Label for this index series (e.g., RDT&E, AF or O&M, SF):", appnCommonLabel(code)) || appnCommonLabel(code);
+        ensureInflationTable(code);
+        state.inflationTables[code].label = String(label).trim() || appnCommonLabel(code);
+        clearResultsForNewInputs();
+        saveState();
+        render();
+        setStatus("good","Index table added.", `${code} ready for FY index levels.`);
+      });
+
+      $("#btnInflationFill1")?.addEventListener("click", ()=>{
+        const fyKeys = getGlobalFyKeysForInflation(state);
+        const used = new Set(["3400","3600","3080"]);
+        for(const ln of (state.lines||[])) used.add(normalizeAppn(ln.appn) || "3400");
+        for(const k of Object.keys(state.inflationTables||{})) used.add(normalizeAppn(k));
+        for(const appn of Array.from(used).filter(Boolean)){
+          const t = ensureInflationTable(appn);
+          for(const fy of fyKeys) t.levels[fy] = 1.0;
+        }
+        clearResultsForNewInputs();
+        saveState();
+        render();
+        setStatus("good","Filled.", "All visible FY index levels set to 1.000 (no inflation).");
+      });
+
+      $("#inflationTablesWrap")?.addEventListener("input", (e)=>{
+        const el = e.target;
+        if(!(el instanceof HTMLInputElement)) return;
+        if(el.dataset && el.dataset.inflation==="idx"){
+          const appn = normalizeAppn(el.dataset.appn) || "3400";
+          const fy = String(el.dataset.fy||"").trim();
+          const t = ensureInflationTable(appn);
+          const v = Number(el.value);
+          if(el.value==="" || !Number.isFinite(v)){
+            delete t.levels[fy];
+          } else {
+            t.levels[fy] = Math.max(0, v);
+          }
+          clearResultsForNewInputs();
+          saveState();
+          // light re-render so warnings/hints update
+          renderInflationEditor();
+          renderHealth();
+        }
+      });
+
+      $("#inflationTablesWrap")?.addEventListener("click", (e)=>{
+        const btn = e.target && (e.target.closest ? e.target.closest("[data-action]") : null);
+        if(!btn) return;
+        const action = btn.getAttribute("data-action");
+        const appn = normalizeAppn(btn.getAttribute("data-appn")) || "";
+        if(!appn) return;
+        if(action==="inflFillOne"){
+          const fyKeys = getGlobalFyKeysForInflation(state);
+          const t = ensureInflationTable(appn);
+          for(const fy of fyKeys) t.levels[fy] = 1.0;
+          clearResultsForNewInputs();
+          saveState();
+          render();
+          setStatus("good","Filled.", `${appn} set to 1.000 across visible FYs.`);
+        }
+        if(action==="inflDelete"){
+          if(confirm(`Remove inflation table for ${appn}? (Cost line APPN values are unchanged.)`)){
+            if(state.inflationTables && state.inflationTables[appn]) delete state.inflationTables[appn];
+            clearResultsForNewInputs();
+            saveState();
+            render();
+            setStatus("good","Removed.", `${appn} inflation table removed.`);
+          }
+        }
+      });
+
 
       // Phase 4: Section CSV downloads (Results table menu)
       const closeDlMenu = ()=>{ const d = $("#dlMenu"); if(d) d.open = false; };
@@ -6996,6 +9572,31 @@ $("#btnCopySummary").addEventListener("click", async ()=>{
         await copyTSV(lines);
       });
 
+
+      $("#btnCopyWbs")?.addEventListener("click", async ()=>{
+        const w = state.lastWbs;
+        const s = state.lastSummary;
+        if(!w || !w.model || !w.stats || !s){
+          setStatus("warn","Nothing to copy yet.","Run first, then copy WBS.");
+          return;
+        }
+        const out = [];
+        out.push(["WBS","Mean","P50_Approx","P80_Approx","P90_Approx","StdDev","Lines"].join("	"));
+        const model = w.model;
+        const stats = w.stats;
+        for(let i=0;i<model.nodes.length;i++){
+          const k = model.nodes[i].key;
+          const st = stats[i];
+          const mean = (k==="TOTAL") ? s.mean : st.mean;
+          const p50  = (k==="TOTAL") ? s.p50  : st.p50;
+          const p80  = (k==="TOTAL") ? s.p80  : st.p80;
+          const p90  = (k==="TOTAL") ? s.p90  : st.p90;
+          const sd   = (k==="TOTAL") ? s.stdev: st.stdev;
+          out.push([wbsLabel(k), mean, p50, p80, p90, sd, (model.nodes[i].nLines||0)].join("	"));
+        }
+        await copyTSV(out);
+      });
+
       // Budget probability wiring
       $("#inBudget").addEventListener("input", ()=> updateBudgetProbability());
       $("#btnUseP50").addEventListener("click", ()=>{
@@ -7024,6 +9625,7 @@ $("#btnCopySummary").addEventListener("click", async ()=>{
           renderHealth();
         });
       };
+      bindLayer("#chkLayerVarUnc", "varUnc");
       bindLayer("#chkLayerCostUnc", "costUnc");
       bindLayer("#chkLayerCorr", "corr");
 
@@ -7031,7 +9633,25 @@ $("#btnCopySummary").addEventListener("click", async ()=>{
       $("#inIterations").addEventListener("change", ()=> { state.settings.iterations = clampInt($("#inIterations").value, 200, 200000); saveState(); renderHealth(); });
       $("#inSeed").addEventListener("change", ()=> { state.settings.seed = clampInt($("#inSeed").value, 0, 999999999); saveState(); renderHealth(); });
       $("#inSampling").addEventListener("change", ()=> { state.settings.sampling = $("#inSampling").value; saveState(); renderHealth(); });
-      $("#inCorrMode").addEventListener("change", ()=> { state.settings.corrMode = $("#inCorrMode").value; updateCorrUI(); 
+      $("#inBaseYearFY")?.addEventListener("change", ()=> {
+        state.settings.baseYearFY = clampInt($("#inBaseYearFY").value, 1950, 2100);
+        saveState();
+        renderHealth();
+      });
+      $("#inOutputBasis")?.addEventListener("change", ()=> {
+        state.settings.outputBasis = (String($("#inOutputBasis").value||"BY").toUpperCase()==="TY") ? "TY" : "BY";
+        saveState();
+        renderHealth();
+        if(state.settings.outputBasis === "TY"){
+          setStatus("good","TY output enabled.","Enter / verify appropriation index levels below. TY uses Factor(FY)=Index(FY)/Index(BY) after phasing.");
+        }
+      });
+      $("#inCorrMode").addEventListener("change", ()=>{
+        state.settings.corrMode = $("#inCorrMode").value;
+        updateCorrUI();
+        saveState();
+        renderHealth();
+      });
       if($("#inDistPreview")){
         $("#inDistPreview").addEventListener("change", ()=>{
           state.settings.distPreview = ($("#inDistPreview").value === "ON");
@@ -7039,7 +9659,6 @@ $("#btnCopySummary").addEventListener("click", async ()=>{
           refreshDistPreviews();
         });
       }
-saveState(); renderHealth(); });
       $("#inRho").addEventListener("change", ()=> { state.settings.rho = Number($("#inRho").value)||0; saveState(); renderHealth(); });
       $("#inRhoA").addEventListener("change", ()=> { state.settings.rhoA = Number($("#inRhoA").value)||0; saveState(); renderHealth(); });
       $("#inRhoB").addEventListener("change", ()=> { state.settings.rhoB = Number($("#inRhoB").value)||0; saveState(); renderHealth(); });
@@ -7058,22 +9677,42 @@ saveState(); renderHealth(); });
         const k = e.target.dataset.k;
         if(!k) return;
 
-        if(["baseCost","lowPct","highPct","rampPct","skew"].includes(k)) line[k] = Number(e.target.value);
-        else line[k] = e.target.value;
+        if(k === "baseExpr"){
+          line.baseExpr = e.target.value;
+          line.baseMode = "FORMULA";
+        }else if(k === "baseCost"){
+          line.baseCost = Number(e.target.value);
+          line.baseMode = "NUMBER";
+        }else if(["lowPct","highPct","rampPct","skew"].includes(k)){
+          line[k] = Number(e.target.value);
+        }else{
+          line[k] = e.target.value;
+        }
 
         if(k === "phase"){
           setRampSkewEnabled(tr, line.phase === "TRAP");
+        }
+        if(k === "byFY"){
+          const s = String(e.target.value||"").trim();
+          if(!s) v.byFY = null;
+          else {
+            const y = Number(s);
+            v.byFY = Number.isFinite(y) ? clampInt(y, 1950, 2100) : null;
+          }
         }
         if(k === "dist"){
           updateDistSem(tr, line);
         }
 
+        const varLookup = buildLineVarLookup(line);
+
         if(state.settings.distPreview){
           const canvas = tr.querySelector("canvas.distPrev");
-          if(canvas) drawDistPreview(canvas, line);
+          if(canvas) drawDistPreview(canvas, line, varLookup);
         }
 
-        applyLineRowUI(tr, line);
+        applyLineRowUI(tr, line, varLookup);
+        updateBaseEvalInRow(tr, line, varLookup);
         saveState();
         renderHealth();
       });
@@ -7099,21 +9738,41 @@ saveState(); renderHealth(); });
           const line = state.lines.find(x=>x.id===id);
           if(!line) return;
 
-          if(["baseCost","lowPct","highPct","rampPct","skew"].includes(k)) line[k] = Number(e.target.value);
-          else line[k] = e.target.value;
+          if(k === "baseExpr"){
+            line.baseExpr = e.target.value;
+            line.baseMode = "FORMULA";
+          }else if(k === "baseCost"){
+            line.baseCost = Number(e.target.value);
+            line.baseMode = "NUMBER";
+          }else if(["lowPct","highPct","rampPct","skew"].includes(k)){
+            line[k] = Number(e.target.value);
+          }else{
+            line[k] = e.target.value;
+          }
+
+          const varLookup = buildLineVarLookup(line);
 
           if(k === "phase"){
             setRampSkewEnabled(tr, line.phase === "TRAP");
           }
-          if(k === "dist"){
+          if(k === "byFY"){
+          const s = String(e.target.value||"").trim();
+          if(!s) v.byFY = null;
+          else {
+            const y = Number(s);
+            v.byFY = Number.isFinite(y) ? clampInt(y, 1950, 2100) : null;
+          }
+        }
+        if(k === "dist"){
             updateDistSem(tr, line);
             if(state.settings.distPreview){
               const canvas = tr.querySelector("canvas.distPrev");
-              if(canvas) drawDistPreview(canvas, line);
+              if(canvas) drawDistPreview(canvas, line, varLookup);
             }
           }
 
-          applyLineRowUI(tr, line);
+          applyLineRowUI(tr, line, varLookup);
+          updateBaseEvalInRow(tr, line, varLookup);
           saveState();
           renderHealth();
         }
@@ -7145,6 +9804,11 @@ saveState(); renderHealth(); });
         const idx = state.lines.findIndex(x=>x.id===id);
         if(idx<0) return;
 
+        if(act==="fxedit"){
+          openFxModal(id);
+          return;
+        }
+
         if(act==="del"){
           if(state.lines.length<=1){
             setStatus("warn", "Need at least one line.", "Add another line before deleting this one.");
@@ -7156,6 +9820,21 @@ saveState(); renderHealth(); });
           state.lines.splice(idx,1);
           saveState(); render();
           setStatus("good", "Line removed.", "Press Run to refresh outputs.");
+
+        }else if(act==="fx"){
+          const ln = state.lines[idx];
+          const prev = normalizeBaseMode(ln.baseMode);
+          ln.baseMode = (prev === "FORMULA") ? "NUMBER" : "FORMULA";
+          if(typeof ln.baseExpr === "undefined" || ln.baseExpr == null) ln.baseExpr = "";
+          if(typeof ln.baseCost === "undefined" || ln.baseCost == null) ln.baseCost = 0;
+          saveState();
+          render();
+          setStatus("good",
+            (ln.baseMode==="FORMULA" ? "Formula enabled." : "Formula disabled."),
+            (ln.baseMode==="FORMULA"
+              ? "This line now uses a formula (ƒx). Click Edit to enter an expression that references Variables (e.g., FTE_DEV * LABOR_RATE)."
+              : "This line now uses a numeric base cost.")
+          );
 
         }else if(act==="dup"){
           const src = state.lines[idx];
@@ -7247,7 +9926,60 @@ if($("#scenarioSelect")){
         });
 
         $("#btnImportClose").addEventListener("click", ()=> closeImportModal());
+        // Formula editor modal wiring
+        $("#btnFxClose")?.addEventListener("click", ()=> closeFxModal());
+        $("#fxCancel")?.addEventListener("click", ()=> closeFxModal());
+        $("#fxSave")?.addEventListener("click", ()=>{
+          const ln = (state.lines||[]).find(x=>x.id===_fxEditLineId);
+          if(!ln){ closeFxModal(); return; }
+          const ta = $("#fxText");
+          const expr = String(ta?.value||"").trim();
+          ln.baseMode = "FORMULA";
+          ln.baseExpr = expr;
+          saveState();
+          render();
+          // Status hint based on validation result
+          const lookup = _fxLastLookup || ((k)=> NaN);
+          const r = tryEvalExpr(expr, lookup);
+          if(r.ok && Number.isFinite(r.value) && r.value >= 0){
+            setStatus("good","Formula saved.","This line will use the evaluated base cost as its point estimate.");
+          }else{
+            setStatus("warn","Formula saved (needs fixing).", r.msg || "Invalid formula.");
+          }
+          closeFxModal();
+        });
+
+        $("#fxText")?.addEventListener("input", ()=> scheduleFxPreviewRefresh());
+        $("#fxVarSearch")?.addEventListener("input", ()=>{
+          const ln = (state.lines||[]).find(x=>x.id===_fxEditLineId);
+          if(!ln) return;
+          renderFxVarTable(ln);
+        });
+
+        $("#fxVarTbody")?.addEventListener("click", (e)=>{
+          const btn = e.target.closest("button[data-insert]");
+          if(!btn) return;
+          insertIntoFxText(btn.dataset.insert);
+        });
+
+        $("#fxFnChips")?.addEventListener("click", (e)=>{
+          const btn = e.target.closest("button[data-fn]");
+          if(!btn) return;
+          insertIntoFxText(btn.dataset.fn + "(");
+        });
+
+        // Keyboard shortcuts (when modal is open)
+        document.addEventListener("keydown", (e)=>{
+          if(!isFxOpen()) return;
+          if(e.key === "Escape"){ e.preventDefault(); closeFxModal(); return; }
+          if((e.ctrlKey || e.metaKey) && e.key === "Enter"){
+            e.preventDefault();
+            $("#fxSave")?.click();
+          }
+        });
+
         $("#importBackdrop").addEventListener("click", (e)=>{ if(e.target.id==="importBackdrop") closeImportModal(); });
+        $("#fxBackdrop")?.addEventListener("click", (e)=>{ if(e.target && e.target.id==="fxBackdrop") closeFxModal(); });
         $("#btnImportApply").addEventListener("click", ()=> applyImport());
         $("#importMode").addEventListener("change", ()=> renderImportSummary());
               }
@@ -8031,6 +10763,44 @@ function resolveTourTarget(step){
         more: "help-sampling"
       },
 
+      baseYear: {
+        title: "Base year (BY)",
+        body: "Defines the Base Year (BY) for all dollar inputs in this estimate. Use BY to keep inputs comparable; convert to TY only after phasing by fiscal year.",
+        bullets: [
+          "Enter costs as BY dollars in the selected Base Year.",
+          "Appropriation-based indices are applied when Output basis = TY."
+        ],
+        more: "help-inflation"
+      },
+      outputBasis: {
+        title: "Output basis (BY vs TY)",
+        body: "Controls whether results are presented in Base Year (BY) or Then Year (TY) dollars.",
+        bullets: [
+          "BY output: no inflation indexing is applied.",
+          "TY output: applies appropriation-specific indices after schedule phasing."
+        ],
+        more: "help-inflation"
+      },
+
+      density: {
+        title: "Screen density",
+        body: "Controls how tight the UI spacing is. Compact fits more controls and rows on screen; it does not change calculations.",
+        bullets: [
+          "Comfortable is best for presenting or projecting.",
+          "Compact is best for heavy data entry on large monitors."
+        ],
+        more: "help-ui-density"
+      },
+      wideMode: {
+        title: "Wide mode",
+        body: "Increases the maximum page width so Inputs and Outputs use more horizontal space on large screens (UI-only).",
+        bullets: [
+          "Pairs well with Side-by-side layout.",
+          "No impact on results or exports."
+        ],
+        more: "help-ui-density"
+      },
+
       corrMode: {
         title: "Correlation mode",
         body: "Turns on correlation and chooses how it is applied across cost lines.",
@@ -8059,6 +10829,16 @@ function resolveTourTarget(step){
           "Each bucket has its own N, so each ρ has its own valid minimum (ρ ≥ −1/(N−1))."
         ],
         more: "help-correlation"
+      },
+
+      appn: {
+        title: "APPN (Appropriation)",
+        body: "Tags each cost line to an appropriation / color of money so inflation can use the correct index series.",
+        bullets: [
+          "Start with common AF codes (3400 RDT&E, 3600 O&M, 3080 Other Procurement).",
+          "Additional services/appropriations can be added later without changing your lines."
+        ],
+        more: "help-inflation"
       },
       corrGroup: {
         title: "Corr Group",
@@ -8275,6 +11055,78 @@ function resolveTourTarget(step){
           "Use the WBS Library to assign quickly and reduce missing coverage."
         ],
         more: "help-wbs"
+      },
+      varName: {
+        title: "Variable name",
+        body: "Unique key used in formulas (ƒx). Names are case-insensitive and must be A–Z, 0–9, and underscore only.",
+        bullets: [
+          "Example: LICENSE_UNIT_COST",
+          "Do not start with a number."
+        ],
+        more: "help-vars"
+      },
+      varType: {
+        title: "Variable type",
+        body: "Scalar variables are single values. FY series variables store one value per fiscal year.",
+        bullets: [
+          "FY series can be referenced as VAR_FY2026 (specific year).",
+          "Using VAR alone returns the sum across FYs."
+        ],
+        more: "help-vars"
+      },
+      varValue: {
+        title: "Value / Series",
+        body: "For Scalar variables, enter a number. For FY series, click Edit… to enter values by fiscal year.",
+        bullets: [
+          "FY series exposes VAR_FY2027 entries automatically.",
+          "FY series does not automatically override schedule phasing."
+        ],
+        more: "help-vars"
+      },
+      varUnit: {
+        title: "Unit",
+        body: "Unit is for readability and basic checks (Dollars, Count, Rate, Percent, Other).",
+        bullets: [
+          "Basis applies only to dollar-like units.",
+          "Units do not change math; formulas do."
+        ],
+        more: "help-vars"
+      },
+      varBasis: {
+        title: "Basis (BY / TY)",
+        body: "For dollar-like units, select whether the input is in Base Year (BY) or Then Year (TY) dollars.",
+        bullets: [
+          "Scalar BY variables can optionally specify a BY fiscal year.",
+          "FY series currently supports BY only."
+        ],
+        more: "help-inflation"
+      },
+      varByFY: {
+        title: "BY fiscal year",
+        body: "Optional base-year fiscal year for scalar dollar variables in BY. Blank = use the estimate Base Year.",
+        bullets: [
+          "If it differs from the estimate Base Year, CASE converts to the estimate Base Year using the line’s APPN index.",
+          "Not used for FY series."
+        ],
+        more: "help-vars"
+      },
+      varDist: {
+        title: "Variable uncertainty",
+        body: "Optional uncertainty distribution applied at the variable layer during Monte Carlo.",
+        bullets: [
+          "For FY series, uncertainty is applied as a multiplier across the series.",
+          "Layer variable uncertainty separately from line uncertainty."
+        ],
+        more: "help-risk"
+      },
+      varStatus: {
+        title: "Row status",
+        body: "Shows whether the variable row has warnings or errors.",
+        bullets: [
+          "Red = fix required (e.g., duplicate name).",
+          "Yellow = warning (e.g., FY series is empty)."
+        ],
+        more: "help-vars"
       }
     };
 
@@ -8299,7 +11151,7 @@ function resolveTourTarget(step){
     }
     function syncBodyScrollLock(){
       try{
-        const lock = isHelpOpen() || isImportOpen();
+        const lock = isHelpOpen() || isImportOpen() || isFxOpen();
         document.body.style.overflow = lock ? "hidden" : "";
       }catch{}
     }
@@ -8968,6 +11820,7 @@ function initHelpCenter(){
         }
         render(); 
         renderRunCompare();
+        initRightCardCollapsers();
         wire(); 
         diag.bootOk = true;
         renderDiagnostics(false);
@@ -9049,11 +11902,130 @@ function initHelpCenter(){
   </div>
 
 
-  <!-- Tooltip popover -->
+  
+  <!-- Variable FY Series Modal -->
+  <div class="modalBackdrop" id="varSeriesBackdrop" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="varSeriesTitle">
+      <div class="modalHeader">
+        <div>
+          <div class="modalTitle" id="varSeriesTitle">Edit FY series</div>
+          <div class="muted small" id="varSeriesSubtitle">Reference in formulas as VAR (sum) or VAR_FY2026 (specific year).</div>
+        </div>
+        <button class="btn ghost" id="btnVarSeriesClose" title="Close">✕</button>
+      </div>
+
+      <div class="modalBody">
+        <div class="row" style="gap:10px; align-items:flex-end; flex-wrap:wrap">
+          <label style="min-width:220px">
+            Fill constant
+            <input id="varSeriesFillConst" type="number" step="1" value="0" style="width:100%">
+          </label>
+          <div style="display:flex; gap:8px; flex-wrap:wrap">
+            <button class="btn sm" id="btnVarSeriesFill" title="Fill all FY values with the constant">Apply fill</button>
+            <button class="btn sm ghost" id="btnVarSeriesZero" title="Set all FY values to 0">Clear</button>
+          </div>
+          <div class="pill" id="varSeriesSum" style="margin-left:auto">Σ —</div>
+        </div>
+
+        <div style="height:10px"></div>
+        <div class="tableWrap" style="max-height:360px">
+          <table aria-label="FY series editor" style="min-width:420px">
+            <thead>
+              <tr>
+                <th style="min-width:140px">Fiscal year</th>
+                <th style="min-width:200px">Value</th>
+              </tr>
+            </thead>
+            <tbody id="varSeriesTbody"></tbody>
+          </table>
+        </div>
+
+        <div class="hint" style="margin-top:10px">
+          FY series values do <b>not</b> automatically control schedule phasing. Use them to compute totals in formulas, or reference specific years via <span class="kbd">VAR_FY2026</span>.
+        </div>
+      </div>
+
+      <div class="modalFooter">
+        <button class="btn" id="btnVarSeriesApply">Save</button>
+        <button class="btn ghost" id="btnVarSeriesCancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+<!-- Tooltip popover -->
   <div id="tooltipPop" class="tooltipPop hidden" role="tooltip" aria-hidden="true"></div>
 
 
-  <!-- Import Pack / CSV Modal -->
+  
+  <!-- Formula Editor Modal -->
+  <div class="modalBackdrop" id="fxBackdrop" style="display:none">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="fxModalTitle" style="max-width: 980px">
+      <div class="modalHeader">
+        <div>
+          <div class="modalTitle" id="fxModalTitle">Edit formula (ƒx)</div>
+          <div class="muted small" id="fxModalSubtitle">Type the expression in a larger box and click variables to insert.</div>
+        </div>
+        <button class="btn ghost" id="btnFxClose" aria-label="Close formula editor">Close</button>
+      </div>
+
+      <div class="modalBody">
+        <div class="fxMetaRow">
+          <div class="fxMetaLeft">
+            <span class="tag"><b>Line:</b> <span id="fxLineName">—</span></span>
+            <span class="tag"><b>APPN:</b> <span id="fxLineAppn">—</span></span>
+          </div>
+          <div class="fxMetaRight">
+            <span class="pill">Operators: + − * / ^ ( )</span>
+          </div>
+        </div>
+
+        <div class="fxGrid">
+          <div class="fxPanel">
+            <h4>Formula</h4>
+            <label style="margin:0">
+              <span class="muted small">Case-insensitive. Example: <span class="helpCode">FTE_DEV * LABOR_RATE</span> or <span class="helpCode">MIN(A,B)</span>.</span>
+              <textarea id="fxText" spellcheck="false" placeholder="e.g., FTE_DEV * LABOR_RATE"></textarea>
+            </label>
+
+            <div class="hint" style="margin-top:8px">
+              Tip: FY series variables can be used as <span class="kbd">NAME</span> (sum) or <span class="kbd">NAME_FY2026</span> (specific year).
+            </div>
+
+            <div class="fxChips" id="fxFnChips" aria-label="Insert function chips"></div>
+
+            <div class="fxPreview" id="fxPreview">—</div>
+          </div>
+
+          <div class="fxPanel">
+            <h4>Available variables (click to insert)</h4>
+            <input class="fxVarSearch" id="fxVarSearch" placeholder="Filter… (e.g., RATE, FY2027)" />
+            <div class="tableWrap" style="min-width:0; max-height: 360px">
+              <table id="fxVarTable" aria-label="Formula variables" style="min-width: 0">
+                <thead>
+                  <tr>
+                    <th style="min-width:190px">Name</th>
+                    <th style="min-width:120px">Type</th>
+                    <th style="min-width:140px">Value</th>
+                  </tr>
+                </thead>
+                <tbody id="fxVarTbody"></tbody>
+              </table>
+            </div>
+            <div class="hint" style="margin-top:8px">Values reflect your current Variables table (including BY conversion by APPN when applicable).</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modalFooter">
+        <button class="btn primary" id="fxSave">Save</button>
+        <button class="btn ghost" id="fxCancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+
+
+<!-- Import Pack / CSV Modal -->
       <div class="modalBackdrop" id="importBackdrop" style="display:none">
         <div class="modal" role="dialog" aria-modal="true" aria-labelledby="importModalTitle" style="max-width: 980px">
           <div class="modalHeader">
@@ -9319,6 +12291,88 @@ function initHelpCenter(){
                   </ul>
                 </section>
 
+                <section class="helpSection" id="help-inflation">
+                  <h3>Base Year (BY), Then Year (TY), and Inflation Indices</h3>
+                  <p>CASE treats your <strong>entered dollar inputs</strong> as <strong>Base Year (BY)</strong> dollars in the selected <strong>Base year (BY)</strong>. You can display outputs in <strong>BY</strong> or <strong>TY</strong> using appropriation-specific index tables.</p>
+                  <ul>
+                    <li><strong>BY outputs</strong>: costs stay in constant dollars (no inflation indexing).</li>
+                    <li><strong>TY outputs</strong>: after schedule phasing by fiscal year, CASE applies a factor using your index levels: <span class="helpCode">Factor(FY)=Index(FY)/Index(BY)</span>.</li>
+                    <li><strong>APPN</strong> on each cost line selects which index series to use (e.g., 3400 RDT&amp;E, 3600 O&amp;M, 3080 Other Procurement).</li>
+                    <li><strong>Index levels</strong> may use <em>any</em> base (FY2026=1.000, FY2024=1.000, etc.) because CASE uses the ratio to your chosen BY.</li>
+                  </ul>
+                  <div class="helpCallout">
+                    <strong>Tip:</strong> If TY looks identical to BY, your indices are probably all 1.000 or not filled for the fiscal years in your schedule.
+                  </div>
+</section>
+
+                
+                <section class="helpSection" id="help-vars">
+                  <h3>Variables</h3>
+                  <p>Variables are named inputs you can reuse across multiple cost lines. In v4.1.9 you can define <strong>Scalar</strong> and <strong>FY series</strong> variables, reference them inside line formulas (ƒx), and (optionally) apply <strong>variable uncertainty</strong> during Monte Carlo. FY series variables can be referenced as <span class="helpCode">VAR_FY2026</span> (specific year) or <span class="helpCode">VAR</span> (sum across FYs). For dollar variables in <strong>BY</strong>, you can optionally specify a <strong>BY fiscal year</strong> (blank = use the estimate Base Year). If it differs from the estimate Base Year, CASE converts it to the estimate Base Year using the line’s APPN index series. The expression engine is safe and does not use <span class="helpCode">eval()</span>.</p>
+                  <h4>Naming</h4>
+                  <ul>
+                    <li>Names must be unique (case-insensitive).</li>
+                    <li>Use <span class="helpCode">A–Z</span>, <span class="helpCode">0–9</span>, and <span class="helpCode">_</span> only, and do not start with a number.</li>
+                    <li>Example: <span class="helpCode">LICENSE_UNIT_COST</span></li>
+                  </ul>
+                  <h4>FY series</h4>
+                  <ul>
+                    <li>FY series variables store one value per fiscal year (e.g., installs per FY, license counts, or constant-dollar amounts by FY).</li>
+                    <li>Reference a specific year in formulas using <span class="helpCode">NAME_FY2027</span>.</li>
+                    <li>Reference the total across the series using <span class="helpCode">NAME</span> (sum).</li>
+                    <li>FY series values do not automatically override schedule phasing (that can be added later if desired).</li>
+                  </ul>
+<h4>Units and basis</h4>
+                  <ul>
+                    <li><strong>Unit</strong> is for readability and basic checks (Dollars, Count, Rate, Percent, Other).</li>
+                    <li><strong>Basis</strong> applies only to dollar-like units:
+                      <ul>
+                        <li><strong>BY</strong>: base year dollars (constant dollars in the estimate’s Base Year).</li>
+                        <li><strong>TY</strong>: then-year dollars (already escalated).</li>
+                      </ul>
+                    </li>
+                    <li>Non-dollar units use <strong>N/A</strong>.</li>
+                  </ul>
+                  <h4>Uncertainty</h4>
+                  <p>If <strong>Variable uncertainty</strong> is enabled in <em>CSRUH layered runs</em>, each variable with a non‑<strong>DET</strong> distribution is sampled once per iteration. Any cost lines that reference that variable inherit the sampled value (functional correlation). For deterministic variables, choose <strong>DET</strong>.</p>
+                </section>
+
+
+</section>
+
+<section class="helpSection" id="help-formulas">
+  <h3>Formulas (ƒx)</h3>
+  <p>Each cost line’s <strong>Base cost</strong> can be entered as a number or as a <strong>formula</strong> that references your Variables.</p>
+  <h4>How to use</h4>
+  <ul>
+    <li>Click <span class="helpCode">ƒx</span> in the Base cost cell to switch the line into formula mode.</li>
+    <li>Type an expression using variable names (case-insensitive), e.g., <span class="helpCode">FTE_DEV * LABOR_RATE</span>.</li>
+    <li>The tool shows a small <span class="helpCode">= $…</span> preview when the formula is valid.</li>
+  </ul>
+  <h4>Supported syntax</h4>
+  <ul>
+    <li>Operators: <span class="helpCode">+ - * / ^</span> and parentheses <span class="helpCode">( )</span></li>
+    <li>Functions: <span class="helpCode">min()</span>, <span class="helpCode">max()</span>, <span class="helpCode">abs()</span>, <span class="helpCode">round()</span>, <span class="helpCode">ceil()</span>, <span class="helpCode">floor()</span></li>
+    <li>Variables: any scalar variable you define in the Variables table (e.g., <span class="helpCode">LICENSE_UNIT_COST</span>)</li>
+  </ul>
+  <div class="helpCallout">
+    <strong>Note:</strong> FY‑series variables and schedule-aware functions are planned next. For now, formulas use scalar variables only.
+  </div>
+</section>
+
+<section class="helpSection" id="help-ui-density">
+
+                  <h3>Screen Density and Wide Mode</h3>
+                  <p>These options are <strong>UI-only</strong> and do <em>not</em> change your estimate math or simulation results. They just help you fit more on screen.</p>
+                  <ul>
+                    <li><strong>Density</strong>: choose <em>Compact</em> to reduce padding and row height, or <em>Comfortable</em> for readability.</li>
+                    <li><strong>Wide mode</strong>: increases the maximum page width so side-by-side Inputs/Outputs use more horizontal space on large monitors.</li>
+                  </ul>
+                  <div class="helpCallout">
+                    <strong>Tip:</strong> If you’re doing lots of line edits, try <em>Compact</em> + <em>Side-by-side</em> + <em>Wide mode</em>.
+                  </div>
+                </section>
+
                 <section class="helpSection" id="help-wbs">
                   <h3>WBS Mapping</h3>
                   <p>WBS mapping is optional but recommended for traceability and storytelling.</p>
@@ -9364,7 +12418,9 @@ function initHelpCenter(){
   <p>Layering is a review technique: add uncertainty sources one at a time so you can validate assumptions and avoid double counting.</p>
   <h4>Recommended layer sequence</h4>
   <ol>
-    <li><strong>Cost uncertainty only</strong> (distributions on lines, no correlation).</li>
+    <li><strong>Deterministic baseline</strong> (no variable uncertainty, no line distributions).</li>
+    <li><strong>+ Variable uncertainty</strong> (sample uncertain Variables; lines remain deterministic).</li>
+    <li><strong>+ Cost uncertainty</strong> (distributions on lines, still no correlation).</li>
     <li><strong>+ Correlation</strong> (Global ρ or Groups A/B/C).</li>
     <li><strong>+ Schedule uncertainty / phasing sensitivity</strong> (if applicable).</li>
     <li><strong>+ Risk register</strong> (when modeled as discrete risks; if/when enabled).</li>
@@ -9507,23 +12563,11 @@ function initHelpCenter(){
 
                 
 <section class="helpSection" id="help-whatsnew">
-                  <h3>What’s New (v3)</h3>
+                  <h3>What’s New (v4)</h3>
                   <ul>
-                    <li>New Help Center (quick start, workflow guide, glossary, troubleshooting).</li>
-                    <li>Upgraded hover tips (readable tooltips, mobile friendly, “learn more” links).</li>
-                    <li>Micro‑tours: targeted tours for Lines, WBS, Schedule, Risk, and Results.</li>
-                    <li><strong>v3.0.1:</strong> Help/tooltip/import overlays moved to the document root for clean modal stacking; ESC closes the top‑most overlay.</li>
-                    <li><strong>v3.0.2:</strong> Expanded Help topics: Scenarios &amp; Sharing, Budget Probability, Layering &amp; Run Compare, and a Cost Line Field Guide.</li>
-                    <li><strong>v3.0.3:</strong> Made dotted terms explicit (<span class="helpCode">data-tip</span>/<span class="helpCode">data-help</span>) so tooltips are consistent and Diagnostics can lint coverage.</li>
-                    <li><strong>v3.0.8:</strong> Aligned Setup inputs (Iterations/Random seed/Sampling) so fields line up even when hints wrap.</li>
-                    <li><strong>v3.0.9:</strong> Help Center interactions fixed (close + TOC links) by hardening wiring and stacking order.</li>
-                    <li><strong>v3.0.10:</strong> Help Center scrolling fixed (proper flex sizing + overflow + min-height:0).</li>
-                    <li><strong>v3.0.15:</strong> Task tours now gate key actions (e.g., Run / Export) so you can’t accidentally skip steps.</li>
-                    <li><strong>v3.0.16:</strong> Help Center mobile navigation improved (mobile TOC toggle, active section tracking, remember last section).</li>
-                    <li><strong>v3.0.17:</strong> Cosmetic pass for Setup → Inputs: consistent control heights, helper-text spacing, and responsive column layout.</li>
-                    <li><strong>v3.0.14:</strong> Convergence chart now shows % difference to the 10k-iteration checkpoint (P50/P80).</li>
-                    <li><strong>v3.0.12:</strong> Tour spotlight readability improved (focused element is lifted above the dimming mask).</li>
-                    <li>Docs coverage checks appear in Diagnostics to prevent documentation regressions.</li>
+                    <li><strong>v4.1.5:</strong> Seeded a runnable example (3 demo lines + Variables + indices) and fixed ID generation in line/scenario creation. (Outputs panel collapse + Density/Wide toggles remain.)</li>
+                    <li><strong>v4.0.8:</strong> Inflation indices editor moved to the bottom of Inputs and is collapsed by default to stay out of the way.</li>
+                    <li><strong>v4.0.7:</strong> Variables: scalar variables + formulas (ƒx) + optional BY FY for dollar inputs (blank = global Base Year), converted to estimate Base Year using each line’s APPN index series.</li>
                   </ul>
                 </section>
 
