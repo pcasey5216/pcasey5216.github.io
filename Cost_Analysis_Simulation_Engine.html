@@ -294,6 +294,9 @@ body.layout-stack.layout-swap .grid{grid-template-areas:"outputs" "inputs";}
     }
     /* Inputs row cosmetic consistency */
     #settingsRow label{ gap:6px; }
+    #settingsRow label .labelHead{display:flex; align-items:center; gap:6px; flex-wrap:wrap; line-height:1.15;}
+    #settingsRow label .labelHead .mathQInline{margin-left:0;}
+
     #settingsRow input, #settingsRow select{ height: 38px; }
     #settingsRow select{ padding-top: 8px; padding-bottom: 8px; }
     #settingsRow .hint{ min-height: 28px; }
@@ -1803,19 +1806,27 @@ body.layout-stack.layout-swap .grid{grid-template-areas:"outputs" "inputs";}
         <div class="cardBody">
           <div class="row" id="settingsRow">
             <label>
-              <span class="dot" data-tip="iterations" data-help="help-iterations" title="Monte Carlo iterations. 5,000–20,000 is typical for stable percentiles.">Iterations</span> <span class="mathQInline" role="button" tabindex="0" data-math-link="math-convergence" title="Math Reference: Convergence & iterations">?</span>
+              <div class="labelHead">
+                <span class="dot" data-tip="iterations" data-help="help-iterations" title="Monte Carlo iterations. 5,000–20,000 is typical for stable percentiles.">Iterations</span>
+                <span class="mathQInline" role="button" tabindex="0" data-math-link="math-convergence" title="Math Reference: Convergence & iterations">?</span>
+              </div>
               <input type="number" min="200" max="200000" step="100" id="inIterations" value="10000" />
               <div class="hint">Higher = smoother percentiles (slower).</div>
             </label>
 
             <label>
-              <span class="dot" data-tip="seed" data-help="help-sampling" title="Use a fixed seed for repeatable results.">Random seed</span>
+              <div class="labelHead">
+                <span class="dot" data-tip="seed" data-help="help-sampling" title="Use a fixed seed for repeatable results.">Random seed</span>
+              </div>
               <input type="number" min="0" max="999999999" step="1" id="inSeed" value="12345" />
               <div class="hint">Change to get a new random draw.</div>
             </label>
 
             <label>
-              <span class="dot" data-tip="sampling" data-help="help-sampling" title="Latin Hypercube Sampling (LHS) reduces noise vs pure Monte Carlo. Correlation (global or grouped) is applied via a Gaussian copula.">Sampling</span> <span class="mathQInline" role="button" tabindex="0" data-math-link="math-sampling" title="Math Reference: Sampling (MC vs LHS)">?</span>
+              <div class="labelHead">
+                <span class="dot" data-tip="sampling" data-help="help-sampling" title="Latin Hypercube Sampling (LHS) reduces noise vs pure Monte Carlo. Correlation (global or grouped) is applied via a Gaussian copula.">Sampling</span>
+                <span class="mathQInline" role="button" tabindex="0" data-math-link="math-sampling" title="Math Reference: Sampling (MC vs LHS)">?</span>
+              </div>
               <select id="inSampling">
                 <option value="LHS">Latin Hypercube (if uncorrelated)</option>
                 <option value="MC">Standard Monte Carlo</option>
@@ -1824,13 +1835,19 @@ body.layout-stack.layout-swap .grid{grid-template-areas:"outputs" "inputs";}
             </label>
 
             <label>
-              <span class="dot" data-tip="baseYear" data-help="help-inflation" title="Base Year (BY) for dollar inputs. Inflation indexing (appropriation-based) is applied in later phases.">Base year (BY)</span> <span class="mathQInline" role="button" tabindex="0" data-math-link="math-inflation" title="Math Reference: Inflation / base year">?</span>
+              <div class="labelHead">
+                <span class="dot" data-tip="baseYear" data-help="help-inflation" title="Base Year (BY) for dollar inputs. Inflation indexing (appropriation-based) is applied in later phases.">Base year (BY)</span>
+                <span class="mathQInline" role="button" tabindex="0" data-math-link="math-inflation" title="Math Reference: Inflation / base year">?</span>
+              </div>
               <input type="number" min="1950" max="2100" step="1" id="inBaseYearFY" value="2026" />
               <div class="hint">All $ inputs assumed in BY dollars.</div>
             </label>
 
             <label>
-              <span class="dot" data-tip="outputBasis" data-help="help-inflation" title="Choose whether outputs are shown in Base Year (BY) dollars or Then Year (TY) dollars. TY uses appropriation-specific indices.">Output basis</span> <span class="mathQInline" role="button" tabindex="0" data-math-link="math-inflation" title="Math Reference: Inflation / then-year outputs">?</span>
+              <div class="labelHead">
+                <span class="dot" data-tip="outputBasis" data-help="help-inflation" title="Choose whether outputs are shown in Base Year (BY) dollars or Then Year (TY) dollars. TY uses appropriation-specific indices.">Output basis</span>
+                <span class="mathQInline" role="button" tabindex="0" data-math-link="math-inflation" title="Math Reference: Inflation / then-year outputs">?</span>
+              </div>
               <select id="inOutputBasis">
                 <option value="BY">BY (Base Year)</option>
                 <option value="TY">TY (Then Year)</option>
@@ -1845,7 +1862,9 @@ body.layout-stack.layout-swap .grid{grid-template-areas:"outputs" "inputs";}
             
 
             <label>
-              <span class="dot" data-tip="distPreviews" data-help="help-distributions" title="Show tiny per-line distribution previews in the cost lines table. Off by default for speed.">Distribution previews</span>
+              <div class="labelHead">
+                <span class="dot" data-tip="distPreviews" data-help="help-distributions" title="Show tiny per-line distribution previews in the cost lines table. Off by default for speed.">Distribution previews</span>
+              </div>
               <select id="inDistPreview">
                 <option value="OFF">Off</option>
                 <option value="ON">On</option>
@@ -1854,7 +1873,10 @@ body.layout-stack.layout-swap .grid{grid-template-areas:"outputs" "inputs";}
             </label>
 
 <label>
-              <span class="dot" data-tip="corrMode" data-help="help-correlation" title="How correlation is applied across cost lines. Global uses one ρ for all lines. Groups correlates only within A/B/C buckets.">Correlation mode</span> <span class="mathQInline" role="button" tabindex="0" data-math-link="math-correlation" title="Math Reference: Correlation (Gaussian copula)">?</span>
+              <div class="labelHead">
+                <span class="dot" data-tip="corrMode" data-help="help-correlation" title="How correlation is applied across cost lines. Global uses one ρ for all lines. Groups correlates only within A/B/C buckets.">Correlation mode</span>
+                <span class="mathQInline" role="button" tabindex="0" data-math-link="math-correlation" title="Math Reference: Correlation (Gaussian copula)">?</span>
+              </div>
               <select id="inCorrMode">
                 <option value="GLOBAL">Global ρ (all lines)</option>
                 <option value="GROUPS">Groups (A/B/C only)</option>
@@ -1864,7 +1886,10 @@ body.layout-stack.layout-swap .grid{grid-template-areas:"outputs" "inputs";}
 
             <div id="rhoGlobalWrap">
               <label>
+                <div class="labelHead">
                 <span class="dot" data-tip="rhoGlobal" data-help="help-correlation" title="Uniform pairwise correlation across all cost lines (Gaussian copula). For N lines, ρ must be ≥ −1/(N−1).">Global correlation (ρ)</span>
+              </div>
+              
                 <input type="number" min="-0.9" max="0.99" step="0.05" id="inRho" value="0" />
                 <div class="hint">Applies to all lines.</div>
               </label>
@@ -1872,17 +1897,26 @@ body.layout-stack.layout-swap .grid{grid-template-areas:"outputs" "inputs";}
 
             <div id="rhoGroupsWrap" style="display:none">
               <label>
+                <div class="labelHead">
                 <span class="dot" data-tip="rhoA" data-help="help-correlation" title="Within-group correlation for lines assigned to Corr Group A. Bounds depend on group size (N).">ρA</span>
+              </div>
+              
                 <input type="number" min="-0.9" max="0.99" step="0.05" id="inRhoA" value="0" />
                 <div class="hint">Group A only.</div>
               </label>
               <label>
+                <div class="labelHead">
                 <span class="dot" data-tip="rhoB" data-help="help-correlation" title="Within-group correlation for lines assigned to Corr Group B. Bounds depend on group size (N).">ρB</span>
+              </div>
+              
                 <input type="number" min="-0.9" max="0.99" step="0.05" id="inRhoB" value="0" />
                 <div class="hint">Group B only.</div>
               </label>
               <label>
+                <div class="labelHead">
                 <span class="dot" data-tip="rhoC" data-help="help-correlation" title="Within-group correlation for lines assigned to Corr Group C. Bounds depend on group size (N).">ρC</span>
+              </div>
+              
                 <input type="number" min="-0.9" max="0.99" step="0.05" id="inRhoC" value="0" />
                 <div class="hint">Group C only.</div>
               </label>
@@ -15194,6 +15228,28 @@ try{
                   details.push("FAIL: Math Reference deep-links missing anchors: " + missing.slice(0,12).join(", ") + (missing.length>12 ? "…" : ""));
                 } else {
                   details.push("OK: Math Reference deep-links resolve");
+
+            // Settings label head layout smoke (v5.0.5 UI polish)
+            try{
+              const labels = Array.from(document.querySelectorAll('#settingsRow label'));
+              let badFirst = 0;
+              for(const l of labels){
+                const fe = l.firstElementChild;
+                if(!fe || !fe.classList || !fe.classList.contains('labelHead')) badFirst++;
+              }
+              const badMath = [];
+              document.querySelectorAll('#settingsRow label .mathQInline').forEach(el=>{
+                if(!el.closest('.labelHead')) badMath.push(el.getAttribute('data-math-link')||'?');
+              });
+              if(badFirst || badMath.length){
+                details.push('FAIL: Settings label header alignment (labelHead) is broken.' + (badFirst? (' Missing labelHead on '+badFirst+' label(s).'):'') + (badMath.length? (' Misplaced math icons: '+badMath.join(', ')+'.') : ''));
+              }else{
+                details.push('OK: Settings label headers align (no floating math icons)');
+              }
+            }catch(e){
+              details.push('FAIL: Settings label header alignment smoke threw: ' + (e?.message||String(e)));
+            }
+
                 }
               }
             }catch(e){
@@ -18536,7 +18592,42 @@ const CASE_GLOSSARY = {
   mitigation: { label:"Mitigation", short:"Actions to reduce risk.", definition:"Beginner: A plan to reduce risk.\n\nAnalyst: Not explicitly modeled as a discrete risk register yet; document planned mitigations.\n\nSME: Could be represented by narrower uncertainty or a scenario." },
   overrun: { label:"Overrun probability", short:"Chance of exceeding budget.", definition:"Beginner: Chance the cost exceeds a budget.\n\nAnalyst: Overrun prob = 1 − Budget Probability.\n\nSME: 1 − F̂(budget)." },
   reproducibility: { label:"Reproducibility", short:"Same inputs/seed ⇒ same results.", definition:"Beginner: Ability to re-run and get the same results.\n\nAnalyst: Export scenario package + record seed.\n\nSME: Deterministic PRNG + seeded sampling." },
-  by_ty: { label:"BY vs TY", short:"Constant vs inflated dollars.", definition:"Beginner: BY removes inflation; TY includes it.\n\nAnalyst: BY for analysis; TY for budgets.\n\nSME: TY applies index factors by FY and APPN." }
+  by_ty: { label:"BY vs TY", short:"Constant vs inflated dollars.", definition:"Beginner: BY removes inflation; TY includes it.\n\nAnalyst: BY for analysis; TY for budgets.\n\nSME: TY applies index factors by FY and APPN." },
+
+  // Tooltip/UI terms (so every dotted tooltip has a full Glossary definition)
+  baseYear: { label:"Base Year FY (BY Inputs)", short:"Dollar-year used for input costs.", definition:"Beginner: Your input dollars are assumed to be in Base Year (BY) dollars—meaning inflation is removed.\n\nAnalyst: Pick a BY that matches your data source year (e.g., FY26 BY$). CASE can then convert to Then Year (TY) outputs using indices.\n\nSME: BY is the reference year for index normalization; TY(FY)=BY(FY)×Index(FY)/Index(BaseFY).", aliases:["baseyear", "by", "base year"] },
+  budgetTotal: { label:"Budget (Total)", short:"Budget used to compute probability of not exceeding.", definition:"Beginner: Enter a budget to see the chance your simulated costs stay at or below that number.\n\nAnalyst: Budget Probability = P(Total ≤ Budget). Use it to compare candidate budgets to risk posture.\n\nSME: Computed from the empirical CDF: F̂(budget). Overrun probability = 1 − F̂(budget).", aliases:["budget probability", "not-to-exceed"] },
+  corrGroup: { label:"Corr Group (A/B/C)", short:"Bucket used when Correlation Mode = Groups.", definition:"Beginner: Assign each cost line to A, B, C, or None.\n\nAnalyst: Only lines in the same group are correlated; different groups are independent (unless you use Global mode).\n\nSME: Each group uses its own equicorrelation matrix and Cholesky factor for the copula draw.", aliases:["group", "correlation bucket"] },
+  corrMode: { label:"Correlation Mode", short:"How correlation is applied across cost lines.", definition:"Beginner: Correlation mode controls whether lines move together.\n- None: lines are independent\n- Global: one ρ for all lines\n- Groups: separate ρ within Corr Groups A/B/C\n\nAnalyst: Use Groups to correlate only lines that share drivers.\n\nSME: Implemented with a Gaussian copula using equicorrelation matrices (global or per group).", aliases:["correlation mode", "dependence mode"] },
+  corrRationale: { label:"Correlation Rationale / Source", short:"Why your correlation settings are defensible.", definition:"Beginner: This is where you write a short explanation for why you chose correlation assumptions.\n\nAnalyst: Capture whether correlation is data-driven (historical costs), expert judgment (SME), or analogy (similar program). This is CSRUH-aligned documentation.\n\nSME: Good rationale reduces review risk; note drivers (same vendor, same labor pool, shared schedule).", aliases:["correlation source", "rationale"] },
+  density: { label:"UI Density", short:"UI-only spacing/width setting.", definition:"Beginner: Density changes how tight or roomy the interface looks (Compact/Comfortable/Wide). It does not change any math.\n\nAnalyst: Use Compact to see more lines at once; use Wide on large monitors.\n\nSME: Pure CSS/layout controls; no impact on the simulation engine or saved scenarios.", aliases:["ui density", "layout density"] },
+  distPreviews: { label:"Distribution Previews", short:"Mini distribution sparkline per line.", definition:"Beginner: Shows a tiny preview of each line’s uncertainty shape right in the table.\n\nAnalyst: Helpful for catching wrong distribution settings (e.g., Lognormal when you expected Triangular).\n\nSME: Purely a UI visualization; may be disabled for performance on large estimates.", aliases:["preview", "sparkline"] },
+  distributionField: { label:"Distribution (Uncertainty)", short:"The uncertainty shape for a line or variable.", definition:"Beginner: The distribution describes how the cost could vary (low/most-likely/high).\n\nAnalyst: Pick shapes that match evidence: Triangular/PERT for bounded estimates; Normal for symmetric variation; Lognormal when costs are strictly positive and right-skewed.\n\nSME: CASE samples each line by mapping a uniform draw u∈(0,1) through the chosen inverse CDF; correlation (if enabled) changes the u’s, not the distribution definitions.", aliases:["uncertainty distribution", "dist"] },
+  highPct: { label:"High %", short:"High-side adjustment relative to base cost.", definition:"Beginner: High % tells how far above the base the cost could go.\n\nAnalyst: Set High% based on historical variability, SME judgment, or analogous programs.\n\nSME: High% is converted into distribution parameters; extreme highs can dominate tails and top-driver rankings.", aliases:["high percent"] },
+  inflRule: { label:"Inflation Rule (Line)", short:"How a line treats inflation when Output Basis is TY.", definition:"Beginner: Inflation rule controls whether a line follows the overall Output Basis or stays in BY dollars.\n\nAnalyst: Default is to follow Output Basis. Use “No inflation” for items already in TY dollars or when you want to hold constant (document why).\n\nSME: Applied after phasing; if Output Basis=TY and inflRule=NoInflation, the line bypasses the index factor.", aliases:["inflation", "no inflation"] },
+  layering: { label:"Layering", short:"Run uncertainty layers separately to avoid double counting.", definition:"Beginner: Layering means adding uncertainty in stages so you can see what each stage changes.\n\nAnalyst: Typical layered approach: (1) cost line uncertainty → (2) correlation → (3) schedule phasing uncertainty → (4) discrete risks. This makes validation easier.\n\nSME: Layered runs support CSRUH-style traceability and help detect double counting across sources of uncertainty.", aliases:["layered runs", "csruh layering"] },
+  lowPct: { label:"Low %", short:"Low-side adjustment relative to base cost.", definition:"Beginner: Low % tells how far below the base the cost could go.\n\nAnalyst: Interpretation depends on the distribution; follow the pill text in the Distribution column.\n\nSME: Low% is converted into distribution parameters (e.g., bounds for Triangular/PERT, or σ for Normal via a heuristic).", aliases:["low percent"] },
+  outputBasis: { label:"Output Basis (BY vs TY)", short:"Whether results show constant or inflated dollars.", definition:"Beginner: Output Basis chooses how results are displayed.\n- BY (Base Year): constant dollars (inflation removed)\n- TY (Then Year): nominal dollars (inflation included)\n\nAnalyst: Use BY for analysis/comparisons; use TY when building budget profiles.\n\nSME: TY applies appropriation-specific index factors by FY after phasing (and per-line inflation rules).", aliases:["by", "ty", "thenyear"] },
+  pePct: { label:"PE% (Point Estimate Percentile)", short:"Where the point estimate sits on the S-curve.", definition:"Beginner: PE% is the probability that the simulated total is at or below the point estimate (deterministic total).\n\nAnalyst: If PE% is low (e.g., 20%), the point estimate is optimistic relative to modeled uncertainty.\n\nSME: PE% ≈ F̂(PE) using the empirical CDF of simulated totals.", aliases:["point estimate percentile", "pe percentile"] },
+  rampPct: { label:"Ramp % (Trapezoid)", short:"Portion of schedule used to ramp up/down.", definition:"Beginner: Ramp % controls how much of the schedule is spent ramping up and ramping down (trapezoid shape).\n\nAnalyst: Typical 10–30%. Higher values mean slower ramp and less time at steady-state.\n\nSME: Ramp defines linear segments of the trapezoid weights; weights are normalized so Σw=1.", aliases:["ramp percent"] },
+  rhoA: { label:"ρA (Group A Correlation)", short:"Within-group correlation for Corr Group A.", definition:"Beginner: ρA sets how strongly lines in Corr Group A move together.\n\nAnalyst: Put only common-driver lines into Group A.\n\nSME: Valid lower bound depends on group size N_A: ρA ≥ −1/(N_A−1).", aliases:["group a rho"] },
+  rhoB: { label:"ρB (Group B Correlation)", short:"Within-group correlation for Corr Group B.", definition:"Beginner: ρB sets how strongly lines in Corr Group B move together.\n\nAnalyst: Use when you have a second set of shared-driver elements.\n\nSME: Valid lower bound depends on group size N_B: ρB ≥ −1/(N_B−1).", aliases:["group b rho"] },
+  rhoC: { label:"ρC (Group C Correlation)", short:"Within-group correlation for Corr Group C.", definition:"Beginner: ρC sets how strongly lines in Corr Group C move together.\n\nAnalyst: Use for a third shared-driver set if needed.\n\nSME: Valid lower bound depends on group size N_C: ρC ≥ −1/(N_C−1).", aliases:["group c rho"] },
+  rhoGlobal: { label:"Global ρ (Correlation)", short:"Uniform correlation across all lines.", definition:"Beginner: Global ρ (rho) is a single number from −1 to +1 that makes all lines move together.\n\nAnalyst: Positive ρ increases tail outcomes (P80/P90). If N lines are correlated, extremely negative ρ may be invalid.\n\nSME: Equicorrelation matrix requires ρ ≥ −1/(N−1). Correlation is applied in latent normal space then mapped to each line’s distribution via inverse CDF.", aliases:["rho", "global rho"] },
+  sampling: { label:"Sampling Method", short:"How random draws are generated.", definition:"Beginner: CASE can draw random samples with Standard Monte Carlo or Latin Hypercube Sampling (LHS).\n\nAnalyst: LHS usually gives smoother percentiles (P50/P80/P90) with fewer iterations than pure MC.\n\nSME: LHS stratifies each marginal U(0,1) into N bins and permutes; correlation (if enabled) is applied via a Gaussian copula on the latent normals.", aliases:["lhs", "monte carlo", "mc"] },
+  skew: { label:"Schedule Skew", short:"Shift phasing earlier or later (shape only).", definition:"Beginner: Skew shifts the phasing curve earlier (front-load) or later (back-load) without changing the total cost.\n\nAnalyst: Use to represent schedule slip/acceleration effects on when dollars occur.\n\nSME: Implemented as a remapping of the trapezoid weight profile across FY bins while preserving normalization.", aliases:["phasing skew", "front-load", "back-load"] },
+  status: { label:"Status (Row)", short:"Validation state: OK / warning / error.", definition:"Beginner: Status shows whether a row looks correct.\n- Green: OK\n- Yellow: Warning (review)\n- Red: Error (fix before running)\n\nAnalyst: Use status to catch missing APPN, invalid distribution parameters, formula issues, or phasing weights that don’t sum.\n\nSME: Status is driven by the central validation engine; errors block simulation, warnings allow run but are flagged in diagnostics.", aliases:["row status", "validation"] },
+  varBasis: { label:"Variable Basis (BY/TY/N/A)", short:"Dollar-basis for dollar-like variables.", definition:"Beginner: For dollar variables, Basis says whether the value is in BY or TY dollars.\n\nAnalyst: Keep most analysis drivers in BY; only mark TY if the source is already nominal.\n\nSME: Basis can trigger conversion logic (where supported) and influences how variables are documented in exports.", aliases:["basis"] },
+  varByFY: { label:"Variable BY FY", short:"Dollar-year (FY) for a variable’s basis.", definition:"Beginner: If a variable is in dollars, BY FY is the fiscal year those dollars are expressed in.\n\nAnalyst: Leave blank to use the estimate Base Year.\n\nSME: Used for documentation and (where applicable) BY↔TY conversion; not used for FY series variables.", aliases:["by fy"] },
+  varDist: { label:"Variable Distribution", short:"Optional uncertainty for a variable.", definition:"Beginner: You can add uncertainty to a variable (not just a cost line).\n\nAnalyst: Good for uncertain quantities, productivity factors, or rates.\n\nSME: Variable uncertainty is applied as a multiplier layer (and for FY series, typically applied across the series consistently).", aliases:["variable uncertainty"] },
+  varName: { label:"Variable Name", short:"Identifier you reference in formulas.", definition:"Beginner: A Variable Name is what you type in a formula (e.g., QTY, UNIT_COST).\n\nAnalyst: Use clear, unique names with underscores; keep a consistent naming standard.\n\nSME: Parsed as tokens in the expression engine; must be unique and match [A–Z0–9_].", aliases:["variable", "parameter"] },
+  varStatus: { label:"Variable Status", short:"Validation state for a variable row.", definition:"Beginner: Same idea as line Status: green OK, yellow warning, red error.\n\nAnalyst: Fix red errors before running; review warnings for naming, missing units/basis, or invalid distributions.\n\nSME: Driven by central validation rules for the Variables table.", aliases:["status"] },
+  varType: { label:"Variable Type", short:"Scalar vs FY series.", definition:"Beginner: Scalar = one number. FY series = a number for each fiscal year.\n\nAnalyst: Use FY series for installs per year, recurring quantities, or year-by-year drivers.\n\nSME: FY series exposes VAR_FY#### for year-specific references and VAR as a sum across years.", aliases:["scalar", "fy series"] },
+  varUnit: { label:"Variable Unit", short:"Units for readability and basic checks.", definition:"Beginner: Units help you remember what a variable means (hours, $/hr, units, licenses).\n\nAnalyst: Units make formulas easier to review and explain.\n\nSME: CASE uses units mainly for display and light validation; it is not a full dimensional-analysis engine.", aliases:["unit"] },
+  varValue: { label:"Variable Value / Series", short:"The numeric value(s) stored for the variable.", definition:"Beginner: For Scalar, this is a single number. For FY series, you edit values by year.\n\nAnalyst: Keep notes on sources (data pulls, SME assumptions).\n\nSME: Values populate the formula evaluation context; series values can be referenced as VAR_FY2028.", aliases:["value"] },
+  wbsSearch: { label:"WBS Search", short:"Search the WBS library by code or title.", definition:"Beginner: Search helps you find the right WBS element quickly.\n\nAnalyst: Use code searches (e.g., 1.5) or keyword searches (e.g., Training).\n\nSME: Search filters the WBS library list client-side; it does not change estimate math.", aliases:["search"] },
+  wbsTemplate: { label:"WBS Template", short:"Prebuilt WBS structure to start from.", definition:"Beginner: A WBS Template gives you a standard structure so you don’t start from scratch.\n\nAnalyst: Use templates to align with common guidance (e.g., MIL-STD-881 style structures) and to check completeness.\n\nSME: Templates populate the WBS library/search and help roll-up mapping; you can still customize as needed.", aliases:["template"] }
+
 };
 
 function getCaseGlossary(){
