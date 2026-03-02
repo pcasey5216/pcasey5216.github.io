@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="description" content="Interactive, browser-based tools for cost analysis training, simulation, and visualization: AI Bias Sandbox, Galton Board Distribution Lab, K-Means Clustering Lab, and CASE." />
+  <meta name="description" content="Interactive, browser-based tools for cost analysis training, simulation, and visualization: AI Bias Sandbox, Galton Board Distribution Lab, K-Means Clustering Lab, CASE, and the Regression Analysis Tool (RAT)." />
   <title>Cost Analysis Interactive Labs</title>
 
   <style>
@@ -43,7 +43,7 @@
     }
 
     .wrap{
-      max-width: 1050px;
+      max-width: 1480px;
       margin: 0 auto;
       padding: 28px 18px 40px;
     }
@@ -59,7 +59,7 @@
       align-items:start;
       justify-items:center;
       text-align:center;
-      margin-bottom: 22px;
+      margin-bottom: 18px;
     }
     .brand{
       display:flex;
@@ -67,7 +67,7 @@
       gap: 6px;
       min-width: 0;
       width: 100%;
-      max-width: 920px;
+      max-width: 1120px;
       align-items:center;
     }
 
@@ -97,30 +97,33 @@
     }
     .sub{
       margin: 0 auto;
-      max-width: 78ch;
+      max-width: 92ch;
       color: var(--muted);
       line-height: 1.5;
       font-size: 15px;
     }
     .quicklinks{
       display:grid;
-      grid-template-columns: repeat(2, minmax(220px, 1fr));
-      gap: 10px;
-      width: min(660px, 100%);
-      margin: 6px auto 0;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+      width: min(1200px, 100%);
+      margin: 10px auto 0;
       justify-content:center;
+      align-items:stretch;
     }
 
     .pill{
       display:inline-flex;
       align-items:center;
       gap:10px;
-      padding: 10px 12px;
+      padding: 9px 12px;
+      min-height: 42px;
       border-radius: 999px;
       background: rgba(255,255,255,0.06);
       border: 1px solid rgba(255,255,255,0.10);
       color: var(--text);
-      font-size: 13px;
+      font-size: 12.75px;
+      white-space: nowrap;
       transition: transform 0.12s ease, background 0.12s ease, border-color 0.12s ease;
       user-select:none;
       justify-content:center;
@@ -130,33 +133,64 @@
     .grid{
       display:grid;
       grid-template-columns: 1fr 1fr;
-      gap: 16px;
+      gap: 18px;
       margin-top: 18px;
     }
 
+    @media (max-width: 980px){
+      .grid{ grid-template-columns: 1fr; }
+    }
+
     @media (max-width: 880px){
+      .wrap{ padding: 22px 14px 34px; }
       .quicklinks{
-        width: min(660px, 100%);
+        grid-template-columns: 1fr;
+        width: min(560px, 100%);
         justify-content:center;
         margin: 8px auto 0;
       }
+      .actions{ flex-wrap: wrap; }
       .grid{ grid-template-columns: 1fr; }
     }
 
     @media (max-width: 640px){
-      .quicklinks{ grid-template-columns: 1fr; }
-      .pill{ justify-content:center; }
+      header{ text-align:left; justify-items:stretch; }
+      .brand{ align-items:flex-start; }
+      .kicker{ justify-content:flex-start; }
+      .sub{ margin-left: 0; margin-right: 0; max-width: none; }
+
+      .quicklinks{ grid-template-columns: 1fr; width: 100%; }
+      .pill{ justify-content:center; width: 100%; min-height: 44px; }
+
+      .card{ padding: 16px; min-height: unset; }
+      h2{ font-size: 18px; }
+      .desc{ font-size: 14px; }
+
+      .actions{ flex-direction: column; align-items: stretch; gap: 8px; }
+      .btn{ width: 100%; min-height: 44px; }
+    }
+
+    @media (max-width: 420px){
+      .btn, .pill{ white-space: normal; }
     }
 
     .card{
       position:relative;
+      display:flex;
+      flex-direction:column;
       border-radius: var(--radius);
       background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04));
       border: 1px solid rgba(255,255,255,0.12);
       box-shadow: var(--shadow);
       padding: 18px;
       overflow:hidden;
-      min-height: 275px;
+      min-height: 290px;
+      transition: transform 0.14s ease, border-color 0.14s ease, background 0.14s ease;
+    }
+    .card:hover{
+      transform: translateY(-2px);
+      border-color: rgba(255,255,255,0.18);
+      background: linear-gradient(180deg, rgba(255,255,255,0.095), rgba(255,255,255,0.045));
     }
 
     .card::before{
@@ -222,9 +256,11 @@
 
     .actions{
       display:flex;
-      flex-wrap:wrap;
+      flex-wrap: nowrap;
+      align-items: center;
       gap: 10px;
-      margin-top: 10px;
+      margin-top: auto; /* push primary actions to the bottom for consistent card rhythm */
+      padding-top: 10px;
     }
 
     .btn{
@@ -237,6 +273,7 @@
       background: rgba(255,255,255,0.08);
       border: 1px solid rgba(255,255,255,0.14);
       font-size: 13px;
+      white-space: nowrap;
       transition: transform 0.12s ease, background 0.12s ease, border-color 0.12s ease;
       user-select:none;
     }
@@ -261,6 +298,7 @@
       border-radius: 12px;
       overflow:auto;
       white-space: nowrap;
+      margin-top: 10px;
     }
 
     footer{
@@ -331,9 +369,10 @@
         <h1>Cost Analysis Interactive Labs</h1>
         <p class="sub">
           
-          Four browser-based tools for training, intuition-building, and communicating assumptions:
+          Five browser-based tools for training, intuition-building, and communicating assumptions:
           the <strong>AI Bias Sandbox</strong>, <strong>Galton Board Distribution Lab</strong>,
-          <strong>K-Means Clustering Lab</strong>, and <strong>CASE</strong> (Cost Analysis &amp; Simulation Engine).
+          <strong>K-Means Clustering Lab</strong>, <strong>CASE</strong> (Cost Analysis &amp; Simulation Engine),
+          and the <strong>Regression Analysis Tool (RAT)</strong>.
           No install required—just open and use.
         
         </p>
@@ -379,6 +418,17 @@
           </svg>
           Open CASE
         </a>
+<a class="pill" href="https://pcasey5216.github.io/Regression_Analysis_Tool_RAT.html" rel="noopener">
+  <svg class="tinyicon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <path d="M4 19V5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    <path d="M4 19H20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    <path d="M6.5 15.5l4-4 3 2 5-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="6.5" cy="15.5" r="1.2" stroke="currentColor" stroke-width="2"/>
+    <circle cx="10.5" cy="11.5" r="1.2" stroke="currentColor" stroke-width="2"/>
+    <circle cx="13.5" cy="13.5" r="1.2" stroke="currentColor" stroke-width="2"/>
+  </svg>
+  Open RAT
+</a>
       </nav>
     </header>
 
@@ -544,6 +594,82 @@
           https://pcasey5216.github.io/Cost_Analysis_Simulation_Engine.html
         </div>
       </article>
+
+<!-- RAT -->
+<article class="card">
+  <div class="tagrow">
+    <span class="tag"><span class="tiny" style="background:rgba(125,211,252,0.75)"></span> Regression</span>
+    <span class="tag"><span class="tiny" style="background:rgba(52,211,153,0.75)"></span> Run-all leaderboard</span>
+    <span class="tag"><span class="tiny" style="background:rgba(251,191,36,0.85)"></span> OLS + MUPE/ZMPE</span>
+    <span class="tag"><span class="tiny" style="background:rgba(255,255,255,0.35)"></span> v1.0.0</span>
+  </div>
+
+  <h2>Regression Analysis Tool (RAT)</h2>
+  <p class="desc">
+    Upload or paste data, then run a full model search to get a ranked leaderboard of regression candidates
+    (with metrics, coefficient stats, and interval bands where applicable).
+  </p>
+
+  <ul>
+    <li>One-click <strong>Run all fits</strong> across common model families (linear / log / polynomial)</li>
+    <li>Rank by RMSE / R² / Adj R² / AIC / BIC, with optional p-value filtering</li>
+    <li>Optional advanced percent-error minimizers (<strong>MUPE</strong> / <strong>ZMPE</strong>) and multi-X subset search</li>
+  </ul>
+
+  <div class="actions">
+    <a class="btn primary" href="https://pcasey5216.github.io/Regression_Analysis_Tool_RAT.html" rel="noopener">
+      Launch RAT
+      <svg class="tinyicon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M14 3h7v7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        <path d="M21 3l-9 9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        <path d="M10 5H6a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </a>
+    <button class="btn" type="button" data-copy="rat">
+      Copy link
+      <span class="sr-only">Copy Regression Analysis Tool (RAT) link</span>
+    </button>
+  </div>
+
+  <div class="mono" id="ratLink" aria-label="Regression Analysis Tool (RAT) URL">
+    https://pcasey5216.github.io/Regression_Analysis_Tool_RAT.html
+  </div>
+</article>
+
+<!-- Your Idea Here -->
+<article class="card">
+  <div class="tagrow">
+    <span class="tag"><span class="tiny" style="background:rgba(167,139,250,0.75)"></span> Community</span>
+    <span class="tag"><span class="tiny" style="background:rgba(125,211,252,0.75)"></span> Education</span>
+    <span class="tag"><span class="tiny" style="background:rgba(52,211,153,0.75)"></span> Analyst-driven</span>
+  </div>
+
+  <h2>Your Idea Here</h2>
+  <p class="desc">
+    Have an idea for an educational cost-estimating or analytics tool that would help the community learn faster?
+    Send it over—short ideas are welcome, and detailed write-ups are even better.
+  </p>
+
+  <ul>
+    <li>Share the concept, intended audience, and “what good looks like” for outputs</li>
+    <li>If you have an example dataset, include it (even a tiny synthetic sample is fine)</li>
+    <li>Bonus: screenshots, pseudo-code, spreadsheets, or links to references</li>
+  </ul>
+
+  <div class="actions">
+    <a class="btn primary" href="mailto:pcasey@quantechserv.com?subject=Tool+idea+submission+%E2%80%94+Cost+Analysis+Interactive+Labs&body=Hi+Patrick%2C%0A%0AHere%E2%80%99s+an+idea+for+a+new+educational+cost+estimating+%2F+cost+analysis+tool%3A%0A%0A1%29+Tool+name+%28working%29%3A%0A2%29+What+problem+it+solves%3A%0A3%29+Who+it%E2%80%99s+for%3A%0A4%29+Inputs+%2F+outputs%3A%0A5%29+Example+dataset+%28optional%29%3A%0A6%29+Notes+%2F+constraints%3A%0A%0AThanks%21%0A">
+      To submit an idea for a tool click here
+      <svg class="tinyicon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M4 4h16v16H4z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+        <path d="M22 6l-10 7L2 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </a>
+  </div>
+
+  <div class="mono" aria-label="Example tool ideas">
+    Example ideas: inflation quick-look • learning curves • WBS templates • uncertainty visualizers • data-quality checkers
+  </div>
+</article>
     </section>
 
     <section class="split" aria-label="About and notes">
@@ -607,7 +733,8 @@
       bias: 'https://pcasey5216.github.io/AI_Bias_Sandbox.html',
       galton: 'https://pcasey5216.github.io/Galton_Board_Distribution_Lab.html',
       kmeans: 'https://pcasey5216.github.io/KMeans_Clustering_Lab.html',
-      case: 'https://pcasey5216.github.io/Cost_Analysis_Simulation_Engine.html'
+      case: 'https://pcasey5216.github.io/Cost_Analysis_Simulation_Engine.html',
+      rat: 'https://pcasey5216.github.io/Regression_Analysis_Tool_RAT.html'
     };
 
     document.querySelectorAll('button[data-copy]').forEach(btn => {
@@ -624,6 +751,55 @@
         }
       });
     });
-  </script>
+
+    // Smoke test (non-blocking)
+    (function indexSmokeTest(){
+      const checks = [];
+      const expect = (name, cond, details) => checks.push({name, pass: !!cond, details: details || undefined});
+
+      expect('Year element present', !!document.getElementById('year'));
+      const cards = document.querySelectorAll('.card');
+      expect('At least 5 cards render', cards.length >= 5, {count: cards.length});
+
+      expect('RAT launch link exists', !!document.querySelector('a[href*="Regression_Analysis_Tool_RAT"]'));
+      expect('RAT copy button exists', !!document.querySelector('button[data-copy="rat"]'));
+
+      const mail = document.querySelector('a[href^="mailto:pcasey@quantechserv.com"]');
+      expect('Idea mailto CTA exists', !!mail && (mail.getAttribute('href')||'').startsWith('mailto:'));
+
+      // Responsive layout sanity checks
+      const grid = document.querySelector('.grid');
+      if (grid) {
+        const cols = (getComputedStyle(grid).gridTemplateColumns || '').split(' ').filter(Boolean).length;
+        if (window.innerWidth <= 980) {
+          expect('Mobile: cards stack (1 column)', cols === 1, {cols, w: window.innerWidth});
+        } else {
+          expect('Desktop: grid columns computed', cols >= 1, {cols, w: window.innerWidth});
+        }
+      } else {
+        expect('Grid container present', false);
+      }
+
+      const quick = document.querySelector('.quicklinks');
+      if (quick) {
+        const qcols = (getComputedStyle(quick).gridTemplateColumns || '').split(' ').filter(Boolean).length;
+        if (window.innerWidth <= 880) {
+          expect('Mobile: quicklinks stack (1 column)', qcols === 1, {qcols, w: window.innerWidth});
+        } else {
+          expect('Desktop: quicklinks columns computed', qcols >= 1, {qcols, w: window.innerWidth});
+        }
+      } else {
+        expect('Quicklinks container present', false);
+      }
+
+      const pass = checks.every(c=>c.pass);
+      if (pass) {
+        console.log('Index smoke test: PASS', checks);
+      } else {
+        console.warn('Index smoke test: FAIL', checks);
+      }
+    })();
+
+</script>
 </body>
 </html>
