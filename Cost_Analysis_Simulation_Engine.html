@@ -1064,6 +1064,29 @@ body.layout-stack.layout-swap .grid{grid-template-areas:"outputs" "inputs";}
     .miniTable th{ color: var(--muted); font-weight: 650; }
     .miniTable td code{ font-family: var(--mono); font-size: 12px; }
     .miniTable .right{ text-align:right; }
+
+    /* Run Compare column resizers */
+    .miniTable th{ position: relative; }
+    .colResizer{
+      position:absolute;
+      top:0; right:-2px;
+      width: 8px;
+      height: 100%;
+      cursor: col-resize;
+      user-select: none;
+      touch-action: none;
+    }
+    .colResizer:after{
+      content:"";
+      position:absolute;
+      top: 20%;
+      bottom: 20%;
+      left: 3px;
+      width: 2px;
+      border-radius: 2px;
+      background: rgba(255,255,255,.18);
+    }
+    body.colResizing{ cursor: col-resize; }
     
     .stepperWrap{
       display:flex;
@@ -1706,7 +1729,10 @@ body.layout-stack.layout-swap .grid{grid-template-areas:"outputs" "inputs";}
             <button class="menuItem" id="btnTourTaskRunExport" role="menuitem">Task: Build → Run → Export</button>
             <button class="menuItem" id="btnTourTaskCorrImpact" role="menuitem">Task: Correlation impact</button>
             <button class="menuItem" id="btnTourTaskScenarios" role="menuitem">Task: Scenarios & sharing</button>
+            
             <div class="menuSep" role="separator"></div>
+            <button class="menuItem" id="btnTourPresenterLocked" role="menuitem">Presenter demo (locked)</button>
+<div class="menuSep" role="separator"></div>
             <button class="menuItem" id="btnTourReview" role="menuitem">Reviewer / QA</button>
           </div>
         </details>
@@ -6779,7 +6805,8 @@ function safeParseJSON(raw){
       if(!s){
         setStatus("warn", "Scenario not found.", "It may have been deleted.");
         refreshScenarioUI();
-        return;
+        try{ window.__caseLastScenarioLoad = { id, at: Date.now() }; }catch{}
+return;
       }
       state.settings = { ...state.settings, ...s.payload.settings };
       state.wbsTemplateId = validWbsTemplateId(String(s.payload.wbsTemplateId||""));
@@ -6792,6 +6819,7 @@ function safeParseJSON(raw){
       clearResultsForNewInputs();
       setSelectedScenarioId(id);
       refreshScenarioUI();
+      try{ window.__caseLastScenarioLoad = { id, at: Date.now() }; }catch{}
     }
 
     function scenarioSaveSelected(){
@@ -11152,6 +11180,81 @@ $("#statMean .v").textContent = fmtMoneyFull(state.lastSummary.mean);
       }
     }
 
+    // ---- Run Compare: resizable columns (Presenter convenience) ----
+    function initRunCompareResizable(){
+      const table = document.getElementById("compareTable");
+      if(!table) return;
+      const thead = table.querySelector("thead");
+      const ths = Array.from(table.querySelectorAll("thead th"));
+      if(!thead || !ths.length) return;
+
+      // Make table layout stable during resize
+      table.style.tableLayout = "fixed";
+      table.style.width = "100%";
+
+      // Restore saved widths
+      try{
+        ensureUiPrefs();
+        const saved = state.uiPrefs && Array.isArray(state.uiPrefs.compareColWidths) ? state.uiPrefs.compareColWidths : null;
+        if(saved && saved.length === ths.length){
+          ths.forEach((th,i)=>{ if(saved[i] && saved[i] > 30) th.style.width = saved[i] + "px"; });
+        }
+      }catch{}
+
+      // Avoid double-binding
+      if(table.__colResizeBound) return;
+      table.__colResizeBound = true;
+
+      ths.forEach((th, idx)=>{
+        // Skip if already has a resizer
+        if(th.querySelector(".colResizer")) return;
+
+        th.style.position = "relative";
+        const grip = document.createElement("div");
+        grip.className = "colResizer";
+        grip.title = "Drag to resize column";
+        th.appendChild(grip);
+
+        let startX=0, startW=0, resizing=false;
+
+        const onMove = (e)=>{
+          if(!resizing) return;
+          const dx = (e.clientX - startX);
+          const w = Math.max(60, startW + dx);
+          th.style.width = w + "px";
+        };
+        const onUp = ()=>{
+          if(!resizing) return;
+          resizing=false;
+          document.body.classList.remove("colResizing");
+          window.removeEventListener("mousemove", onMove);
+          window.removeEventListener("mouseup", onUp);
+
+          // Save widths
+          try{
+            ensureUiPrefs();
+            state.uiPrefs.compareColWidths = ths.map(t=>{
+              const px = parseFloat(getComputedStyle(t).width || "0");
+              return isFinite(px) ? Math.round(px) : null;
+            });
+            saveUiPrefs();
+          }catch{}
+        };
+
+        grip.addEventListener("mousedown", (e)=>{
+          e.preventDefault();
+          e.stopPropagation();
+          resizing=true;
+          document.body.classList.add("colResizing");
+          startX = e.clientX;
+          startW = parseFloat(getComputedStyle(th).width || "0");
+          window.addEventListener("mousemove", onMove);
+          window.addEventListener("mouseup", onUp);
+        });
+      });
+    }
+
+
 function applyStepUI(opts={}){
       ensureUiPrefs();
       const scroll = !!opts.scroll;
@@ -13272,6 +13375,8 @@ async function copyTSV(lines){
 
 function applyResults(res){
       lastResultsFull = res;
+
+      try{ window.__caseLastRunAt = Date.now(); window.__caseLastRunMeta = (res && res.meta) ? res.meta : null; }catch{}
 
       $("#runStamp").textContent = `Ran ${res.meta.ranAt}`;
       $("#histNote").textContent = (()=>{
@@ -15482,7 +15587,7 @@ try{
 
       if(!Array.isArray(state.lines) || state.lines.length === 0){
         diag.lastRunOk = false;
-        diag.lastError = "No cost lines.";
+        diag.lastError = { where: "run", msg: "No cost lines.", stack: null, at: new Date().toISOString() };
         setStatus("warn","Add at least one cost line.","Use + Add line, Load WBS, or load the Example scenario.");
         renderHealth();
         return;
@@ -16125,6 +16230,7 @@ $("#btnCopySummary").addEventListener("click", async ()=>{
           ...(isFiniteNumber(s.stdev)? [["StdDev", s.stdev].join("\t")] : []),
           ...(isFiniteNumber(s.stdev) && isFiniteNumber(s.mean) && s.mean>0 ? [["CV", (s.stdev/s.mean)].join("\t")] : [])
         ];
+        try{ window.__caseLastCopyAt = Date.now(); window.__caseLastCopyKind = "summary"; }catch{}
         await copyTSV(lines);
       });
 
@@ -16135,6 +16241,7 @@ $("#btnCopySummary").addEventListener("click", async ()=>{
         for(let i=0;i<fy.keys.length;i++){
           lines.push([fy.keys[i], fy.mean[i], fy.p80[i]].join("\t"));
         }
+        try{ window.__caseLastCopyAt = Date.now(); window.__caseLastCopyKind = "fy"; }catch{}
         await copyTSV(lines);
       });
 
@@ -16332,6 +16439,8 @@ $("#btnCopySummary").addEventListener("click", async ()=>{
           saveState();
           applyLayerUI();
           renderRunCompare();
+        try{ initRunCompareResizable(); }catch(e){}
+
           renderHealth();
         });
       };
@@ -16925,6 +17034,22 @@ if($("#scenarioSelect")){
       _bindTour("#btnTourTaskRunExport", "task_runexport");
       _bindTour("#btnTourTaskCorrImpact", "task_corrimpact");
       _bindTour("#btnTourTaskScenarios", "task_scenarios");
+
+      // Presenter demo (locked) — presenter-only teleprompter tour
+      const PRESENTER_TOUR_CODE = "pcasey26";
+      function _startPresenterDemoLocked(){
+        const code = prompt("Presenter demo code:");
+        if(String(code||"").trim() !== PRESENTER_TOUR_CODE){
+          try{ setStatus("warn", "Presenter demo tour locked", "Incorrect code."); }catch{}
+          return;
+        }
+        startTour("presenter_demo");
+      }
+      try{
+        const b = document.querySelector("#btnTourPresenterLocked");
+        if(b) b.addEventListener("click", (e)=>{ e.preventDefault(); _startPresenterDemoLocked(); });
+      }catch{}
+
       _bindTour("#btnTourReview", "review");
       $("#tourBack").addEventListener("click", ()=> tourPrev());
       $("#tourNext").addEventListener("click", ()=> tourNext());
@@ -17171,6 +17296,238 @@ if($("#scenarioSelect")){
 
       
       
+      
+      // Presenter demo (locked) — slide-deck-aligned teleprompter tour
+      const presenterDemo = [
+        { el:"#scenarioCard", focus:"#scenarioSelect", title:"Presenter demo — Load built‑in Baseline", bullets:[
+          "<b>Action:</b> In Scenarios, pick a built‑in Baseline (e.g., “RAVENSHIELD — Baseline”) and click <b>Load</b>.",
+          "<b>Presenter:</b> “We’re using a built‑in scenario so this demo is reproducible.”"
+        ],
+          gateText:"Load a Baseline scenario to continue.",
+          pre: function(){
+            try{ setActiveStep("lines", {scroll:false}); }catch{}
+            try{ this._preLoadAt = (window.__caseLastScenarioLoad && window.__caseLastScenarioLoad.at) ? window.__caseLastScenarioLoad.at : 0; }catch{ this._preLoadAt = 0; }
+          },
+          waitForState: function(){
+            try{
+              const sel = document.getElementById("scenarioSelect");
+              const optText = sel && sel.selectedOptions && sel.selectedOptions[0] ? String(sel.selectedOptions[0].textContent||"") : "";
+              const looksBaseline = /baseline/i.test(optText);
+              const hasModel = (state && Array.isArray(state.lines) && state.lines.length>0);
+              const loadedNow = (window.__caseLastScenarioLoad && window.__caseLastScenarioLoad.at && window.__caseLastScenarioLoad.at > (this._preLoadAt||0));
+              const loadedIdMatches = (window.__caseLastScenarioLoad && sel && window.__caseLastScenarioLoad.id === sel.value);
+              return looksBaseline && hasModel && (loadedNow || loadedIdMatches);
+            }catch(e){ return false; }
+          }
+        },
+
+        { el:"#btnRun", title:"Checkpoint A — Run baseline", bullets:[
+          "<b>Presenter:</b> “If we fund at $X, what confidence do we have of not exceeding?”",
+          "<b>Action:</b> Click <b>Run</b>."
+        ],
+          pre: function(){ try{ setActiveStep("results", {scroll:false}); }catch{} try{ this._preRunAt = window.__caseLastRunAt || 0; }catch{ this._preRunAt = 0; } },
+          gateText:"Run the simulation to continue.",
+          waitForState: function(){
+            try{
+              const okResults = !!(typeof lastResultsFull!=="undefined" && lastResultsFull && Array.isArray(lastResultsFull.totals) && lastResultsFull.totals.length>0);
+              const ranThisStep = (window.__caseLastRunAt||0) > (this._preRunAt||0);
+              return okResults && ranThisStep;
+            }catch(e){ return false; }
+          }
+        },
+
+        { el:"#inBudget", focus:"#inBudget", title:"Checkpoint A — Budget confidence + room prompt", bullets:[
+          "<b>Room prompt:</b> “Would you fund at <b>P50</b> or <b>P80</b> for this decision?”",
+          "<b>Action:</b> Enter a Budget (total) to compute P(not exceed).",
+          "<b>Callout:</b> Point to the budget probability statement + S‑curve."
+        ],
+          pre: function(){
+            try{ setActiveStep("results", {scroll:true}); }catch{}
+            try{ document.getElementById("inBudget")?.scrollIntoView({block:"center", inline:"nearest"}); }catch{}
+          },
+          gateText:"Enter a budget amount to continue.",
+          waitForState: ()=> (Number(document.getElementById("inBudget")?.value||0) > 0)
+        },
+
+        { el:"#layersWrap", title:"Checkpoint B — Turn on CSRUH layered runs (Advanced)", bullets:[
+          "<b>Presenter:</b> “To avoid double counting, we layer impacts separately.”",
+          "<b>Action:</b> Ensure <b>Cost uncertainty</b> is checked (Correlation OFF for layer 1)."
+        ],
+          pre: function(){
+            try{ setActiveStep("results", {scroll:false}); }catch{}
+            try{
+              ensureUiPrefs();
+              if(!state.uiPrefs.showAdvanced){
+                state.uiPrefs.showAdvanced = true;
+                saveUiPrefs();
+                applyAdvancedUI();
+              }
+            }catch{}
+            try{ document.getElementById("layersWrap")?.scrollIntoView({block:"center", inline:"nearest"}); }catch{}
+          },
+          gateText:"Enable Cost uncertainty (layer) to continue.",
+          waitForState: ()=> !!document.getElementById("chkLayerCostUnc")?.checked
+        },
+
+        { el:"#btnRun", title:"Checkpoint B — Run layer 1 (cost uncertainty only)", bullets:[
+          "<b>Action:</b> Click <b>Run</b> with Correlation OFF."
+        ],
+          gateText:"Run layer 1 to continue.",
+          pre: function(){
+            try{ setActiveStep("results", {scroll:false}); }catch{}
+            try{ ensureUiPrefs(); if(!state.uiPrefs.showAdvanced){ state.uiPrefs.showAdvanced=true; saveUiPrefs(); applyAdvancedUI(); } }catch{}
+            try{
+              this._preRows = document.querySelectorAll("#compareTable tbody tr").length;
+              this._preRunAt = window.__caseLastRunAt || 0;
+            }catch{ this._preRows = 0; this._preRunAt = 0; }
+          },
+          waitForState: function(){
+            try{
+              const rows = document.querySelectorAll("#compareTable tbody tr").length;
+              const ranThisStep = (window.__caseLastRunAt||0) > (this._preRunAt||0);
+              return ranThisStep && rows > (this._preRows||0);
+            }catch(e){ return false; }
+          }
+        },
+
+        { el:"#chkLayerCorr", title:"Checkpoint B — Turn on correlation layer", bullets:[
+          "<b>Presenter:</b> “Correlation changes the tail — it’s shared drivers, not adding risk twice.”",
+          "<b>Action:</b> Check <b>Correlation</b>."
+        ],
+          pre: function(){
+            try{ setActiveStep("results", {scroll:false}); }catch{}
+            try{
+              ensureUiPrefs();
+              if(!state.uiPrefs.showAdvanced){
+                state.uiPrefs.showAdvanced = true;
+                saveUiPrefs();
+                applyAdvancedUI();
+              }
+            }catch{}
+          },
+          gateText:"Enable Correlation (layer) to continue.",
+          waitForState: ()=> !!document.getElementById("chkLayerCorr")?.checked
+        },
+
+        { el:"#btnRun", title:"Checkpoint B — Run layer 2 (+ correlation)", bullets:[
+          "<b>Action:</b> Click <b>Run</b> again to capture the +correlation layer."
+        ],
+          gateText:"Run layer 2 to continue.",
+          pre: function(){
+            try{ setActiveStep("results", {scroll:false}); }catch{}
+            try{ ensureUiPrefs(); if(!state.uiPrefs.showAdvanced){ state.uiPrefs.showAdvanced=true; saveUiPrefs(); applyAdvancedUI(); } }catch{}
+            try{
+              this._preRows = document.querySelectorAll("#compareTable tbody tr").length;
+              this._preRunAt = window.__caseLastRunAt || 0;
+            }catch{ this._preRows = 0; this._preRunAt = 0; }
+          },
+          waitForState: function(){
+            try{
+              const rows = document.querySelectorAll("#compareTable tbody tr").length;
+              const ranThisStep = (window.__caseLastRunAt||0) > (this._preRunAt||0);
+              return ranThisStep && rows > (this._preRows||0);
+            }catch(e){ return false; }
+          }
+        },
+
+        { el:"#compareCard", focus:"#compareTable", title:"Checkpoint B — Run compare (what moved P80?)", bullets:[
+          "<b>Presenter:</b> “Here’s the receipt: each run shows what was turned on and how P50/P80 moved.”",
+          "<b>Action:</b> Scroll the table and call out deltas from layer 1 → layer 2."
+        ],
+          pre: function(){
+            try{ setActiveStep("results", {scroll:true}); }catch{}
+            try{
+              const c = document.getElementById("compareCard");
+              if(c) c.classList.remove("hidden");
+            }catch{}
+          }
+        },
+
+        { el:"#linesTableWrap", title:"Checkpoint C — Inspect assumptions (pick 1–2 lines)", bullets:[
+          "<b>Presenter:</b> “If we can’t defend the line assumptions, we can’t defend the total.”",
+          "<b>Action:</b> Choose 1–2 representative lines to discuss."
+        ],
+          pre: function(){ try{ setActiveStep("lines", {scroll:true}); }catch{} }
+        },
+
+        { el:'#linesTable select[data-k="dist"]', title:"Checkpoint C — Distribution choice", bullets:[
+          "<b>Action:</b> Point to Dist selector and justify shape (bounded vs skew / tail risk)."
+        ],
+          pre: function(){ try{ setActiveStep("lines", {scroll:true}); }catch{} }
+        },
+
+        // Step 11: open formula editor
+        { el:"#fxBackdrop", focus:"#fxText", title:"Checkpoint C — Drivers (formula editor)", bullets:[
+          "<b>Action:</b> Open formula editor (if used) and highlight the key drivers / variables."
+        ],
+          pre: function(){
+            try{ setActiveStep("lines", {scroll:true}); }catch{}
+            try{
+              const btn = document.querySelector('#linesTable button[data-act="fxedit"]');
+              if(btn) btn.click();
+            }catch{}
+            try{ document.getElementById("fxText")?.scrollIntoView({block:"center", inline:"nearest"}); }catch{}
+          }
+        },
+
+        // Step 12: open phasing editor
+        { el:"#phBackdrop", focus:"#phModalTitle", title:"Checkpoint C — Phasing story", bullets:[
+          "<b>Action:</b> Open Phasing… and show how the line spreads across FYs (sums to 100%)."
+        ],
+          pre: function(){
+            try{ setActiveStep("lines", {scroll:true}); }catch{}
+            try{
+              const btn = document.querySelector('#linesTable button[data-act="phaseEdit"]');
+              if(btn) btn.click();
+            }catch{}
+            try{ document.getElementById("phModalTitle")?.scrollIntoView({block:"center", inline:"nearest"}); }catch{}
+          }
+        },
+
+        // Step 13: open correlation details
+        { el:"#corrBackdrop", focus:"#corrModalTitle", title:"Checkpoint C — Correlation details", bullets:[
+          "<b>Action:</b> Open Correlation details… point out rationale/source and implied matrix."
+        ],
+          pre: function(){
+            try{ setActiveStep("risk", {scroll:true}); }catch{}
+            try{
+              ensureUiPrefs();
+              if(!state.uiPrefs.showAdvanced){
+                state.uiPrefs.showAdvanced = true;
+                saveUiPrefs();
+                applyAdvancedUI();
+              }
+            }catch{}
+            try{ document.getElementById("btnCorrDetails")?.click(); }catch{}
+            try{ document.getElementById("corrModalTitle")?.scrollIntoView({block:"center", inline:"nearest"}); }catch{}
+          }
+        },
+
+        // Step 14: briefing artifacts (copy) — highlight only the button; do not block clicks
+        { el:"#btnCopySummary", focus:"#btnCopySummary", title:"Checkpoint D — Briefing artifacts (Copy summary / Copy FY)", bullets:[
+          "<b>Action:</b> Click <b>Copy summary</b> (and optionally <b>Copy FY</b>).",
+          "<b>Presenter:</b> “Training-first: make it easy to communicate results correctly.”"
+        ],
+          pre: function(){
+            try{ setActiveStep("results", {scroll:true}); }catch{}
+            try{ document.getElementById("btnCopySummary")?.scrollIntoView({block:"center", inline:"nearest"}); }catch{}
+            try{ this._preCopyAt = window.__caseLastCopyAt || 0; }catch{ this._preCopyAt = 0; }
+          },
+          gateText:"Click Copy summary or Copy FY to continue.",
+          waitForState: function(){
+            try{ return (window.__caseLastCopyAt||0) > (this._preCopyAt||0); }catch(e){ return false; }
+          }
+        },
+
+        { el:"#btnPackExport", title:"Checkpoint D — Export for reproducible review", bullets:[
+          "<b>Action:</b> Export Package (and/or Export review pack).",
+          "<b>Close:</b> “AI can build tools like this — and we can iterate safely when requests come with scenarios.”"
+        ],
+          pre: function(){ try{ setActiveStep("results", {scroll:true}); }catch{} }
+        }
+      ];
+
+
       const reviewerWalkthrough = [
         { el:"#settingsRow", focus:"#cardInputs", title:"Global settings", bullets:[
           "Set iterations, seed, and sampling method.",
@@ -17196,212 +17553,28 @@ if($("#scenarioSelect")){
           "Shows schedule allocation across fiscal years.",
           "Open a few lines and inspect Phasing to see how weights were generated."
         ]},
-        { el:"#briefingToolsCard", title:"Top drivers", bullets:[
-          "A quick variability proxy to focus discussion.",
-          "Use it to prioritize data collection and risk mitigation."
-        ]},
-        { el:"#btnReviewPackExport", title:"Export review pack", bullets:[
-          "Downloads all example scenarios (Baseline / Conservative / Aggressive) plus a short README.",
-          "Use it to share reproducible inputs with peers."
-        ]}
-      ];
+        { el:"#btnCopySummary", focus:"#btnCopySummary", title:"Checkpoint D — Briefing artifacts (Copy summary / Copy FY)", bullets:[
+          "<b>Action:</b> Click <b>Copy summary</b> (and optionally <b>Copy FY</b>).",
+          "<b>Presenter:</b> “Training-first: make it easy to communicate results correctly.”"
+        ],
+          pre: function(){
+            try{ setActiveStep("results", {scroll:true}); }catch{}
+            try{ document.getElementById("btnCopySummary")?.scrollIntoView({block:"center", inline:"nearest"}); }catch{}
+            try{ this._preCopyAt = window.__caseLastCopyAt || 0; }catch{ this._preCopyAt = 0; }
+          },
+          gateText:"Click Copy summary or Copy FY to continue.",
+          waitForState: function(){
+            try{ return (window.__caseLastCopyAt||0) > (this._preCopyAt||0); }catch(e){ return false; }
+          }
+        },
 
-const taskRunExport = [
-        { el:"#btnDefaults", title:"Start clean (optional)", bullets:[
-          "If you’re experimenting, click Recommended defaults to reset global settings (does not change your cost lines).",
-          "For comparisons, keep the same sampling + seed unless you intentionally want a new random draw."
-        ]},
-        { el:"#btnAddRow", title:"Add a cost line", bullets:[
-          "Click Add line and enter a base cost + uncertainty + dates.",
-          "Tip: Start with 1–3 lines, get a clean run, then expand."
+        { el:"#btnPackExport", title:"Checkpoint D — Export for reproducible review", bullets:[
+          "<b>Action:</b> Export Package (and/or Export review pack).",
+          "<b>Close:</b> “AI can build tools like this — and we can iterate safely when requests come with scenarios.”"
         ],
-          gateText:"Add at least one cost line to continue.",
-          waitForState: ()=> (state.lines && state.lines.length>0)
-        },
-        { el:"#linesTableWrap", title:"Fill the core fields", bullets:[
-          "Base cost: your point estimate for the line.",
-          "Dist + Low/High: your uncertainty range (interpretation depends on distribution).",
-          "Start/End: drives fiscal year phasing and schedule exposure."
-        ]},
-        { el:"#btnRun", title:"Run", bullets:[
-          "Run the simulation to populate KPIs, charts, FY phasing, and roll-ups.",
-          "If the tool highlights errors, fix those fields first."
-        ],
-          gateText:"Click Run and complete a successful run to continue.",
-          waitFor:{selector:"#btnRun", event:"click"},
-          waitForState: ()=> (diag.lastRunOk===true)
-        },
-        { el:"#statP80", focus:"#cardOutputs", title:"Interpret KPIs", bullets:[
-          "P50 is a planning point; P80 is a common funding point.",
-          "Buffer = P80 − P50 (a quick way to communicate risk margin)."
-        ]},
-        { el:"#chartCdfCard", title:"Make a probability statement", bullets:[
-          "Use the S‑curve (CDF) to answer: “What’s the chance we exceed $X?”",
-          "Use Budget (total) to compute P(not exceed) for a specific funding level."
-        ]},
-        { el:"#inBudget", focus:"#cardOutputs", title:"Budget probability", bullets:[
-          "Enter a total budget to compute P(not exceed).",
-          "This is the simplest way to brief confidence at a funding level."
-        ]},
-        { el:"#btnExport", title:"Export snapshot", bullets:[
-          "Export after a run to capture inputs + results for traceability.",
-          "Use snapshots for peer reviews, briefings, and change tracking."
-        ],
-          gateText:"Click Export to download the results snapshot (CSV).",
-          waitFor:{selector:"#btnExport", event:"click"},
-          waitForState: ()=> (diag.lastRunOk===true)
-        },
-        { el:"#btnTour", title:"Done", bullets:[
-          "Nice — you completed a basic run and export.",
-          "Next: use Scenarios to version assumptions and share Packs for review."
-        ]}
-      ];
-
-      const taskCorrImpact = [
-        { el:"#inCorrMode", focus:"#cardInputs", title:"Turn on correlation", bullets:[
-          "Correlation makes lines move together when they share a common driver.",
-          "Start simple: use Global ρ or a single group (A) before adding complexity."
-        ], pre: ()=>{
-          try{ const det = $("#corrDetails"); if(det && det.tagName==="DETAILS") det.open = true; }catch{}
-        }},
-        { el:"#rhoGlobalWrap", title:"Set Global ρ (example)", bullets:[
-          "Try a sensitivity value like ρ = 0.2 or 0.5 to see tail impact.",
-          "Correlation usually changes tails (percentiles) more than the mean."
-        ],
-          gateText:"Set a non‑zero ρ (e.g., 0.2) to continue.",
-          waitFor:{selector:"#inRho", event:"input"},
-          waitForState: ()=> { const v = Number($("#inRho") ? $("#inRho").value : 0) || 0; return Math.abs(v) > 1e-9; }
-        },
-        { el:"#layersWrap", focus:"#cardInputs", title:"Layering (optional but recommended)", bullets:[
-          "Turn on layered runs to compare ‘cost only’ vs ‘+correlation’ cleanly in one run.",
-          "Recommended sequence: Cost uncertainty → +Correlation → +Schedule uncertainty."
-        ], pre: ()=>{
-          try{ const det = $("#layersDetails"); if(det && det.tagName==="DETAILS") det.open = true; }catch{}
-        }},
-        { el:"#chkLayerCorr", focus:"#cardInputs", title:"Enable the Correlation layer", bullets:[
-          "With layering on, you can see how correlation changes P50/P80 and CV without guessing.",
-          "Run Compare summarizes the impact across layers."
-        ],
-          gateText:"Check the Correlation layer box to continue.",
-          waitFor:{selector:"#chkLayerCorr", event:"change"},
-          waitForState: ()=> { const cb = $("#chkLayerCorr"); return !!(cb && cb.checked); }
-        },
-        { el:"#btnRun", title:"Run and compare", bullets:[
-          "Run the simulation after enabling correlation/layers.",
-          "Then review the Run Compare card and the S‑curve."
-        ],
-          gateText:"Click Run and complete a successful run to continue.",
-          waitFor:{selector:"#btnRun", event:"click"},
-          waitForState: ()=> (diag.lastRunOk===true)
-        },
-        { el:"#compareCard", title:"Run Compare", bullets:[
-          "Compare P50/P80/Mean and CV across layers.",
-          "If correlation increases P80 more than P50, it’s adding tail risk (common in real programs)."
-        ]},
-        { el:"#chartCdfCard", title:"See tail movement on the S‑curve", bullets:[
-          "Correlation often flattens the curve (more spread) and moves upper percentiles.",
-          "Keep the rationale/source documented if you brief correlation as a driver."
-        ]},
-        { el:"#corrRationaleWrap", title:"Document rationale / source", bullets:[
-          "Record why correlation is appropriate (data, SME, precedent).",
-          "This improves defensibility during peer reviews."
-        ], pre: ()=>{
-          try{ const det = $("#corrDetails"); if(det && det.tagName==="DETAILS") det.open = true; }catch{}
-        }},
-        { el:"#btnTour", title:"Done", bullets:[
-          "You’ve demonstrated correlation impact and documented it.",
-          "Next: keep layering for clean ‘what changed?’ storytelling."
-        ]}
-      ];
-
-      const taskScenarios = [
-        { el:"#scenarioCard", title:"Scenarios", bullets:[
-          "Scenarios store your inputs (lines, settings, correlation, WBS mappings, notes).",
-          "Use scenarios to track estimate versions and share with teammates."
-        ]},
-        { el:"#btnScenarioSaveAs", title:"Save As (recommended)", bullets:[
-          "Use Save As to create a named version before major changes.",
-          "Keep a simple naming convention (e.g., v1 baseline, v2 +corr, v3 schedule update)."
-        ],
-          gateText:"Use Save As to create a named scenario before continuing.",
-          waitFor:{selector:"#btnScenarioSaveAs", event:"click"},
-          waitForState: ()=> { try{ return loadScenarios().length > 0; }catch{ return false; } }
-        },
-        { el:"#btnScenarioExport", title:"Export / Import scenario JSON", bullets:[
-          "Scenario JSON is best for single‑scenario sharing and backups.",
-          "Import restores that scenario into your local scenario list."
-        ],
-          gateText:"Click Export/Import to download a scenario JSON or import one.",
-          waitFor:{selector:"#btnScenarioExport", event:"click"}
-        },
-        { el:"#btnPackExport", title:"Scenario Packages (best for reviews)", bullets:[
-          "Packs bundle multiple scenarios plus shared metadata (more complete sharing).",
-          "Use Packs for peer reviews so reviewers can reproduce your full set of cases."
-        ],
-          gateText:"Click Export Pack to download a scenario pack.",
-          waitFor:{selector:"#btnPackExport", event:"click"}
-        },
-        { el:"#btnPackImport", title:"Import Pack / CSV", bullets:[
-          "Import Pack restores multiple scenarios and their contents.",
-          "Import CSV is best when you want to edit cost lines in Excel and bring them back."
-        ],
-          gateText:"Click Import Pack/CSV to bring in a pack or a lines CSV.",
-          waitFor:{selector:"#btnPackImport", event:"click"}
-        },
-        { el:"#btnExport", title:"Export results after a run", bullets:[
-          "After running, export results for briefing tables and change tracking.",
-          "Pair a results export with a snapshot/pack for traceability."
-        ],
-          gateText:"Run successfully, then click Export to download results.",
-          waitFor:{selector:"#btnExport", event:"click"},
-          waitForState: ()=> (diag.lastRunOk===true)
-        },
-        { el:"#btnTour", title:"Done", bullets:[
-          "Great — you saved a scenario and learned how to share via JSON/Packs.",
-          "Tip: pair a Pack (inputs) with an Export (results) for traceability."
-        ]}
-      ];
-
-      const review = [
-        { el:"#btnDiag", title:"Diagnostics (includes docs checks)", bullets:[
-          "Use Diagnostics to confirm Boot OK / Wired and see the last error (if any).",
-          "v3 adds documentation coverage checks (tooltips + tour targets)."
-        ]},
-        { el:"#healthDetails", title:"Input checks", bullets:[
-          "Fix red errors before interpreting results.",
-          "Yellow warnings are allowed, but may reduce interpretability."
-        ]},
-        { el:"#wbsLibraryCard", title:"WBS coverage", bullets:[
-          "Turn on “Show only missing” to focus on unassigned cost lines.",
-          "Assign WBS in bulk using the selection bar in the cost lines table."
-        ], pre: ()=>{
-          try{
-            const det = $("#wbsLibraryCard"); if(det && det.tagName==="DETAILS") det.open = true;
-            const cb = $("#wbsLibShowOnlyMissing"); if(cb) cb.checked = true;
-            renderWbsLibrary();
-          }catch{}
-        }},
-        { el:"#wbsRollupCard", title:"WBS roll‑up", bullets:[
-          "Review totals at the right level for your audience.",
-          "Use expand/collapse and filters to focus on key branches."
-        ]},
-        { el:"#lineResultsCard", title:"Per‑line results", bullets:[
-          "Identify which lines drive mean cost and which drive uncertainty.",
-          "Use percentiles to understand the spread on specific elements."
-        ]},
-        { el:"#chartConvCard", title:"Convergence check", bullets:[
-          "Verify the estimate stabilizes as iterations increase (P50/P80).",
-          "Apply the recommendation to choose an iteration count efficiently."
-        ]},
-        { el:"#resultsTableCard", title:"Copy/paste summary", bullets:[
-          "Use Copy Summary / Copy FY for quick briefings and email updates.",
-          "Exports are consistent with these tables."
-        ]},
-        { el:"#btnExport", title:"Full export snapshot", bullets:[
-          "Export after a run to capture inputs + summary + FY + WBS roll‑ups.",
-          "Use this for traceability and peer reviews."
-        ]}
-      ];
+          pre: function(){ try{ setActiveStep("results", {scroll:true}); }catch{} }
+        }
+      ];;
 
       const m = String(mode || "quick").toLowerCase();
       if(m === "review") return review;
@@ -17415,6 +17588,7 @@ const taskRunExport = [
       if(m === "task_corrimpact") return taskCorrImpact;
       if(m === "task_scenarios") return taskScenarios;
       if(m === "review_walkthrough") return reviewerWalkthrough;
+      if(m === "presenter_demo") return presenterDemo;
       return quick;
     }
 
@@ -17472,6 +17646,14 @@ function openDetailsAncestors(el){
       tour.idx = 0;
       tour.active = true;
       tour.mode = (/^review/.test(String(mode||"")) ) ? "review" : "quick";
+      tour._presenterDemo = (String(mode||"").toLowerCase() === "presenter_demo");
+      // Protect against accidentally exiting presenter demo
+      try{
+        if(tour._presenterDemo){
+          tour._beforeUnload = (e)=>{ try{ e.preventDefault(); e.returnValue = ""; return ""; }catch{} };
+          window.addEventListener("beforeunload", tour._beforeUnload);
+        }
+      }catch{}
       tour._focusEl = null;
       try{ setTourActiveEl(null); }catch{}
       tour._activeEl = null;
@@ -17507,7 +17689,14 @@ function openDetailsAncestors(el){
       showTourStep();
     }
     function endTour(){
+      try{
+        if(tour && tour._presenterDemo && !tour._forceEnd){
+          const ok = confirm("Exit presenter demo?\n\nYou can continue the guided demo by staying in the tour.");
+          if(!ok) return;
+        }
+      }catch{}
       tour.active = false;
+      try{ if(tour._beforeUnload) window.removeEventListener("beforeunload", tour._beforeUnload); tour._beforeUnload=null; }catch{}
       try{ clearTourGate(); }catch{}
       if(tour._onScroll) window.removeEventListener("scroll", tour._onScroll, true);
       tour._onScroll = null;
