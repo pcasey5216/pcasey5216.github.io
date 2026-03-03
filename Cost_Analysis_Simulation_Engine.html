@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>CASE — Cost Analysis &amp; Simulation Engine (v5.0.5)</title>
+  <title>CASE — Cost Analysis &amp; Simulation Engine (v5.1.0-presenterDemo)</title>
   <style>
     :root{
       --bg:#0b1220; --panel:#101a33; --panel2:#0f1930; --text:#e8eefc; --muted:#a9b6d6;
@@ -215,12 +215,60 @@
       .bannerActions{justify-content:flex-start;}
     }
 
-.grid{display:grid; grid-template-columns: 1.15fr .85fr; gap:14px; align-items:start; grid-template-areas:"inputs outputs";}
-#cardInputs{grid-area:inputs;}
-#cardOutputs{grid-area:outputs;}
-body.layout-swap .grid{grid-template-areas:"outputs inputs";}
-body.layout-stack .grid{grid-template-columns: 1fr; grid-template-areas:"inputs" "outputs";}
-body.layout-stack.layout-swap .grid{grid-template-areas:"outputs" "inputs";}
+/* Pane layout (Inputs | splitter | Outputs) */
+.grid{
+  display:flex;
+  align-items:flex-start; /* avoid height-stretching in split view; stacked view will override */
+  gap:14px;
+  --splitPct: 58; /* % of width allocated to Inputs in split view */
+}
+#cardInputs{flex: 0 0 calc(var(--splitPct) * 1%); min-width: 420px;}
+#cardOutputs{flex: 1 1 calc((100 - var(--splitPct)) * 1%); min-width: 360px;}
+
+.colSplitter{
+  flex: 0 0 10px;
+  align-self: stretch; /* ensure visible when .grid uses align-items:flex-start */
+border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.04);
+  box-shadow: 0 10px 24px rgba(0,0,0,.25);
+  cursor: col-resize;
+  position: relative;
+  user-select:none;
+  touch-action:none;
+}
+.colSplitter:after{
+  content:"";
+  position:absolute;
+  top: 18%;
+  bottom: 18%;
+  left: 50%;
+  width: 2px;
+  transform: translateX(-50%);
+  border-radius: 2px;
+  background: rgba(255,255,255,.18);
+}
+.colSplitter:hover{ background: rgba(255,255,255,.06); border-color: rgba(106,169,255,.35); }
+.colSplitter:focus-visible{
+  outline:none;
+  border-color: rgba(106,169,255,.70);
+  box-shadow: 0 0 0 3px rgba(106,169,255,.18), 0 10px 24px rgba(0,0,0,.25);
+}
+body.paneResizing{ cursor: col-resize; }
+body.paneResizing .colSplitter{ background: rgba(106,169,255,.08); border-color: rgba(106,169,255,.55); }
+
+/* Swap Inputs/Outputs positions */
+body.layout-swap #cardOutputs{ order: 1; }
+body.layout-swap #colSplitter{ order: 2; }
+body.layout-swap #cardInputs{ order: 3; }
+
+/* Stacked layout */
+body.layout-stack .grid{ flex-direction: column; align-items: stretch; }
+body.layout-stack #cardInputs, body.layout-stack #cardOutputs{ flex: 1 1 auto; min-width: 0; width: 100%; }
+body.layout-stack #colSplitter{ display:none; }
+body.layout-stack.layout-swap #cardOutputs{ order: 1; }
+body.layout-stack.layout-swap #cardInputs{ order: 2; }
+
 
     .card{
       scroll-margin-top: 96px;
@@ -323,6 +371,9 @@ body.layout-stack.layout-swap .grid{grid-template-areas:"outputs" "inputs";}
     .advBadge .btn{ box-shadow:none; }
     input:focus, select:focus{border-color: rgba(106,169,255,.55); box-shadow: 0 0 0 3px rgba(106,169,255,.16)}
     input[type="number"]{font-variant-numeric: tabular-nums;}
+    .moneyField{ font-variant-numeric: tabular-nums; text-align:right; }
+    .moneyField::placeholder{ color: rgba(169,182,214,.65); }
+
     .hint{margin-top:6px; font-size:11px; color: var(--muted); line-height:1.3;}
     .dot{ text-decoration: underline dotted rgba(233,240,255,.55); text-underline-offset: 2px; cursor: help; }
     .hint .dot{ text-decoration: underline dotted rgba(233,240,255,.55); text-underline-offset: 2px; cursor: help; }
@@ -512,10 +563,17 @@ body.layout-stack.layout-swap .grid{grid-template-areas:"outputs" "inputs";}
     .tourNav button{padding: 8px 10px; border-radius: 12px; font-weight:800}
 
     @media (max-width: 980px){
-      .grid{grid-template-columns: 1fr; grid-template-areas:"inputs" "outputs";}
-      body.layout-swap .grid{grid-template-areas:"outputs" "inputs";}
       table{min-width: 1040px}
       canvas{height: 210px}
+    }
+
+    @media (max-width: 720px){
+      /* Auto-stack panes on narrow screens */
+      .grid{ flex-direction: column; align-items: stretch; }
+      #colSplitter{ display:none; }
+      #cardInputs, #cardOutputs{ flex: 1 1 auto; min-width: 0; width: 100%; }
+      body.layout-swap #cardOutputs{ order: 1; }
+      body.layout-swap #cardInputs{ order: 2; }
     }
   
     @media (max-width: 560px){
@@ -1634,7 +1692,7 @@ body.layout-stack.layout-swap .grid{grid-template-areas:"outputs" "inputs";}
     }
 
 
-    /* ----- v5.0.5 Documentation expansion helpers ----- */
+    /* ----- v5.1.0-presenterDemo Documentation expansion helpers ----- */
     .helpCallout{
       border: 1px solid rgba(106,169,255,.28);
       background: rgba(106,169,255,.08);
@@ -1708,7 +1766,7 @@ body.layout-stack.layout-swap .grid{grid-template-areas:"outputs" "inputs";}
         <div class="logo" aria-hidden="true"></div>
         <div class="titleWrap">
           <h1>CASE</h1>
-          <div class="sub">Cost Analysis &amp; Simulation Engine • schedule phasing + risk simulation • <span class="pill">v5.0.5</span></div>
+          <div class="sub">Cost Analysis &amp; Simulation Engine • schedule phasing + risk simulation • <span class="pill">v5.1.0-presenterDemo</span></div>
         </div>
       </div>
 
@@ -2320,9 +2378,11 @@ body.layout-stack.layout-swap .grid{grid-template-areas:"outputs" "inputs";}
         <div class="footerNote">
           <span>Autosaves locally in your browser (no data leaves the page).</span>
           <span class="pill">FY = Oct 1 – Sep 30</span>
-          <span class="pill" id="buildPill">v5.0.5</span>
+          <span class="pill" id="buildPill">v5.1.0-presenterDemo</span>
         </div>
       </div>
+
+      <div class="colSplitter" id="colSplitter" role="separator" aria-orientation="vertical" tabindex="0" title="Drag to resize Inputs vs Outputs"></div>
 
       <div class="card" id="cardOutputs">
         <div class="cardHeader">
@@ -2383,6 +2443,7 @@ body.layout-stack.layout-swap .grid{grid-template-areas:"outputs" "inputs";}
             <div class="cardHeader">
               <h2>Run compare</h2>
               <div class="pill" id="compareNote">Last runs</div>
+              <button class="btn ghost xs" id="btnCompareResetCols" title="Reset Run Compare column widths">Reset columns</button>
             </div>
             <div class="cardBody" style="padding-top: 12px">
               <div class="hint">Shows the last few runs so you can demonstrate CSRUH-style layering (cost uncertainty → correlation → schedule uncertainty → risk register).</div>
@@ -2468,7 +2529,7 @@ body.layout-stack.layout-swap .grid{grid-template-areas:"outputs" "inputs";}
                 <div class="row" style="align-items:flex-end">
                   <label style="flex:2 1 220px">
                     <span class="dot" data-tip="budgetTotal" data-help="help-budget" title="Enter a budget to compute P(not exceed) using the simulated S-curve.">Budget (total)</span>
-                    <input id="inBudget" type="number" min="0" step="1000" placeholder="e.g., 5000000">
+                    <input id="inBudget" type="text" inputmode="decimal" autocomplete="off" class="moneyField" placeholder="$5,000,000" aria-label="Budget total (currency)">
                     <div class="hint">Uses the latest run’s total-cost simulations.</div>
                   </label>
 
@@ -2929,7 +2990,7 @@ body.layout-stack.layout-swap .grid{grid-template-areas:"outputs" "inputs";}
   <script>
 
     /*********************
-     * CASE — Cost Analysis & Simulation Engine (v5.0.5)
+     * CASE — Cost Analysis & Simulation Engine (v5.1.0-presenterDemo)
      * - Fixed correlation implementation (supports negative ρ when valid).
      * - Date parsing and FY mapping are UTC-stable.
      * - LocalStorage stays small (results arrays are not persisted).
@@ -2961,7 +3022,7 @@ body.layout-stack.layout-swap .grid{grid-template-areas:"outputs" "inputs";}
     }
 
 // ---------- Diagnostics (Pass 1: boot/run reliability) ----------
-    const DIAG_BUILD = "v5.0.5";
+    const DIAG_BUILD = "v5.1.0-presenterDemo";
     const diag = {
       build: DIAG_BUILD,
       lastSelfCheckAt: null,
@@ -3377,6 +3438,76 @@ function clamp(x, a, b){ return Math.max(a, Math.min(b, x)); }
       if(!isFiniteNumber(x)) return '—';
       return '$' + x.toLocaleString(undefined,{maximumFractionDigits:0});
     }
+
+    function fmtMoneyM(x){
+      if(!isFiniteNumber(x)) return '—';
+      return `$${(x/1e6).toFixed(2)}M`;
+    }
+
+    // Currency input helpers (Budget total)
+    function parseMoneyInput(v){
+      if(v == null) return NaN;
+      let s = String(v).trim();
+      if(!s) return NaN;
+      // allow $ and commas/spaces; allow K/M/B suffixes; allow parentheses for negative
+      let neg = false;
+      if(s.includes('(') && s.includes(')')){
+        neg = true;
+        s = s.replace(/[()]/g,'');
+      }
+      s = s.replace(/[$,\s]/g,'');
+      const m = s.match(/^(-?\d*\.?\d+)([kKmMbB])?$/);
+      if(!m) return NaN;
+      let num = Number(m[1]);
+      if(!Number.isFinite(num)) return NaN;
+      const suf = m[2] ? m[2].toUpperCase() : '';
+      if(suf==='K') num *= 1e3;
+      else if(suf==='M') num *= 1e6;
+      else if(suf==='B') num *= 1e9;
+      if(neg) num = -Math.abs(num);
+      return num;
+    }
+    function readMoneyInput(el){
+      if(!el) return NaN;
+      const v = parseMoneyInput(el.value);
+      if(Number.isFinite(v)){
+        el.dataset.num = String(v);
+        return v;
+      }
+      const d = Number(el.dataset.num);
+      return Number.isFinite(d) ? d : NaN;
+    }
+    function setMoneyInput(el, n){
+      if(!el) return;
+      if(!Number.isFinite(n)){
+        el.value = '';
+        el.dataset.num = '';
+        return;
+      }
+      el.dataset.num = String(n);
+      // Show raw while editing; show formatted when not focused.
+      if(document.activeElement === el) el.value = String(Math.round(n));
+      else el.value = fmtMoneyFull(n);
+    }
+    function wireMoneyInput(el, onChange){
+      if(!el) return;
+      const fire = ()=>{ if(typeof onChange === 'function') onChange(); };
+      el.addEventListener('input', ()=>{
+        // keep dataset updated as user types; don't force formatting mid-typing
+        const v = parseMoneyInput(el.value);
+        if(Number.isFinite(v)) el.dataset.num = String(v);
+        fire();
+      });
+      el.addEventListener('focus', ()=>{
+        const n = readMoneyInput(el);
+        if(Number.isFinite(n)) el.value = String(Math.round(n));
+      });
+      el.addEventListener('blur', ()=>{
+        const n = readMoneyInput(el);
+        if(Number.isFinite(n)) el.value = fmtMoneyFull(n);
+      });
+    }
+
     function fmtPct(x){
       if(!isFiniteNumber(x)) return '—';
       return (x*100).toFixed(0) + '%';
@@ -5305,7 +5436,7 @@ if(typeof s.layers.costUnc === "undefined") s.layers.costUnc = true;
 
 
     state.settings = state.settings || {};
-    state.uiPrefs = loadUiPrefs() || { activeStep:"setup", showAdvanced:false, focusMode:false, layoutMode:"split", swapPanes:false };
+    state.uiPrefs = loadUiPrefs() || { activeStep:"setup", showAdvanced:false, focusMode:false, layoutMode:"split", swapPanes:false, density:"comfort", wideMode:false, rightCards:{}, gridSplitPct:58, compareColWidths:null };
     if(typeof state.settings.distPreview === "undefined") state.settings.distPreview = false;
     state.wbsTemplateId = String(state.wbsTemplateId||""); // normalize later after WBS templates load
     let lastResultsFull = null; // in-memory only
@@ -10430,6 +10561,7 @@ function _tokenizeExpr(expr){
       renderStepper();
       applyLayoutUI();
       applyDensityUI();
+      applyPaneSplitUI();
       applyRightCardCollapseUI();
       applyAdvancedUI();
       applyLayerUI();
@@ -10629,7 +10761,7 @@ $("#statMean .v").textContent = fmtMoneyFull(state.lastSummary.mean);
         renderWbs(state.lastWbs, state.lastSummary);
         renderWbsFy(state.lastWbs, getWbsByFyForRender(), state.lastSummary);
         // restore budget input if available
-        if(state.lastBudget != null){ const bEl = $("#inBudget"); if(bEl) bEl.value = String(state.lastBudget); }
+        if(state.lastBudget != null){ const bEl = $("#inBudget"); if(bEl) setMoneyInput(bEl, state.lastBudget); }
         updateBudgetProbability();
       }else{
         // Clear outputs when no saved results exist
@@ -10691,6 +10823,19 @@ $("#statMean .v").textContent = fmtMoneyFull(state.lastSummary.mean);
         const rightCardsRaw = obj.rightCards;
         const rightCards = (rightCardsRaw && typeof rightCardsRaw === "object") ? rightCardsRaw : null;
 
+        // Newer UI-only prefs (safe to ignore if missing)
+        const splitRaw = Number(obj.gridSplitPct ?? obj.splitPct ?? obj.paneSplitPct);
+        const gridSplitPct = Number.isFinite(splitRaw) ? clamp(splitRaw, 20, 80) : null;
+
+        let compareColWidths = null;
+        const cwRaw = obj.compareColWidths ?? obj.compareCols ?? obj.runCompareColWidths;
+        if(Array.isArray(cwRaw)){
+          compareColWidths = cwRaw.slice(0, 30).map(v=>{
+            const n = Number(v);
+            return Number.isFinite(n) ? clamp(n, 30, 2000) : null;
+          });
+        }
+
         return {
           activeStep: step,
           showAdvanced: !!obj.showAdvanced,
@@ -10699,7 +10844,9 @@ $("#statMean .v").textContent = fmtMoneyFull(state.lastSummary.mean);
           swapPanes,
           density,
           wideMode,
-          rightCards
+          rightCards,
+          gridSplitPct,
+          compareColWidths
         };
       }catch{ return null; }
     }
@@ -10707,6 +10854,17 @@ $("#statMean .v").textContent = fmtMoneyFull(state.lastSummary.mean);
     function saveUiPrefs(){
       try{
         if(!state.uiPrefs) return;
+
+        const splitRaw = Number(state.uiPrefs.gridSplitPct);
+        const gridSplitPct = Number.isFinite(splitRaw) ? clamp(splitRaw, 20, 80) : 58;
+
+        const compareColWidths = Array.isArray(state.uiPrefs.compareColWidths)
+          ? state.uiPrefs.compareColWidths.slice(0, 30).map(v=>{
+              const n = Number(v);
+              return Number.isFinite(n) ? clamp(n, 30, 2000) : null;
+            })
+          : null;
+
         localStorage.setItem(UI_PREF_KEY, JSON.stringify({
           activeStep: isWorkflowStep(state.uiPrefs.activeStep) ? state.uiPrefs.activeStep : "setup",
           showAdvanced: !!state.uiPrefs.showAdvanced,
@@ -10715,7 +10873,9 @@ $("#statMean .v").textContent = fmtMoneyFull(state.lastSummary.mean);
           swapPanes: !!state.uiPrefs.swapPanes,
           density: (String(state.uiPrefs.density||"comfort") === "compact") ? "compact" : "comfort",
           wideMode: !!state.uiPrefs.wideMode,
-          rightCards: state.uiPrefs.rightCards || {}
+          rightCards: state.uiPrefs.rightCards || {},
+          gridSplitPct,
+          compareColWidths
         }));
       }catch{}
     }
@@ -10735,7 +10895,7 @@ $("#statMean .v").textContent = fmtMoneyFull(state.lastSummary.mean);
     }
 
     function ensureUiPrefs(){
-      if(!state.uiPrefs) state.uiPrefs = { activeStep:"setup", showAdvanced:false, focusMode:false, layoutMode:"split", swapPanes:false, density:"comfort", wideMode:false, rightCards:{} };
+      if(!state.uiPrefs) state.uiPrefs = { activeStep:"setup", showAdvanced:false, focusMode:false, layoutMode:"split", swapPanes:false, density:"comfort", wideMode:false, rightCards:{}, gridSplitPct:58, compareColWidths:null };
       if(!isWorkflowStep(String(state.uiPrefs.activeStep||""))) state.uiPrefs.activeStep = "setup";
       state.uiPrefs.showAdvanced = !!state.uiPrefs.showAdvanced;
       state.uiPrefs.focusMode = !!state.uiPrefs.focusMode;
@@ -10743,6 +10903,15 @@ $("#statMean .v").textContent = fmtMoneyFull(state.lastSummary.mean);
       state.uiPrefs.swapPanes = !!state.uiPrefs.swapPanes;
       state.uiPrefs.density = (String(state.uiPrefs.density||"comfort") === "compact") ? "compact" : "comfort";
       state.uiPrefs.wideMode = !!state.uiPrefs.wideMode;
+
+      const splitRaw = Number(state.uiPrefs.gridSplitPct);
+      state.uiPrefs.gridSplitPct = Number.isFinite(splitRaw) ? clamp(splitRaw, 20, 80) : 58;
+
+      if(!Array.isArray(state.uiPrefs.compareColWidths)) state.uiPrefs.compareColWidths = null;
+      else state.uiPrefs.compareColWidths = state.uiPrefs.compareColWidths.slice(0, 30).map(v=>{
+        const n = Number(v);
+        return Number.isFinite(n) ? clamp(n, 30, 2000) : null;
+      });
 
       if(!state.uiPrefs.rightCards || typeof state.uiPrefs.rightCards !== "object") state.uiPrefs.rightCards = {};
       // Normalize to boolean map
@@ -10894,6 +11063,129 @@ $("#statMean .v").textContent = fmtMoneyFull(state.lastSummary.mean);
       const btn = $("#btnWide");
       if(btn) btn.classList.toggle("active", wide);
     }
+
+    // -------- UI: Resizable Inputs/Outputs panes --------
+    function clampPaneSplitPct(pct){
+      const grid = document.querySelector(".grid");
+      const splitter = document.getElementById("colSplitter");
+      const p0 = Number(pct);
+      const base = Number.isFinite(p0) ? p0 : 58;
+      if(!grid || !splitter) return clamp(base, 20, 80);
+
+      const rect = grid.getBoundingClientRect();
+      const gap = parseFloat(getComputedStyle(grid).gap || "0") || 0;
+      const sw = splitter.getBoundingClientRect().width || 10;
+      const avail = rect.width - sw - (gap * 2);
+      if(!(avail > 0)) return clamp(base, 20, 80);
+
+      const minLeft = 420;
+      const minRight = 360;
+      const minPct = clamp((minLeft / avail) * 100, 20, 80);
+      const maxPct = clamp(((avail - minRight) / avail) * 100, 20, 80);
+      if(!(maxPct > minPct)) return clamp(base, 20, 80);
+
+      return clamp(base, minPct, maxPct);
+    }
+
+    function applyPaneSplitUI(){
+      ensureUiPrefs();
+      const grid = document.querySelector(".grid");
+      if(!grid) return;
+
+      const pct = clampPaneSplitPct(state.uiPrefs.gridSplitPct);
+      state.uiPrefs.gridSplitPct = pct;
+      grid.style.setProperty("--splitPct", String(pct));
+      initPaneSplitter();
+    }
+
+    function initPaneSplitter(){
+      const splitter = document.getElementById("colSplitter");
+      const grid = splitter ? splitter.parentElement : null;
+      if(!splitter || !grid) return;
+
+      if(splitter.__paneSplitBound) return;
+      splitter.__paneSplitBound = true;
+
+      const setPct = (pct, doSave)=>{
+        ensureUiPrefs();
+        const p = clampPaneSplitPct(pct);
+        state.uiPrefs.gridSplitPct = p;
+        grid.style.setProperty("--splitPct", String(p));
+        if(doSave) saveUiPrefs();
+      };
+
+      // Ensure initial var reflects prefs
+      try{ setPct(state.uiPrefs.gridSplitPct, false); }catch{}
+
+      let dragging = false;
+      let startX = 0;
+      let startPct = 58;
+
+      splitter.addEventListener("pointerdown", (e)=>{
+        if(e && typeof e.button === "number" && e.button !== 0) return;
+        dragging = true;
+        ensureUiPrefs();
+        startX = e.clientX;
+        startPct = Number(state.uiPrefs.gridSplitPct) || 58;
+        document.body.classList.add("paneResizing");
+        try{ splitter.setPointerCapture(e.pointerId); }catch{}
+        e.preventDefault();
+      });
+
+      splitter.addEventListener("pointermove", (e)=>{
+        if(!dragging) return;
+
+        const rect = grid.getBoundingClientRect();
+        const gap = parseFloat(getComputedStyle(grid).gap || "0") || 0;
+        const sw = splitter.getBoundingClientRect().width || 10;
+        const avail = rect.width - sw - (gap * 2);
+        if(!(avail > 0)) return;
+
+        const dx = e.clientX - startX;
+        const startLeft = (startPct / 100) * avail;
+        const newLeft = startLeft + dx;
+
+        const minLeft = 420;
+        const maxLeft = Math.max(minLeft, avail - 360);
+        const clampedLeft = clamp(newLeft, minLeft, maxLeft);
+        const newPct = (clampedLeft / avail) * 100;
+
+        setPct(newPct, false);
+      });
+
+      const endDrag = ()=>{
+        if(!dragging) return;
+        dragging = false;
+        document.body.classList.remove("paneResizing");
+        setPct(state.uiPrefs.gridSplitPct, true);
+      };
+
+      splitter.addEventListener("pointerup", endDrag);
+      splitter.addEventListener("pointercancel", endDrag);
+      splitter.addEventListener("lostpointercapture", endDrag);
+
+      splitter.addEventListener("dblclick", ()=> setPct(58, true));
+
+      splitter.addEventListener("keydown", (e)=>{
+        const k = e.key;
+        if(k !== "ArrowLeft" && k !== "ArrowRight" && k !== "Home" && k !== "End") return;
+        e.preventDefault();
+        const step = e.shiftKey ? 5 : 2;
+        ensureUiPrefs();
+        let pct = Number(state.uiPrefs.gridSplitPct) || 58;
+
+        if(k === "Home") pct = 35;
+        else if(k === "End") pct = 75;
+        else pct = pct + (k === "ArrowLeft" ? -step : step);
+
+        setPct(pct, true);
+      });
+
+      window.addEventListener("resize", ()=>{
+        try{ setPct(state.uiPrefs.gridSplitPct, false); }catch{}
+      });
+    }
+
 
 
     // -------- UI: Collapsible cards on Outputs (right) panel --------
@@ -11143,6 +11435,7 @@ $("#statMean .v").textContent = fmtMoneyFull(state.lastSummary.mean);
       card.classList.remove("hidden");
       const note = $("#compareNote");
       if(note) note.textContent = `Last ${hist.length} run${hist.length===1?"":"s"}`;
+      try{ initRunCompareResizable(); }catch(e){}
 
       tb.innerHTML = "";
       for(let i=hist.length-1; i>=0; i--){
@@ -11181,29 +11474,78 @@ $("#statMean .v").textContent = fmtMoneyFull(state.lastSummary.mean);
     }
 
     // ---- Run Compare: resizable columns (Presenter convenience) ----
-    function initRunCompareResizable(){
+        // ---- Run Compare: resizable columns (Presenter convenience) ----
+    function resetRunCompareColWidths(){
+      try{
+        const table = document.getElementById("compareTable");
+        if(!table) return;
+        const ths = Array.from(table.querySelectorAll("thead th"));
+        const colgroup = table.querySelector("colgroup");
+        const cols = colgroup ? Array.from(colgroup.children) : [];
+        ths.forEach(th=>{ th.style.width = ""; });
+        cols.forEach(c=>{ c.style.width = ""; });
+
+        ensureUiPrefs();
+        state.uiPrefs.compareColWidths = null;
+        saveUiPrefs();
+      }catch{}
+    }
+
+    function initRunCompareResizable(opts={}){
       const table = document.getElementById("compareTable");
       if(!table) return;
-      const thead = table.querySelector("thead");
       const ths = Array.from(table.querySelectorAll("thead th"));
-      if(!thead || !ths.length) return;
+      if(!ths.length) return;
 
       // Make table layout stable during resize
       table.style.tableLayout = "fixed";
       table.style.width = "100%";
 
-      // Restore saved widths
+      // Ensure colgroup so header/body stay aligned
+      let colgroup = table.querySelector("colgroup");
+      if(!colgroup){
+        colgroup = document.createElement("colgroup");
+        for(let i=0;i<ths.length;i++) colgroup.appendChild(document.createElement("col"));
+        table.insertBefore(colgroup, table.firstChild);
+      }else{
+        // Normalize col count
+        const cols0 = Array.from(colgroup.children);
+        while(cols0.length < ths.length){ colgroup.appendChild(document.createElement("col")); cols0.push(colgroup.lastChild); }
+        while(cols0.length > ths.length){ colgroup.removeChild(cols0.pop()); }
+      }
+      const cols = Array.from(colgroup.children);
+
+      // Apply saved widths (if any)
       try{
         ensureUiPrefs();
-        const saved = state.uiPrefs && Array.isArray(state.uiPrefs.compareColWidths) ? state.uiPrefs.compareColWidths : null;
+        const saved = (state.uiPrefs && Array.isArray(state.uiPrefs.compareColWidths)) ? state.uiPrefs.compareColWidths : null;
         if(saved && saved.length === ths.length){
-          ths.forEach((th,i)=>{ if(saved[i] && saved[i] > 30) th.style.width = saved[i] + "px"; });
+          for(let i=0;i<ths.length;i++){
+            const w = Number(saved[i]);
+            if(Number.isFinite(w) && w > 30){
+              cols[i].style.width = Math.round(w) + "px";
+              ths[i].style.width = Math.round(w) + "px";
+            }
+          }
         }
       }catch{}
 
-      // Avoid double-binding
+      // If already bound, just re-apply widths and exit
       if(table.__colResizeBound) return;
       table.__colResizeBound = true;
+
+      const MIN_W = 70;
+
+      const save = ()=>{
+        try{
+          ensureUiPrefs();
+          state.uiPrefs.compareColWidths = ths.map(t=>{
+            const px = parseFloat(getComputedStyle(t).width || "0");
+            return Number.isFinite(px) ? Math.round(px) : null;
+          });
+          saveUiPrefs();
+        }catch{}
+      };
 
       ths.forEach((th, idx)=>{
         // Skip if already has a resizer
@@ -11212,44 +11554,89 @@ $("#statMean .v").textContent = fmtMoneyFull(state.lastSummary.mean);
         th.style.position = "relative";
         const grip = document.createElement("div");
         grip.className = "colResizer";
-        grip.title = "Drag to resize column";
+        grip.title = "Drag to resize column (double‑click to auto-fit)";
         th.appendChild(grip);
 
-        let startX=0, startW=0, resizing=false;
+        let dragging = false;
+        let startX = 0;
+        let startW = 0;
+        let startNextW = 0;
 
-        const onMove = (e)=>{
-          if(!resizing) return;
-          const dx = (e.clientX - startX);
-          const w = Math.max(60, startW + dx);
-          th.style.width = w + "px";
-        };
-        const onUp = ()=>{
-          if(!resizing) return;
-          resizing=false;
-          document.body.classList.remove("colResizing");
-          window.removeEventListener("mousemove", onMove);
-          window.removeEventListener("mouseup", onUp);
-
-          // Save widths
-          try{
-            ensureUiPrefs();
-            state.uiPrefs.compareColWidths = ths.map(t=>{
-              const px = parseFloat(getComputedStyle(t).width || "0");
-              return isFinite(px) ? Math.round(px) : null;
-            });
-            saveUiPrefs();
-          }catch{}
+        const setWidthPair = (w0, w1)=>{
+          const wA = Math.max(MIN_W, Math.round(w0));
+          cols[idx].style.width = wA + "px";
+          ths[idx].style.width = wA + "px";
+          if(idx+1 < cols.length && Number.isFinite(w1)){
+            const wB = Math.max(MIN_W, Math.round(w1));
+            cols[idx+1].style.width = wB + "px";
+            ths[idx+1].style.width = wB + "px";
+          }
         };
 
-        grip.addEventListener("mousedown", (e)=>{
-          e.preventDefault();
-          e.stopPropagation();
-          resizing=true;
+        grip.addEventListener("pointerdown", (e)=>{
+          if(e && typeof e.button === "number" && e.button !== 0) return;
+          dragging = true;
           document.body.classList.add("colResizing");
           startX = e.clientX;
-          startW = parseFloat(getComputedStyle(th).width || "0");
-          window.addEventListener("mousemove", onMove);
-          window.addEventListener("mouseup", onUp);
+          startW = parseFloat(getComputedStyle(ths[idx]).width || "0") || 0;
+          startNextW = (idx+1 < ths.length) ? (parseFloat(getComputedStyle(ths[idx+1]).width || "0") || 0) : 0;
+          try{ grip.setPointerCapture(e.pointerId); }catch{}
+          e.preventDefault();
+          e.stopPropagation();
+        });
+
+        grip.addEventListener("pointermove", (e)=>{
+          if(!dragging) return;
+          const dx = e.clientX - startX;
+
+          if(idx+1 < ths.length){
+            const total = startW + startNextW;
+            let wA = startW + dx;
+            wA = clamp(wA, MIN_W, total - MIN_W);
+            const wB = total - wA;
+            setWidthPair(wA, wB);
+          }else{
+            let wA = startW + dx;
+            wA = clamp(wA, MIN_W, 2400);
+            setWidthPair(wA, NaN);
+          }
+        });
+
+        const endDrag = ()=>{
+          if(!dragging) return;
+          dragging = false;
+          document.body.classList.remove("colResizing");
+          save();
+        };
+
+        grip.addEventListener("pointerup", endDrag);
+        grip.addEventListener("pointercancel", endDrag);
+        grip.addEventListener("lostpointercapture", endDrag);
+
+        grip.addEventListener("dblclick", (e)=>{
+          e.preventDefault();
+          e.stopPropagation();
+          // Auto-fit to content for this column (small table; cheap scan)
+          let maxW = th.scrollWidth + 18;
+          try{
+            const rows = Array.from(table.querySelectorAll("tbody tr"));
+            for(const r of rows){
+              const cell = r.children[idx];
+              if(cell) maxW = Math.max(maxW, (cell.scrollWidth||0) + 18);
+            }
+          }catch{}
+
+          if(idx+1 < ths.length){
+            const curA = parseFloat(getComputedStyle(ths[idx]).width || "0") || MIN_W;
+            const curB = parseFloat(getComputedStyle(ths[idx+1]).width || "0") || MIN_W;
+            const total = curA + curB;
+            const wA = clamp(maxW, MIN_W, total - MIN_W);
+            const wB = total - wA;
+            setWidthPair(wA, wB);
+          }else{
+            setWidthPair(clamp(maxW, MIN_W, 2400), NaN);
+          }
+          save();
         });
       });
     }
@@ -12834,7 +13221,7 @@ function updateBudgetProbability(){
       const textEl = $("#budgetText");
       if(!bEl || !box || !title || !textEl) return;
 
-      const b = Number(bEl.value);
+      const b = readMoneyInput(bEl);
       if(!lastResultsFull || !lastResultsFull.totals || lastResultsFull.totals.length<2){
         box.classList.remove("good","warn","bad");
         box.classList.add("status");
@@ -12867,7 +13254,7 @@ function updateBudgetProbability(){
       const delta50 = (Number.isFinite(p50) ? (b - p50) : null);
       const delta80 = (Number.isFinite(p80) ? (b - p80) : null);
       const parts = [
-        `Budget: ${fmtMoneyFull(b)}`,
+        `Budget: ${fmtMoneyM(b)}`,
         Number.isFinite(delta50) ? `vs P50: ${fmtMoney(delta50)}` : null,
         Number.isFinite(delta80) ? `vs P80: ${fmtMoney(delta80)}` : null
       ].filter(Boolean);
@@ -13472,7 +13859,7 @@ try{ renderConvergenceAdvisor(res.conv, res.meta ? res.meta.iterations : null); 
       renderWbsFy(res.wbs, res.wbs?.byFy, res.summary);
       // default budget (first run): set to P80 if empty
       const bEl = $("#inBudget");
-      if(bEl && (bEl.value==='' || bEl.value==null)) bEl.value = String(Math.round(res.summary.p80||0));
+      if(bEl){ const cur = readMoneyInput(bEl); if(!(Number.isFinite(cur) && cur>0)) setMoneyInput(bEl, Math.round(res.summary.p80||0)); }
       updateBudgetProbability();
 
       // CSRUH: keep a short compare history
@@ -14418,6 +14805,64 @@ out.push(["LineName","WBS","APPN","BaseMode","BaseCost","BaseExpr","Dist","LowPc
         details.push("FAIL: Documentation completeness check threw: " + (e?.message||String(e)));
       }
 
+
+      
+      // 0d) Layout / formatting interplay (stack + swap + splitter)
+      try{
+        const grid = document.querySelector(".grid");
+        const splitter = document.getElementById("colSplitter");
+        const inputs = document.getElementById("cardInputs");
+        const outputs = document.getElementById("cardOutputs");
+
+        if(!grid || !splitter || !inputs || !outputs){
+          details.push("FAIL: Layout elements missing (grid/splitter/inputs/outputs).");
+        }else{
+          const isNarrow = (typeof window !== "undefined" && window.matchMedia) ? window.matchMedia("(max-width: 720px)").matches : false;
+          const wasStack = document.body.classList.contains("layout-stack");
+          const wasSwap = document.body.classList.contains("layout-swap");
+
+          try{
+            // Force stacked layout and verify: splitter hidden + cards stretch full width.
+            document.body.classList.add("layout-stack");
+            splitter.getBoundingClientRect(); // reflow
+
+            const disp = getComputedStyle(splitter).display;
+            if(disp !== "none") details.push("FAIL: Layout stack did not hide pane splitter.");
+
+            const gw = grid.getBoundingClientRect().width || 0;
+            const iw = inputs.getBoundingClientRect().width || 0;
+            const ow = outputs.getBoundingClientRect().width || 0;
+            if(gw > 0){
+              const okFull = (iw / gw) > 0.92 && (ow / gw) > 0.92;
+              if(!okFull) details.push("FAIL: Layout stack did not stretch cards to full width (inputs=" + Math.round(iw) + "px, outputs=" + Math.round(ow) + "px, grid=" + Math.round(gw) + "px).");
+            }
+
+            // Stacked + swap ordering should place Outputs before Inputs.
+            document.body.classList.add("layout-swap");
+            const oOrd = parseInt(getComputedStyle(outputs).order || "0", 10);
+            const iOrd = parseInt(getComputedStyle(inputs).order || "0", 10);
+            if(!(oOrd < iOrd)) details.push("FAIL: Layout stack+swap ordering unexpected (outputs.order=" + oOrd + ", inputs.order=" + iOrd + ").");
+
+            // Desktop split view sanity: splitter should be visible when not stacked (unless narrow screen)
+            if(!isNarrow){
+              document.body.classList.remove("layout-stack");
+              splitter.getBoundingClientRect();
+              const disp2 = getComputedStyle(splitter).display;
+              if(disp2 === "none") details.push("FAIL: Split view unexpectedly hid pane splitter on desktop width.");
+              const r2 = splitter.getBoundingClientRect();
+              if(r2.width < 6 || r2.height < 30) details.push("FAIL: Pane splitter not visibly sized in split view (w=" + Math.round(r2.width) + "px, h=" + Math.round(r2.height) + "px)." );
+            }
+
+            details.push("OK: Layout modes (split/stack/swap) behave consistently");
+          }finally{
+            document.body.classList.toggle("layout-stack", wasStack);
+            document.body.classList.toggle("layout-swap", wasSwap);
+          }
+        }
+      }catch(e){
+        details.push("FAIL: Layout formatting interplay check threw: " + (e?.message||String(e)));
+      }
+
 // 0d) Review pack export structure (example bundle)
       try{
         const rp = buildReviewPackFromExample();
@@ -15106,6 +15551,69 @@ try{
             }
             if(sum <= 0) details.push("FAIL: Charts blanked after render even with full results present.");
             else details.push("OK: Charts persist across render (full results)");
+            // Budget currency input + P(not exceed) display smoke (v5.1.0-presenterDemo)
+            try{
+              const bEl = $("#inBudget");
+              const tEl = $("#budgetText");
+              const ttl = $("#budgetTitle");
+              if(!bEl || !tEl || !ttl){
+                details.push("WARN: Budget UI elements missing; skipping budget currency smoke.");
+              }else{
+                // use formatted currency input and ensure parsing works + text shows $M
+                bEl.value = "$5,000,000";
+                updateBudgetProbability();
+                const txt = String(tEl.textContent||"");
+                const okDollar = /Budget:\s*\$/.test(txt);
+                const okM = /\bM\b/.test(txt) || /\$\d+\.\d{2}M/.test(txt);
+                if(!okDollar || !okM) details.push("FAIL: Budget currency formatting/parsing failed (text='" + txt + "').");
+                else details.push("OK: Budget currency input parses and displays in $M");
+              }
+            }catch(e){
+              details.push("FAIL: Budget currency smoke threw: " + (e?.message||String(e)));
+            }
+
+            // Presenter demo: auto-close dialogs between steps (risk/correlation/phasing) smoke
+            try{
+              const fxB = $("#fxBackdrop");
+              const phB = $("#phBackdrop");
+              const coB = $("#corrBackdrop");
+              if(!fxB || !phB || !coB){
+                details.push("WARN: Presenter demo backdrops missing; skipping dialog auto-close smoke.");
+              }else{
+                // simulate all three dialogs being open
+                fxB.style.display = "flex";
+                phB.style.display = "flex";
+                coB.style.display = "flex";
+
+                const prevActive = !!tour.active;
+                const prevPres = !!tour._presenterDemo;
+                tour.active = true;
+                tour._presenterDemo = true;
+
+                // next step does not target any modal -> should close all
+                try{ _tourAutoClosePresenterDialogs({el:"#phBackdrop"}, {el:"#btnCopySummary"}); }catch{}
+
+                const okFx = (getComputedStyle(fxB).display === "none");
+                const okPh = (getComputedStyle(phB).display === "none");
+                const okCo = (getComputedStyle(coB).display === "none");
+                if(!okFx || !okPh || !okCo){
+                  details.push("FAIL: Presenter demo dialog auto-close failed (fx=" + getComputedStyle(fxB).display + ", ph=" + getComputedStyle(phB).display + ", corr=" + getComputedStyle(coB).display + ").");
+                  // force close for subsequent tests
+                  try{ closeFxModal(); }catch{}
+                  try{ closePhasingModal(); }catch{}
+                  try{ closeCorrDetailsModal(); }catch{}
+                }else{
+                  details.push("OK: Presenter demo auto-closes dialogs between steps");
+                }
+
+                tour.active = prevActive;
+                tour._presenterDemo = prevPres;
+              }
+            }catch(e){
+              details.push("FAIL: Presenter demo dialog auto-close smoke threw: " + (e?.message||String(e)));
+            }
+
+
             // Convergence pill (Phase 4.4.9): when a 10k baseline delta is present, the summary pill should reflect tol-of-10k mode.
             try{
               const cn = $("#convNote");
@@ -15334,7 +15842,7 @@ try{
                 } else {
                   details.push("OK: Math Reference deep-links resolve");
 
-            // Settings label head layout smoke (v5.0.5 UI polish)
+            // Settings label head layout smoke (v5.1.0-presenterDemo UI polish)
             try{
               const labels = Array.from(document.querySelectorAll('#settingsRow label'));
               let badFirst = 0;
@@ -15376,6 +15884,62 @@ try{
             }catch(e){
               details.push("FAIL: Diagnostics self-check wiring check threw: " + (e?.message||String(e)));
             }
+            // UI-only layout controls smoke (pane splitter + Run Compare resizers)
+            try{
+              const sp = document.getElementById("colSplitter");
+              if(!sp) details.push("FAIL: Pane splitter (#colSplitter) is missing.");
+              else details.push("OK: Pane splitter present");
+            }catch(e){
+              details.push("FAIL: Pane splitter smoke threw: " + (e?.message||String(e)));
+            }
+
+            try{
+              const t = document.getElementById("compareTable");
+              if(!t) details.push("FAIL: Run Compare table (#compareTable) is missing.");
+              else{
+                try{ initRunCompareResizable(); }catch(e){}
+                const thN = t.querySelectorAll("thead th").length;
+                const gripN = t.querySelectorAll(".colResizer").length;
+                const colN = t.querySelectorAll("colgroup col").length;
+                if(gripN < thN) details.push(`FAIL: Run Compare resizers not initialized (${gripN}/${thN}).`);
+                else details.push("OK: Run Compare column resizers present");
+                if(colN !== thN) details.push(`FAIL: Run Compare colgroup mismatch (${colN}/${thN}).`);
+                else details.push("OK: Run Compare colgroup present");
+                if(!document.getElementById("btnCompareResetCols")) details.push("FAIL: Run Compare reset columns button (#btnCompareResetCols) missing.");
+                else details.push("OK: Run Compare reset columns button present");
+              }
+            }catch(e){
+              details.push("FAIL: Run Compare resizer smoke threw: " + (e?.message||String(e)));
+            }
+
+            try{
+              // Ensure UI prefs persist new keys
+              const savedRaw = (()=>{
+                try{ return localStorage.getItem(UI_PREF_KEY); }catch{ return null; }
+              })();
+              const savedPrefs = deepClone(state.uiPrefs || {});
+              ensureUiPrefs();
+              state.uiPrefs.gridSplitPct = 61;
+              state.uiPrefs.compareColWidths = [111,222,333,444];
+              saveUiPrefs();
+              const loaded = loadUiPrefs();
+              const okSplit = loaded && (typeof loaded.gridSplitPct === "number") && Number.isFinite(loaded.gridSplitPct);
+              const okCols = loaded && Array.isArray(loaded.compareColWidths);
+              if(!okSplit || !okCols) details.push("FAIL: UI prefs did not persist split/compare widths.");
+              else details.push("OK: UI prefs persist split + compare widths");
+
+              // Restore UI prefs storage
+              try{
+                if(savedRaw == null) localStorage.removeItem(UI_PREF_KEY);
+                else localStorage.setItem(UI_PREF_KEY, savedRaw);
+              }catch{}
+
+              state.uiPrefs = savedPrefs;
+              ensureUiPrefs();
+            }catch(e){
+              details.push("FAIL: UI prefs persistence smoke threw: " + (e?.message||String(e)));
+            }
+
 
 // Restore prior state (best effort)
             lastResultsFull = snap.lastResultsFull;
@@ -15792,6 +16356,17 @@ try{
 
 
 
+
+
+      // Run Compare table: reset column widths (UI-only)
+      const rcReset = document.getElementById("btnCompareResetCols");
+      if(rcReset){
+        rcReset.addEventListener("click", ()=>{
+          try{ resetRunCompareColWidths(); }catch(e){}
+          try{ initRunCompareResizable(); }catch(e){}
+          setStatus("good", "Run Compare columns reset.", "Column width preference cleared (UI-only).");
+        });
+      }
 
       $("#btnAddRow").addEventListener("click", ()=>{
         pushUndo("Add line");
@@ -16358,15 +16933,15 @@ $("#btnCopySummary").addEventListener("click", async ()=>{
       });
 
       // Budget probability wiring
-      $("#inBudget").addEventListener("input", ()=> updateBudgetProbability());
+      wireMoneyInput($("#inBudget"), ()=> updateBudgetProbability());
       $("#btnUseP50").addEventListener("click", ()=>{
-        if(state.lastSummary){ $("#inBudget").value = String(Math.round(state.lastSummary.p50||0)); updateBudgetProbability(); }
+        if(state.lastSummary){ setMoneyInput($("#inBudget"), Math.round(state.lastSummary.p50||0)); updateBudgetProbability(); }
       });
       $("#btnUseP80").addEventListener("click", ()=>{
-        if(state.lastSummary){ $("#inBudget").value = String(Math.round(state.lastSummary.p80||0)); updateBudgetProbability(); }
+        if(state.lastSummary){ setMoneyInput($("#inBudget"), Math.round(state.lastSummary.p80||0)); updateBudgetProbability(); }
       });
       $("#btnUseP90").addEventListener("click", ()=>{
-        if(state.lastSummary){ $("#inBudget").value = String(Math.round(state.lastSummary.p90||0)); updateBudgetProbability(); }
+        if(state.lastSummary){ setMoneyInput($("#inBudget"), Math.round(state.lastSummary.p90||0)); updateBudgetProbability(); }
       });
 
       // Phase 4.4.2: Rank drivers (Spearman) wiring
@@ -17705,6 +18280,15 @@ function openDetailsAncestors(el){
       tour._nudged = false;
       tour._dir = 1;
 
+      // Presenter demo cleanup: close transient dialogs
+      try{
+        if(tour && tour._presenterDemo){
+          try{ closeFxModal(); }catch{}
+          try{ closePhasingModal(); }catch{}
+          try{ closeCorrDetailsModal(); }catch{}
+        }
+      }catch{}
+
       // Restore UI prefs
       try{
         if(tour._restore){
@@ -17724,8 +18308,50 @@ function openDetailsAncestors(el){
       $("#tourFocus").style.display = "none";
       $("#tourCard").style.display = "none";
     }
-    function tourNext(){ if(tour.active){ tour._dir = 1; tour.idx = Math.min(tour.steps.length-1, tour.idx+1); showTourStep(); } }
-    function tourPrev(){ if(tour.active){ tour._dir = -1; tour.idx = Math.max(0, tour.idx-1); showTourStep(); } }
+        // Presenter demo helper: close transient dialogs before advancing steps.
+    function _tourAutoClosePresenterDialogs(prevStep, nextStep){
+      try{
+        if(!tour || !tour.active || !tour._presenterDemo) return;
+        const nextSig = nextStep ? (String(nextStep.el||"") + "|" + String(nextStep.focus||"")) : "";
+        const needsFx   = /#fxBackdrop|#fxModalTitle|#fxText/.test(nextSig);
+        const needsPh   = /#phBackdrop|#phModalTitle/.test(nextSig);
+        const needsCorr = /#corrBackdrop|#corrModalTitle/.test(nextSig);
+
+        if(!needsFx){
+          const back = $("#fxBackdrop");
+          if(back && getComputedStyle(back).display !== "none"){ try{ closeFxModal(); }catch{} }
+        }
+        if(!needsPh){
+          const back = $("#phBackdrop");
+          if(back && getComputedStyle(back).display !== "none"){ try{ closePhasingModal(); }catch{} }
+        }
+        if(!needsCorr){
+          const back = $("#corrBackdrop");
+          if(back && getComputedStyle(back).display !== "none"){ try{ closeCorrDetailsModal(); }catch{} }
+        }
+      }catch{}
+    }
+
+    function tourNext(){
+      if(!tour.active) return;
+      const prev = tour.steps[tour.idx];
+      const nextIdx = Math.min(tour.steps.length-1, tour.idx+1);
+      const next = tour.steps[nextIdx];
+      tour._dir = 1;
+      try{ _tourAutoClosePresenterDialogs(prev, next); }catch{}
+      tour.idx = nextIdx;
+      showTourStep();
+    }
+    function tourPrev(){
+      if(!tour.active) return;
+      const prev = tour.steps[tour.idx];
+      const nextIdx = Math.max(0, tour.idx-1);
+      const next = tour.steps[nextIdx];
+      tour._dir = -1;
+      try{ _tourAutoClosePresenterDialogs(prev, next); }catch{}
+      tour.idx = nextIdx;
+      showTourStep();
+    }
 
 
     // ---- Tour action gating (task tours) ----
@@ -18725,7 +19351,7 @@ function ensureHelpBindings(){
 
 /* ----- Phase 4.6.1: Glossary system (central dictionary + UI + dotted term sweep) ----- */
 const CASE_GLOSSARY = {
-  // Expanded glossary (beginner + analyst + SME) — v5.0.5
+  // Expanded glossary (beginner + analyst + SME) — v5.1.0-presenterDemo
   point_estimate: { label:"Point Estimate (PE)", short:"Deterministic total before uncertainty layers.", definition:"Beginner: The point estimate is the “single best guess” total before uncertainty is applied. In CASE, it is the sum of each line’s base cost (or formula result), phased across fiscal years, plus (optional) inflation conversion depending on Output Basis.\n\nAnalyst: PE is the reference point used to compare against probabilistic outputs (P50/P80/etc.). If PE lands at a low percentile (e.g., PE% ≈ 20), your point estimate is optimistic relative to your modeled uncertainty.\n\nSME / math: PE is the deterministic model output f(x) evaluated at the base inputs, before random sampling (and before applying correlation-driven copula sampling)." },
   pe_percentile: { label:"PE% (Point Estimate Percentile)", short:"Percentile position of the deterministic point estimate on the S‑curve.", definition:"Beginner: PE% answers: “Where does the point estimate fall on the S‑curve?” If PE% = 30, the point estimate is at roughly P30, meaning ~70% of simulated outcomes are higher than PE.\n\nAnalyst: PE% is a quick realism check. Very low PE% can indicate underestimated uncertainty or missing risk drivers; very high PE% can indicate overly conservative ranges or double-counted risk.\n\nSME / math: PE% is the empirical CDF evaluated at PE: PE% ≈ F̂(PE)." },
   pxx: { label:"Pxx (Percentile)", short:"A probability-based cost point (e.g., P80 = 80% not-to-exceed).", definition:"Beginner: A percentile is a “not-to-exceed” level with a probability attached. P80 means ~80% of simulated totals are at or below that value.\n\nAnalyst: Percentiles are how many programs communicate confidence: P50 (median) for most-likely planning; P80 or P90 for budget targets depending on risk posture.\n\nSME / math: Pxx is an empirical quantile of the simulated distribution. CASE computes it by sorting sampled totals and selecting the corresponding order statistic.", aliases:["percentile", "quantile", "p50", "p80", "p90"] },
