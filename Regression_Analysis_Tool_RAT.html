@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Regression Analysis Tool (RAT) v1.1.0-tours10.2</title>
+  <title>Regression Analysis Tool (RAT)</title>
   <style>
     :root {
       --bg: #0b1020;
@@ -27,11 +27,17 @@
       font-family: var(--sans);
       background: var(--bg);
       color: var(--text);
+      overflow-x: hidden;
+      -webkit-text-size-adjust: 100%;
     }
     .app {
       max-width: 1280px;
       margin: 0 auto;
       padding: 18px 18px 26px;
+      padding-top: calc(18px + env(safe-area-inset-top));
+      padding-right: calc(18px + env(safe-area-inset-right));
+      padding-bottom: calc(26px + env(safe-area-inset-bottom));
+      padding-left: calc(18px + env(safe-area-inset-left));
       display: flex;
       flex-direction: column;
       gap: 14px;
@@ -94,6 +100,7 @@
     }
 
     .grid { min-width: 0; }
+    .grid > * { min-width: 0; }
     .col-resizer {
       align-self: stretch;
       width: 10px;
@@ -132,7 +139,7 @@
     /* Full width mode */
     body.fullwidth .app { max-width: none; }
 
-    @media (max-width: 980px) { .grid { grid-template-columns: 1fr; } .col-resizer { display:none; } .badge-row { justify-content: flex-start; } .brand { min-width: 0; } }
+    @media (max-width: 980px) { .grid { grid-template-columns: 1fr !important; } .grid > * { min-width: 0; max-width: 100%; } .col-resizer { display:none !important; } .badge-row { justify-content: flex-start; } .brand { min-width: 0 !important; } }
 
     .card {
       border: 1px solid var(--stroke);
@@ -225,6 +232,7 @@
 
     .table-wrap {
       overflow: auto;
+      -webkit-overflow-scrolling: touch;
       border: 1px solid rgba(255,255,255,0.12);
       border-radius: 14px;
       background: rgba(0,0,0,0.18);
@@ -250,7 +258,71 @@
       color: rgba(255,255,255,0.82);
     }
 
-    /* Correlation screening */
+    
+    /* Compact tables (mobile-friendly) */
+    .table-wrap.compact .mini-table { table-layout: fixed; }
+    .table-wrap.compact .mini-table th,
+    .table-wrap.compact .mini-table td {
+      padding: 7px 6px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .table-wrap.cmp.compact .mini-table th:nth-child(1),
+    .table-wrap.cmp.compact .mini-table td:nth-child(1),
+    .table-wrap.cmp.compact .mini-table th:nth-child(5),
+    .table-wrap.cmp.compact .mini-table td:nth-child(5),
+    .table-wrap.cmp.compact .mini-table th:nth-child(6),
+    .table-wrap.cmp.compact .mini-table td:nth-child(6),
+    .table-wrap.cmp.compact .mini-table th:nth-child(9),
+    .table-wrap.cmp.compact .mini-table td:nth-child(9),
+    .table-wrap.cmp.compact .mini-table th:nth-child(10),
+    .table-wrap.cmp.compact .mini-table td:nth-child(10),
+    .table-wrap.cmp.compact .mini-table th:nth-child(11),
+    .table-wrap.cmp.compact .mini-table td:nth-child(11) { display: none; }
+    /* Compare: let Model wrap a bit */
+    .table-wrap.cmp.compact .mini-table th:nth-child(3),
+    .table-wrap.cmp.compact .mini-table td:nth-child(3) { white-space: normal; }
+
+    .table-wrap.lb.compact .mini-table th:nth-child(4),
+    .table-wrap.lb.compact .mini-table td:nth-child(4),
+    .table-wrap.lb.compact .mini-table th:nth-child(5),
+    .table-wrap.lb.compact .mini-table td:nth-child(5),
+    .table-wrap.lb.compact .mini-table th:nth-child(8),
+    .table-wrap.lb.compact .mini-table td:nth-child(8),
+    .table-wrap.lb.compact .mini-table th:nth-child(9),
+    .table-wrap.lb.compact .mini-table td:nth-child(9),
+    .table-wrap.lb.compact .mini-table th:nth-child(10),
+    .table-wrap.lb.compact .mini-table td:nth-child(10),
+    .table-wrap.lb.compact .mini-table th:nth-child(11),
+    .table-wrap.lb.compact .mini-table td:nth-child(11) { display: none; }
+    /* Leaderboard: let Model wrap a bit */
+    .table-wrap.lb.compact .mini-table th:nth-child(2),
+    .table-wrap.lb.compact .mini-table td:nth-child(2) { white-space: normal; }
+
+    @media (max-width: 720px){
+      .table-wrap.compact .mini-table { font-size: 11.5px; }
+      .table-wrap.compact .mini-table th, .table-wrap.compact .mini-table td { padding: 6px 6px; }
+    }
+
+    /* Tap/click popovers for tooltip text (mobile-friendly) */
+    .tag[title], .pill.pop[title] { cursor: help; }
+    .rat-popover {
+      position: fixed;
+      z-index: 6000;
+      max-width: 340px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: rgba(10,14,28,0.96);
+      border: 1px solid rgba(255,255,255,0.14);
+      box-shadow: 0 18px 50px rgba(0,0,0,0.55);
+      color: rgba(255,255,255,0.92);
+      font-size: 12.5px;
+      line-height: 1.35;
+      display: none;
+    }
+    .rat-popover.show { display: block; }
+/* Correlation screening */
     .corr-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px; }
     @media (max-width: 980px) { .corr-grid { grid-template-columns: 1fr; } }
     .corr-matrix { font-variant-numeric: tabular-nums; }
@@ -899,6 +971,40 @@ body.tours-open{ overflow: hidden; }
       /* Intentionally no outline/box highlight: focus rectangle indicates the step target */
     }
 
+
+
+    /* Mobile friendliness pass (M1.1): tighter breakpoints for phones */
+    @media (max-width: 720px) {
+      /* Ensure stacked grid cannot be overridden by inline styles */
+      .grid { grid-template-columns: 1fr !important; }
+      .grid > * { min-width: 0; max-width: 100%; }
+      .card { min-width: 0; }
+
+      .app {
+        padding: 12px 12px 18px;
+        padding-top: calc(12px + env(safe-area-inset-top));
+        padding-right: calc(12px + env(safe-area-inset-right));
+        padding-bottom: calc(18px + env(safe-area-inset-bottom));
+        padding-left: calc(12px + env(safe-area-inset-left));
+      }
+      header { flex-direction: column; align-items: stretch; }
+      .brand { min-width: 0; width: 100%; }
+      .badge-row { width: 100%; justify-content: flex-start; }
+      .badge-row .pill { max-width: 100%; white-space: normal; line-height: 1.25; }
+      .badge-row button.pill { flex: 1 1 auto; justify-content: center; }
+      .row, .row3 { grid-template-columns: 1fr !important; }
+      canvas { height: 320px; }
+      .plot { padding: 8px; }
+    }
+
+    @media (max-width: 520px) {
+      h1 { font-size: 18px; }
+      .sub { font-size: 12px; }
+      .badge-row { gap: 10px; }
+      .badge-row button.pill { width: 100%; }
+      input[type="text"], input[type="number"], select, textarea { padding: 12px 12px; }
+      .help-drawer { width: 100vw; border-radius: 0; }
+    }
 </style>
 </head>
 <body>
@@ -908,7 +1014,7 @@ body.tours-open{ overflow: hidden; }
         <div class="logo" aria-hidden="true"></div>
         <div class="title-wrap">
           <h1>Regression Analysis Tool (RAT)</h1>
-          <div class="sub">v1.1.0-tours10.2 • Build 2026-03-03 22:32 UTC</div>
+          <div class="sub">v1.1.4-presoDemo1.1-hf2 • Build 2026-03-04 13:44 UTC</div>
         </div>
       </div>
       <div class="badge-row">
@@ -1261,7 +1367,9 @@ body.tours-open{ overflow: hidden; }
                     </div>
                     <div class="body">
                       <div id="lbMeta" class="tiny muted">Run “Run all fits” to populate.</div>
-                      <div class="table-wrap" style="min-width:0; margin-top:10px;">
+                      <label class="chk" style="margin-top:8px;"><input id="lbCompact" type="checkbox">Compact leaderboard columns</label>
+
+                      <div id="lbTableWrap" class="table-wrap lb" style="min-width:0; margin-top:10px;">
                         <table class="mini-table" aria-label="Leaderboard table">
                           <thead>
                             <tr>
@@ -1341,6 +1449,7 @@ body.tours-open{ overflow: hidden; }
                   <div class="field" style="min-width: 240px;">
                     <label>Overlays</label>
                     <label data-tour="compare_toggle" class="chk" style="margin-top:6px;"><input id="cmpEnable" type="checkbox">Enable compare overlays (max 6)</label>
+                    <label class="chk" style="margin-top:6px;"><input id="cmpCompact" type="checkbox">Compact table columns</label>
                     <div class="hint">Select models below to overlay their curves on the plot and view side-by-side metrics.</div>
                   </div>
                   <div class="field">
@@ -1359,7 +1468,7 @@ body.tours-open{ overflow: hidden; }
                 </div>
 
                 <div class="tiny" style="color: var(--muted); margin-top:10px;">Selected models (side-by-side)</div>
-                <div data-tour="compare_table" class="table-wrap" style="min-width:0; margin-top:8px;">
+                <div data-tour="compare_table" id="cmpTableWrap" class="table-wrap cmp" style="min-width:0; margin-top:8px;">
                   <table class="mini-table" aria-label="Compare models table">
                     <thead>
                       <tr>
@@ -1905,8 +2014,8 @@ body.tours-open{ overflow: hidden; }
     // =========================
     var APP = {
       name: 'Regression Analysis Tool (RAT)',
-      version: '1.1.0-tours10.2',
-      buildUTC: '2026-03-03 22:32 UTC',
+      version: '1.1.4-presoDemo1.1-hf2',
+      buildUTC: '2026-03-04 13:44 UTC',
       defaults: { polyMaxDegree: 3, pStatRule: 'ALL_COEFS_SIGNIFICANT', zmpeMeanPercentErrorZero: true,
         optimizer: { method: 'LM', maxIter: 80, tol: 1e-8, starts: 3, jitter: 0.25, lambda0: 0.01, fdEps: 1e-6, seed: 1, zmpePenalty: 1000 } }
     };
@@ -2269,6 +2378,7 @@ body.tours-open{ overflow: hidden; }
         gateT: 0,
         renderIdx: -1,
         vpOverride: null,
+        suppressAnimUntil: 0,
         rt: Object.create(null)
       };
 
@@ -2566,6 +2676,125 @@ function __tourHasData(){
             { title: 'Interpret Current Fit', body: 'Current Fit shows the selected model’s equation and metrics. This is what drives the plot and exports.', target: 'current_fit_top', activeTarget: 'current_fit_card', placement: 'auto', pre: function(){ __tourOpenCard('resultsCard'); __tourOpenCard('fitCard'); }, gate: function(){ return __tourHasLeaderboard(); }, gateText: 'Run all fits to generate at least one model before continuing.' },
             { title: 'Interpret the plot', body: 'The plot overlays the Current Fit on the scatter. Hover points for values; toggle CI/PI bands if desired.', target: 'plot_area', placement: 'auto', pre: function(){ __tourOpenCard('resultsCard'); } },
             { title: 'Export the leaderboard', body: 'Use Copy TSV (Excel-friendly) or Download CSV/TSV to share results. Exports reflect your current ranking + filters.', target: 'export_leaderboard', placement: 'auto', pre: function(){ __tourOpenCard('inputsCard'); __tourOpenCard('leaderCard'); }, gate: function(){ return __tourHasLeaderboard(); }, gateText: 'Run all fits to enable leaderboard exports.' }
+          ]
+        },
+
+        tour_presentation_demo: {
+          id: 'tour_presentation_demo',
+          title: 'Presentation Demo: Learning Curve + Model Selection',
+          desc: 'A guided walk-through for briefings: load a learning curve, run model search, apply the winner, compare candidates, and export for review.',
+          minutes: 12,
+          steps: [
+            { title: 'Stage the demo (auto-load + run)', body: 'This tour will set up the Learning Curve scenario and run the leaderboard so we can focus on interpretation (not clicks).', target: 'scenario_picker', placement: 'auto',
+              pre: function(){
+                try{ __tourOpenCard('inputsCard'); __tourOpenCard('dataCard'); }catch(e){}
+                try{ if (window.__ratHelpClose) window.__ratHelpClose(); }catch(eH){}
+                try{
+                  var es = qs('#exSearch'); if (es){ es.value = 'learning'; }
+                  if (typeof refreshScenarioMatches === 'function') refreshScenarioMatches(true);
+                }catch(eS){}
+                try{
+                  var sel = qs('#exampleSelect');
+                  if (sel) sel.value = 'sc_learning_curve';
+                  if (typeof renderScenarioCallout === 'function') renderScenarioCallout(ScenarioIndex && ScenarioIndex['sc_learning_curve'] ? ScenarioIndex['sc_learning_curve'] : null);
+                }catch(eSel){}
+                try{
+                  var btn = qs('#loadExampleRunBtn');
+                  if (btn && typeof btn.click === 'function') btn.click();
+                }catch(eB){}
+              },
+              gate: function(){ return __tourHasLeaderboard(); },
+              gateText: 'Wait for the leaderboard to finish (or click “Load + Run”).'
+            },
+
+            { title: 'What are we estimating?', body: 'The scenario callout summarizes what this dataset represents and what you should expect to win.', target: '#scenarioCallout', placement: 'auto',
+              pre: function(){
+                try{ __tourOpenCard('inputsCard'); __tourOpenCard('dataCard'); }catch(e){}
+                try{ var el = qs('#scenarioCallout'); if (el && el.scrollIntoView) el.scrollIntoView({ block:'center' }); }catch(e2){}
+              },
+              gate: function(){ return __tourHasData(); },
+              gateText: 'Load a scenario so the callout appears.'
+            },
+
+            { title: 'Confirm X and Y', body: 'Always sanity-check column mapping: X=cumulative quantity, Y=unit cost. RAT will try to guess, but you should verify.', target: 'x_select', placement: 'auto',
+              pre: function(){ try{ __tourOpenCard('inputsCard'); __tourOpenCard('varsCard'); }catch(e){} },
+              gate: function(){ try{ return __tourHasData() && State && State.selection && State.selection.x && State.selection.y; }catch(e){ return false; } },
+              gateText: 'Select X and Y to continue.'
+            },
+
+            { title: 'Model selection dial: Rank by AIC', body: 'Rank by AIC (min) to prefer simpler models when accuracy is similar. Switch to RMSE when units-based error matters most.', target: 'rank_metric', placement: 'auto',
+              pre: function(){
+                try{ __tourOpenCard('inputsCard'); __tourOpenCard('leaderCard'); }catch(e){}
+                try{
+                  var rm = qs('#lbRankMetric');
+                  if (rm && String(rm.value) !== 'aic') { rm.value = 'aic'; }
+                }catch(e2){}
+              },
+              gate: function(){ try{ var rm = qs('#lbRankMetric'); return !!(rm && String(rm.value) === 'aic'); }catch(e){ return true; } },
+              gateText: 'Set Rank by = AIC.'
+            },
+
+            { title: 'Leaderboard: the candidates', body: 'Top rows are the best fits under your current settings. For a learning curve, expect Log-log (Power) near the top.', target: 'leaderboard_table', placement: 'auto',
+              pre: function(){ try{ __tourOpenCard('inputsCard'); __tourOpenCard('leaderCard'); }catch(e){} },
+              gate: function(){ return __tourHasLeaderboard(); },
+              gateText: 'Run all fits to populate the leaderboard.'
+            },
+
+            { title: 'Apply the winner', body: 'Click Apply #1 (or click any leaderboard row) to make that model the Current Fit and update the plot.', target: '#applyTopBtn', placement: 'auto',
+              pre: function(){
+                try{ __tourOpenCard('inputsCard'); __tourOpenCard('leaderCard'); }catch(e){}
+              },
+              gate: function(){ try{ return !!(FitState && FitState.ok); }catch(e){ return false; } },
+              gateText: 'Click Apply #1 (or a leaderboard row) so Current Fit is populated.'
+            },
+
+            { title: 'Current Fit: interpret the learning rate', body: 'Here’s the selected equation and fit stats. For Log-log, the slope is the learning exponent (b).', target: 'current_fit_top', activeTarget: 'current_fit_card', placement: 'auto',
+              pre: function(){ try{ __tourOpenCard('resultsCard'); __tourOpenCard('fitCard'); }catch(e){} },
+              gate: function(){ try{ return !!(FitState && FitState.ok); }catch(e){ return true; } },
+              gateText: 'Current Fit must be computed.'
+            },
+
+            { title: 'Plot: curve + 95% CI/PI', body: 'The scatter is your raw data; the line is the Current Fit. CI/PI bands help communicate uncertainty and prediction spread.', target: 'plot_area', placement: 'auto',
+              pre: function(){ try{ __tourOpenCard('resultsCard'); }catch(e){} },
+              gate: function(){ try{ return !!(FitState && FitState.ok); }catch(e){ return true; } },
+              gateText: 'Current Fit must be computed.'
+            },
+
+            { title: 'Compare mode: turn on overlays', body: 'Enable Compare overlays to put multiple candidate curves on the same plot (up to 6).', target: 'compare_toggle', placement: 'auto',
+              pre: function(){
+                try{ __tourOpenCard('resultsCard'); __tourOpenCard('compareCard'); }catch(e){}
+                try{ if (window.__ratHelpClose) window.__ratHelpClose(); }catch(eH){}
+              },
+              gate: function(){ return (__tourCompareEnabled() && __tourCompareHasPickerItems()); },
+              gateText: 'Enable Compare overlays (and wait for the picker list to populate).'
+            },
+
+            { title: 'Pick a few models', body: 'Select 2–4 models to compare tradeoffs (Log-log vs Linear vs Poly2 is a great trio). Tip: “Select top” is a quick start.', target: 'compare_picker', placement: 'auto',
+              pre: function(){
+                try{ __tourOpenCard('resultsCard'); __tourOpenCard('compareCard'); }catch(e){}
+                try{ var el = qs('#cmpList'); if (el && el.scrollIntoView) el.scrollIntoView({ block:'center' }); }catch(e2){}
+              },
+              gate: function(){ return (__tourCompareSelectedCount() >= 2); },
+              gateText: 'Select at least two models (use “Select top” or hand-pick).'
+            },
+
+            { title: 'Side-by-side table', body: 'This is your briefing/peer-review view: metrics, minimizer, origin setting, and complexity all in one place.', target: 'compare_table', placement: 'auto',
+              pre: function(){ try{ __tourOpenCard('resultsCard'); __tourOpenCard('compareCard'); }catch(e){} },
+              gate: function(){ return (__tourCompareSelectedCount() >= 2); },
+              gateText: 'Keep at least two models selected.'
+            },
+
+            { title: 'Export for reviewers', body: 'Download a reproducible Package JSON so a reviewer can rerun the exact comparison (or export CSV/TSV for Excel).', target: 'package_json', placement: 'auto',
+              pre: function(){ try{ __tourOpenCard('resultsCard'); __tourOpenCard('compareCard'); }catch(e){} },
+              gate: function(){ return (__tourCompareSelectedCount() >= 1); },
+              gateText: 'Select at least one model to enable exports.'
+            },
+
+            { title: 'Wrap', body: 'Core workflow: load data → run model search → apply a fit → compare candidates → export results for review.', target: 'export_leaderboard', placement: 'auto',
+              pre: function(){ try{ __tourOpenCard('inputsCard'); __tourOpenCard('leaderCard'); }catch(e){} },
+              optional: true,
+              allowSkip: true
+            }
           ]
         },
 
@@ -3651,7 +3880,15 @@ function _removeActiveEl(){
             bottom = top + minSize;
           }
 
-          dom.focus.style.display = 'block';
+                    // If we just resized (or are using a virtual viewport override for tests),
+          // suppress focus transitions so the box snaps into the new bounds immediately.
+          try{
+            var sup = (Date.now() < (S.suppressAnimUntil||0)) || !!S.vpOverride;
+            if (sup) dom.focus.style.transition = 'none';
+            else dom.focus.style.transition = '';
+          }catch(e){}
+
+dom.focus.style.display = 'block';
           dom.focus.style.left = Math.round(left) + 'px';
           dom.focus.style.top = Math.round(top) + 'px';
           dom.focus.style.width = Math.max(20, Math.round(right - left)) + 'px';
@@ -3733,7 +3970,7 @@ function _removeActiveEl(){
         document.addEventListener('keydown', S.onKey, true);
 
         S.onScroll = function(){ _scheduleRender(); };
-        S.onResize = function(){ _scheduleRender(); };
+        S.onResize = function(){ try{ S.suppressAnimUntil = Date.now() + 280; }catch(e){} _scheduleRender(); };
         window.addEventListener('scroll', S.onScroll, true);
         window.addEventListener('resize', S.onResize, true);
 
@@ -4284,7 +4521,7 @@ function coverageAudit(opts){
         try{
           var ww = Number(w), hh = Number(h);
           if (!Number.isFinite(ww) || !Number.isFinite(hh)) return;
-          S.vpOverride = { w: Math.max(0, ww|0), h: Math.max(0, hh|0) };
+          S.vpOverride = { w: Math.max(0, ww|0), h: Math.max(0, hh|0) }; try{ S.suppressAnimUntil = Date.now() + 280; }catch(e){}
         }catch(e){}
       }
       function __tourClearViewportOverride(){
@@ -6030,6 +6267,28 @@ function renderDataQuality(meta) {
           }
         },
 
+        // COST ESTIMATING
+        {
+          id: 'sc_learning_curve',
+          title: 'Learning curve (unit cost vs cumulative quantity)',
+          category: 'Cost Estimating',
+          tags: ['learning curve','power','log-log','cer','production'],
+          demonstrates: 'Classic learning curve modeled as a power function (log-log). Great for showing model selection and interpretation.',
+          expected: 'Leaderboard: Log-log (Power) should rank near the top (often #1) by AIC/RMSE.',
+          tryNext: 'Enable Compare overlays and select Log-log vs Linear vs Poly2; watch extrapolation and interval behavior.',
+          preset: {
+            x:'cum_qty', y:'unit_cost_k', w:'',
+            useMultiX:false,
+            lb: { rankMetric:'aic', pRule:'NONE', alpha:0.05, topN:25,
+              inc:{ linear:true, linearLog:true, logLinear:true, logLog:true, poly:true },
+              incIntercept:true, incOrigin:false, polyMax:4
+            },
+            subset: { enable:false },
+            minimizers: { ols:true, mupe:false, zmpe:false, current:'OLS' },
+            runMode: 'leaderboard'
+          }
+        },
+
         // POLYNOMIALS
         {
           id: 'ex_poly',
@@ -6521,7 +6780,22 @@ function renderDataQuality(meta) {
         return rowsS.join('\n');
       }
       
-      if (kind === 'sc_exp') {
+            if (kind === 'sc_learning_curve') {
+        var rowsLC = ['cum_qty,unit_cost_k'];
+        var seedLC = 20260304;
+        function rndLC(){ seedLC = (seedLC * 1664525 + 1013904223) % 4294967296; return seedLC / 4294967296; }
+        for (var iLC=1; iLC<=60; iLC++) {
+          var x = iLC;
+          var base = 250 * Math.pow(x, -0.32);
+          var noise = (rndLC() - 0.5) * 0.08; // ±4% multiplicative
+          var y = base * (1 + noise);
+          if (!(y > 0)) y = Math.max(0.01, Math.abs(y) || 0.01);
+          rowsLC.push(String(x) + ',' + y.toFixed(4));
+        }
+        return rowsLC.join('\n');
+      }
+
+if (kind === 'sc_exp') {
         // Exponential growth: y = 50*exp(0.08*t) with small multiplicative noise (always positive)
         var rowsE = ['t,y'];
         var seedE = 314159;
@@ -12219,6 +12493,31 @@ doCheck('Scenarios: picker populated + search finds matches', function() {
         return 'specs=' + specs.length + ', options=' + optCount + ', cats=' + catCount + ', matches=' + matches.length;
       });
 
+      doCheck('Scenarios: Learning curve scenario exists + parses', function() {
+        try{ if (typeof getScenarioSpecs === 'function') getScenarioSpecs(); }catch(e){}
+        if (!ScenarioIndex || !ScenarioIndex['sc_learning_curve']) throw new Error('Missing ScenarioIndex entry for sc_learning_curve');
+        var ex = makeExample('sc_learning_curve');
+        if (!ex || ex.indexOf('cum_qty') !== 0) throw new Error('Example generator did not return expected header');
+
+        var meta = parseTableText(ex, { hasHeader:true, allowComments:true, parsePercent:true });
+        if (!meta || !meta.columns || !meta.rows) throw new Error('Parse did not return expected structure');
+        if (meta.columns.indexOf('cum_qty') < 0 || meta.columns.indexOf('unit_cost_k') < 0) throw new Error('Expected columns missing');
+        if (!(meta.rowCount >= 40)) throw new Error('Too few rows in learning curve: ' + meta.rowCount);
+
+        // Ensure y is positive (log models require it)
+        var yCol = 'unit_cost_k';
+        for (var i=0; i<meta.rows.length; i++){
+          var y = parseNumberLoose(meta.rows[i][yCol], { parsePercent: true });
+          if (!(y > 0)) throw new Error('Non-positive y at row ' + i);
+        }
+
+        return 'rows=' + meta.rowCount + ', cols=' + meta.colCount;
+      });
+
+
+
+
+
       doCheck('Help: content present and linkable', function() {
         var drawer = qs('#helpDrawer');
         var content = qs('#helpContent');
@@ -12701,6 +13000,152 @@ doCheck('Layout: grid has resizer + two columns (inputs + right)', function() {
       });
 
 
+
+      doCheck('Layout: no horizontal page overflow', function() {
+        // Avoid false positives from off-canvas overlays (Help/Tours/modals) and intentionally scrollable regions (tables/logs).
+        function hasOverlayAncestor(el){
+          try{
+            var p = el;
+            while (p && p !== document.body && p !== document.documentElement){
+              var cs = getComputedStyle(p);
+              if (cs){
+                var pos = (cs.position || '');
+                if (pos === 'fixed' || pos === 'absolute') return true;
+              }
+              p = p.parentElement;
+            }
+          }catch(e){}
+          return false;
+        }
+
+        function clippedByOverflow(el){
+          try{
+            var p = el;
+            while (p && p !== document.body && p !== document.documentElement){
+              var cs = getComputedStyle(p);
+              if (!cs) { p = p.parentElement; continue; }
+              var ox = (cs.overflowX || cs.overflow || '');
+              var clip = (ox && ox !== 'visible');
+              if (clip){
+                // If this container clips/scrolls horizontal content, then children extending right are OK.
+                if ((p.scrollWidth || 0) > (p.clientWidth || 0) + 2) return true;
+                if (p.classList && (p.classList.contains('table-wrap') || p.classList.contains('log') || p.classList.contains('xmulti-list'))) return true;
+                if (p.id === 'corrMatrixWrap' || p.id === 'selfTestOutput') return true;
+              }
+              p = p.parentElement;
+            }
+          }catch(e){}
+          return false;
+        }
+
+        var maxR = 0, worst = null, worstRect = null;
+        var els = document.querySelectorAll('body *');
+        for (var i=0;i<els.length;i++){
+          var el = els[i];
+          if (!el || !el.getBoundingClientRect) continue;
+          var cs = getComputedStyle(el);
+          if (!cs) continue;
+          if (cs.display === 'none') continue;
+
+          // Ignore overlays and their descendants (fixed/absolute positioned containers do not contribute to page layout).
+          if (hasOverlayAncestor(el)) continue;
+
+          // Ignore descendants of intentionally scrollable/clipped containers.
+          if (clippedByOverflow(el)) continue;
+
+          var r = el.getBoundingClientRect();
+          if (!r || !(r.width || r.height)) continue;
+
+          if (r.right > maxR){
+            maxR = r.right;
+            worst = el;
+            worstRect = r;
+          }
+        }
+        var over = maxR - window.innerWidth;
+        if (over > 2){
+          var desc = 'unknown';
+          try{
+            if (worst){
+              desc = worst.tagName.toLowerCase();
+              if (worst.id) desc += '#' + worst.id;
+              if (worst.className){
+                var cls = String(worst.className).trim().split(/\s+/).filter(Boolean).slice(0,4).join('.');
+                if (cls) desc += '.' + cls;
+              }
+            }
+          }catch(_eD){}
+          throw new Error('Horizontal overflow: maxRight=' + Math.round(maxR) + 'px window=' + window.innerWidth + 'px (over=' + Math.round(over) + 'px) offender=' + desc);
+        }
+        return 'ok (over=' + Math.round(over) + 'px)';
+      });
+
+
+      doCheck('Mobile layout: stacks header + single-column fields (if narrow)', function() {
+        if (window.innerWidth > 720) return 'skipped (viewport=' + window.innerWidth + 'px)';
+        var h = qs('header');
+        if (!h) throw new Error('Missing header');
+        var fd = getComputedStyle(h).flexDirection || '';
+        if (fd.indexOf('column') !== 0) throw new Error('Expected header flex-direction column, got=' + fd);
+        var row = document.querySelector('.row');
+        if (row) {
+          var gtc = (getComputedStyle(row).gridTemplateColumns || '').trim();
+          var cols = gtc ? gtc.split(/\s+/) : [];
+          if (cols.length > 1) throw new Error('.row not single column: ' + gtc);
+        }
+        var row3 = document.querySelector('.row3');
+        if (row3) {
+          var gtc3 = (getComputedStyle(row3).gridTemplateColumns || '').trim();
+          var cols3 = gtc3 ? gtc3.split(/\s+/) : [];
+          if (cols3.length > 1) throw new Error('.row3 not single column: ' + gtc3);
+        }
+        return 'ok (viewport=' + window.innerWidth + 'px)';
+      });
+
+
+      doCheck('Mobile tables: compact toggle hides columns (narrow)', function() {
+        if (window.innerWidth > 720) return 'skip (not narrow)';
+        var cmpT = qs('#cmpCompact');
+        var lbT = qs('#lbCompact');
+        var cmpW = qs('#cmpTableWrap');
+        var lbW = qs('#lbTableWrap');
+        if (!cmpT || !lbT || !cmpW || !lbW) throw new Error('Missing compact toggles or table wraps');
+        cmpT.checked = true;
+        cmpT.dispatchEvent(new Event('change', {bubbles:true}));
+        lbT.checked = true;
+        lbT.dispatchEvent(new Event('change', {bubbles:true}));
+
+        function countVisibleTh(sel){
+          var ths = document.querySelectorAll(sel);
+          var n = 0;
+          for (var i=0;i<ths.length;i++){
+            var cs = getComputedStyle(ths[i]);
+            if (cs && cs.display !== 'none') n++;
+          }
+          return n;
+        }
+
+        var cmpCols = countVisibleTh('#cmpTableWrap thead th');
+        var lbCols = countVisibleTh('#lbTableWrap thead th');
+        if (cmpCols > 6) throw new Error('Compare compact still has too many visible cols: ' + cmpCols);
+        if (lbCols > 6) throw new Error('Leaderboard compact still has too many visible cols: ' + lbCols);
+        return 'cmpCols=' + cmpCols + ', lbCols=' + lbCols;
+      });
+
+      doCheck('Popovers: tooltip tags open/close on click', function() {
+        var tag = qs('#minMUPEtag');
+        var pop = qs('#ratPopover');
+        var api = window.__ratPopoverApi;
+        if (!tag || !pop || !api) throw new Error('Popover API not ready');
+        // open
+        tag.dispatchEvent(new MouseEvent('click', {bubbles:true, cancelable:true}));
+        if (!api.isShown() || getComputedStyle(pop).display === 'none') throw new Error('Popover did not show');
+        // close by clicking outside
+        document.body.dispatchEvent(new MouseEvent('click', {bubbles:true, cancelable:true}));
+        if (api.isShown()) throw new Error('Popover did not hide');
+        return 'ok';
+      });
+
       doCheck('Layout: Leaderboard is under Model Search (left column)', function() {
         var m = qs('#modelCard');
         var l = qs('#leaderCard');
@@ -12738,9 +13183,15 @@ doCheck('Layout: grid has resizer + two columns (inputs + right)', function() {
       });
 
       doCheck('UX: resizer exists and supports width var', function() {
+        // Resizer is only meaningful on desktop (two-column layout)
+        if (window.innerWidth <= 980) return 'skipped (stacked layout)';
         var g = qs('.grid');
         var r = qs('#colResizer');
         if (!g || !r) throw new Error('Missing grid or resizer');
+        try{
+          var rd = getComputedStyle(r).display || '';
+          if (rd === 'none') return 'skipped (resizer hidden)';
+        }catch(e){}
         // Programmatically set a width var and ensure computed style changes
         g.style.setProperty('--leftW', '444px');
         var cs = getComputedStyle(g).gridTemplateColumns;
@@ -13026,6 +13477,55 @@ doCheck('Layout: grid has resizer + two columns (inputs + right)', function() {
         try{ st.pre(); }catch(e){ throw new Error('Step 7 pre threw: ' + (e && e.message ? e.message : String(e))); }
         if (document.body.classList.contains('help-open')) throw new Error('Help still open after step 7 pre');
         return 'ok';
+      });
+
+      doCheck('Tours: Presentation Demo tour targets resolvable', function() {
+        if (!window.Tour || !window.Tour._tours) throw new Error('Tour registry missing');
+        var t = window.Tour._tours['tour_presentation_demo'];
+        if (!t) throw new Error('Missing tour: tour_presentation_demo');
+        if (!t.steps || !t.steps.length) throw new Error('Presentation Demo tour has no steps');
+        var missing = [];
+        function _resolve(selOrTok){
+          if (!selOrTok) return null;
+          var s = String(selOrTok).trim();
+          if (!s) return null;
+          var c0 = s.charAt(0);
+          var looksSel = (c0 === '#' || c0 === '.' || c0 === '[') || /[\s>~:+"']/.test(s);
+          if (looksSel){
+            try{ return document.querySelector(s); }catch(e){ return null; }
+          }
+          try{
+            var el = document.querySelector('[data-tour="' + s + '"]');
+            if (el) return el;
+          }catch(e2){}
+          try{
+            var byId = document.getElementById(s);
+            if (byId) return byId;
+          }catch(e3){}
+          try{ return document.querySelector(s); }catch(e4){ return null; }
+        }
+        for (var i=0;i<t.steps.length;i++){
+          var st = t.steps[i];
+          var tgt = st && st.target;
+          var el = _resolve(tgt);
+          if (!el) missing.push('step ' + (i+1) + ': ' + String(tgt));
+          var at = st && st.activeTarget;
+          if (at){
+            var ael = _resolve(at);
+            if (!ael) missing.push('step ' + (i+1) + ' activeTarget: ' + String(at));
+          }
+        }
+        if (missing.length) throw new Error('Missing targets: ' + missing.join('; '));
+        // Also confirm it shows as available in the launcher catalog
+        try{
+          var cat = (typeof window.Tour.catalog === 'function') ? window.Tour.catalog() : [];
+          var found = false;
+          for (var j=0;j<cat.length;j++){
+            if (String(cat[j].id||'') === 'tour_presentation_demo' && cat[j].available) { found = true; break; }
+          }
+          if (!found) throw new Error('tour_presentation_demo not available in launcher catalog');
+        }catch(e5){ throw e5; }
+        return 'steps=' + t.steps.length;
       });
 
       doCheck('Tours: coverage audit reports 0 missing for core tours', function() {
@@ -13470,8 +13970,14 @@ doCheck('Tours: launcher lists tours and Start works', function() {
 
       doCheck('UX: resizer symmetric travel bounds', function() {
         // Ensures the draggable range is symmetric around the visual center.
+        if (window.innerWidth <= 980) return 'skipped (stacked layout)';
         if (typeof window.__ratComputeResizerBounds !== 'function') return 'skip (bounds helper missing)';
         var b = window.__ratComputeResizerBounds();
+        try{
+          var r = qs('#colResizer');
+          if (r && getComputedStyle(r).display === 'none') return 'skipped (resizer hidden)';
+        }catch(e){}
+        if (b && isFinite(b.lo) && isFinite(b.hi) && b.hi <= b.lo + 1) return 'skipped (degenerate bounds)';
         if (!b || !isFinite(b.lo) || !isFinite(b.hi) || !isFinite(b.center)) throw new Error('Invalid bounds object');
         var dl = b.center - b.lo;
         var dr = b.hi - b.center;
@@ -15497,6 +16003,13 @@ qs('#polyMax').addEventListener('input', function(e) {
       const usable = Math.max(0, rect.width - RES_W - GAP_W);
       const minLeft = 320;
       const minRight = 420;       // keep right column usable
+      // If the layout is stacked/narrow, the resizer is inactive; keep bounds sane.
+      if (usable <= (minLeft + minRight)) {
+        const lo = minLeft;
+        const hi = minLeft;
+        const center = minLeft;
+        return { lo, hi, center, usable, minLeft, minRight, maxLeft: minLeft };
+      }
       const maxLeft = Math.max(minLeft, usable - minRight);
       const center = usable / 2;
 
@@ -15909,6 +16422,157 @@ function initToursLauncher(){
   try{ window.PlotState = PlotState; }catch(e){}
   try{ window.LeaderState = LeaderState; }catch(e){}
 
+  function initMobileTables(){
+    var cmpToggle = q('#cmpCompact');
+    var lbToggle = q('#lbCompact');
+    var cmpWrap = q('#cmpTableWrap');
+    var lbWrap = q('#lbTableWrap');
+
+    function apply(){
+      try{ if (cmpWrap && cmpToggle) cmpWrap.classList.toggle('compact', !!cmpToggle.checked); }catch(e){}
+      try{ if (lbWrap && lbToggle) lbWrap.classList.toggle('compact', !!lbToggle.checked); }catch(e){}
+    }
+
+    function setDefaultsFromViewport(){
+      var narrow = false;
+      try{ narrow = window.matchMedia && window.matchMedia('(max-width: 720px)').matches; }catch(e){}
+      if (cmpToggle && !cmpToggle.dataset.userSet) cmpToggle.checked = !!narrow;
+      if (lbToggle && !lbToggle.dataset.userSet) lbToggle.checked = !!narrow;
+      apply();
+    }
+
+    if (cmpToggle){
+      cmpToggle.addEventListener('change', function(){ cmpToggle.dataset.userSet = '1'; apply(); });
+    }
+    if (lbToggle){
+      lbToggle.addEventListener('change', function(){ lbToggle.dataset.userSet = '1'; apply(); });
+    }
+
+    // initial default (unless browser restored state)
+    setDefaultsFromViewport();
+
+    // auto-adjust only until the user flips the toggle explicitly
+    try{
+      if (window.matchMedia){
+        var mq = window.matchMedia('(max-width: 720px)');
+        var onChange = function(){ setDefaultsFromViewport(); };
+        if (mq.addEventListener) mq.addEventListener('change', onChange);
+        else if (mq.addListener) mq.addListener(onChange);
+      } else {
+        window.addEventListener('resize', setDefaultsFromViewport, {passive:true});
+      }
+    }catch(e){}
+
+    try{ window.__ratMobileTables = { apply: apply, setDefaultsFromViewport: setDefaultsFromViewport }; }catch(e){}
+  }
+
+  function initTapPopovers(){
+    var pop = q('#ratPopover');
+    if (!pop) return;
+
+    var shown = false;
+    var anchor = null;
+
+    function hide(){
+      shown = false;
+      anchor = null;
+      try{ pop.classList.remove('show'); }catch(e){}
+      try{ pop.setAttribute('aria-hidden','true'); }catch(e){}
+      try{ pop.style.left = '-9999px'; pop.style.top = '-9999px'; }catch(e){}
+    }
+
+    function show(el, text){
+      if (!el || !text) return;
+      anchor = el;
+      pop.textContent = text;
+      pop.classList.add('show');
+      pop.setAttribute('aria-hidden','false');
+
+      // Measure after showing
+      var margin = 10;
+      var gap = 8;
+      var r = el.getBoundingClientRect();
+      var pw = pop.offsetWidth || 240;
+      var ph = pop.offsetHeight || 80;
+
+      var left = (r.left + r.right) / 2 - pw / 2;
+      left = Math.max(margin, Math.min(left, window.innerWidth - margin - pw));
+
+      var top = r.bottom + gap;
+      if (top + ph > window.innerHeight - margin){
+        top = r.top - ph - gap;
+      }
+      top = Math.max(margin, Math.min(top, window.innerHeight - margin - ph));
+
+      pop.style.left = Math.round(left) + 'px';
+      pop.style.top = Math.round(top) + 'px';
+
+      shown = true;
+    }
+
+    function toggleFor(el, ev){
+      var text = '';
+      try{ text = el.getAttribute('data-pop') || el.getAttribute('title') || ''; }catch(e){}
+      if (!text) return;
+      if (ev){
+        try{ ev.preventDefault(); }catch(e){}
+        try{ ev.stopPropagation(); }catch(e){}
+      }
+      if (shown && anchor === el){
+        hide();
+        return;
+      }
+      show(el, text);
+    }
+
+    // Make existing tooltip tags focusable/clickable
+    try{
+      var nodes = document.querySelectorAll('.tag[title], .pill.pop[title], [data-pop].pop');
+      for (var i=0;i<nodes.length;i++){
+        var el = nodes[i];
+        if (!el) continue;
+        if (!el.getAttribute('tabindex')) el.setAttribute('tabindex','0');
+        if (!el.getAttribute('role')) el.setAttribute('role','button');
+      }
+    }catch(e){}
+
+    // Delegated click handler (works for dynamic content too)
+    document.addEventListener('click', function(e){
+      var t = e.target;
+      if (!t || !t.closest) return;
+      var el = t.closest('.tag[title], .pill.pop[title], [data-pop].pop');
+      if (!el) return;
+      toggleFor(el, e);
+    }, true);
+
+    document.addEventListener('keydown', function(e){
+      if (e.key === 'Escape' && shown){ hide(); }
+      if ((e.key === 'Enter' || e.key === ' ') && e.target){
+        try{
+          var el = e.target.closest ? e.target.closest('.tag[title], .pill.pop[title], [data-pop].pop') : null;
+          if (el){ toggleFor(el, e); }
+        }catch(_e){}
+      }
+    }, true);
+
+    // Click outside closes
+    document.addEventListener('click', function(e){
+      if (!shown) return;
+      if (pop.contains(e.target)) return;
+      hide();
+    }, false);
+
+    // Repositioning is overkill; just hide on scroll/resize
+    window.addEventListener('resize', function(){ if (shown) hide(); }, {passive:true});
+    window.addEventListener('scroll', function(){ if (shown) hide(); }, true);
+
+    // Expose for self-test
+    try{ window.__ratPopoverApi = { show: show, hide: hide, isShown: function(){ return shown; }, el: pop }; }catch(e){}
+
+    hide();
+  }
+
+
 
   function run(){
     try{ applyFullWidthFromLS(); }catch(e){}
@@ -15917,6 +16581,8 @@ function initToursLauncher(){
     try{ initResizer(); }catch(e){}
     try{ initHelpDrawer(); }catch(e){}
     try{ initToursLauncher(); }catch(e){}
+    try{ initMobileTables(); }catch(e){}
+    try{ initTapPopovers(); }catch(e){}
     try{ window.__ratUxPolishReady = true; }catch(e){}
   }
 
@@ -15925,5 +16591,7 @@ function initToursLauncher(){
 })();
 
 </script>
+
+  <div id="ratPopover" class="rat-popover" role="dialog" aria-hidden="true"></div>
 </body>
 </html>
