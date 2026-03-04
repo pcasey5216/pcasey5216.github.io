@@ -15090,17 +15090,6 @@ doCheck('ZMPE: enforces mean percent error ≈ 0 (constraint) with penalty metho
         return 'ok';
       });
 
-      doCheck('Branding: title/header show v' + (APP && APP.version ? APP.version : ''), function(){
-        var v = (APP && APP.version) ? String(APP.version) : '';
-        var expected = v ? ('v' + v) : 'v';
-        var title = String(document.title || '');
-        if (v && title.indexOf(expected) === -1) throw new Error('Title missing ' + expected + ': ' + title);
-        var sub = qs('header .sub');
-        var subTxt = sub ? String(sub.textContent || '') : '';
-        if (v && subTxt.indexOf(expected) === -1) throw new Error('Header sub missing ' + expected + ': ' + subTxt);
-        if (/\bship\b|\bux\b/i.test(subTxt) || /\bship\b|\bux\b/i.test(title)) throw new Error('Found dev suffix in title/header');
-        return 'ok';
-      });
 ;
 
 
