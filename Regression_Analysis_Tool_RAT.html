@@ -1005,6 +1005,67 @@ body.tours-open{ overflow: hidden; }
       input[type="text"], input[type="number"], select, textarea { padding: 12px 12px; }
       .help-drawer { width: 100vw; border-radius: 0; }
     }
+
+    /* =========================
+       Welcome / first-run modal (RAT)
+       ========================= */
+    body.welcome-open{ overflow: hidden; }
+    .modalBackdrop{
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.58);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      z-index: 1300;
+    }
+    .modalBackdrop.open{ display:flex; }
+    .modal{
+      width: min(780px, 100%);
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.16);
+      background: rgba(16, 24, 46, 0.96);
+      backdrop-filter: blur(10px);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .modalHeader{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap: 12px;
+      padding: 12px 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.10);
+      background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+    }
+    .modalTitle{
+      font-weight: 900;
+      letter-spacing: 0.2px;
+      font-size: 16px;
+      line-height: 1.15;
+    }
+    .modalBody{
+      padding: 12px 14px 14px;
+      color: rgba(255,255,255,0.90);
+    }
+    .modalBody p{ margin: 0 0 10px; line-height: 1.35; }
+    .modalBody ul{ margin: 0; padding-left: 18px; }
+    .modalBody li{ margin: 6px 0; color: var(--muted); }
+    .modalFooter{
+      display:flex;
+      justify-content:space-between;
+      gap: 10px;
+      padding: 12px 14px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      background: rgba(0,0,0,0.12);
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    @media (max-width: 520px){
+      .modalBackdrop{ padding: 12px; }
+    }
+    
 </style>
 </head>
 <body>
@@ -1014,7 +1075,7 @@ body.tours-open{ overflow: hidden; }
         <div class="logo" aria-hidden="true"></div>
         <div class="title-wrap">
           <h1>Regression Analysis Tool (RAT)</h1>
-          <div class="sub">v1.1.4-presoDemo1.1-hf2 • Build 2026-03-04 13:44 UTC</div>
+          <div class="sub">v1.1.5-welcome1.0-hf1 • Build 2026-03-05 11:57 UTC</div>
         </div>
       </div>
       <div class="badge-row">
@@ -1974,6 +2035,43 @@ body.tours-open{ overflow: hidden; }
     </div>
   </aside>
 
+  <!-- Welcome / first-run modal (on-load) -->
+  <div class="modalBackdrop" id="welcomeBackdrop" aria-hidden="true">
+    <div class="modal" id="welcomeDialog" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
+      <div class="modalHeader">
+        <div>
+          <div class="modalTitle" id="welcomeTitle">Welcome to RAT</div>
+          <div class="muted tiny">Pick a guided demo, or jump straight into your own dataset.</div>
+        </div>
+        <button id="btnWelcomeClose" class="small ghost" type="button" aria-label="Close welcome dialog">Close</button>
+      </div>
+      <div class="modalBody">
+        <p class="muted">In a few minutes you can:</p>
+        <ul>
+          <li>Load an <b>example scenario</b> (or upload/paste your own CSV)</li>
+          <li>Run a <b>ranked leaderboard</b> across model families (linear, log, polynomial)</li>
+          <li>Click a row to apply the <b>Current Fit</b> and inspect diagnostics</li>
+          <li>Use <b>Compare</b> and <b>Exports</b> for briefings &amp; traceability</li>
+        </ul>
+        <div class="callout good" style="margin-top:12px;">
+          <b>Tip:</b> For briefings, start <b>Presentation Demo</b> (learning curve story + model selection).
+        </div>
+        <div class="callout" style="margin-top:10px;">
+          You can relaunch any tour anytime via the <b>Tours</b> button in the header.
+        </div>
+      </div>
+      <div class="modalFooter">
+        <button id="btnWelcomeNever" class="small ghost" type="button" title="Do not show this welcome prompt again on this device.">Don’t show again</button>
+        <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; margin-left:auto;">
+          <button id="btnWelcomeSkip" class="small ghost" type="button">View later</button>
+          <button id="btnWelcomeTours" class="small" type="button">Open Tours</button>
+          <button id="btnWelcomeQuickStart" class="small" type="button">Start Quick Start</button>
+          <button id="btnWelcomePreso" class="small primary" type="button">Start Presentation Demo</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
 <script>
   (function() {
     'use strict';
@@ -2014,8 +2112,8 @@ body.tours-open{ overflow: hidden; }
     // =========================
     var APP = {
       name: 'Regression Analysis Tool (RAT)',
-      version: '1.1.4-presoDemo1.1-hf2',
-      buildUTC: '2026-03-04 13:44 UTC',
+      version: '1.1.5-welcome1.0-hf1',
+      buildUTC: '2026-03-05 11:57 UTC',
       defaults: { polyMaxDegree: 3, pStatRule: 'ALL_COEFS_SIGNIFICANT', zmpeMeanPercentErrorZero: true,
         optimizer: { method: 'LM', maxIter: 80, tol: 1e-8, starts: 3, jitter: 0.25, lambda0: 0.01, fdEps: 1e-6, seed: 1, zmpePenalty: 1000 } }
     };
@@ -12633,7 +12731,41 @@ doCheck('Help: Escape closes and focus returns', function() {
         return 'ok';
       });
 
-      doCheck('Tours: engine loads and can render overlay', function() {
+      
+      doCheck('Welcome: modal exists + open/close works', function() {
+        if (!window.__ratWelcomeApi || typeof window.__ratWelcomeApi.open !== 'function') {
+          throw new Error('welcome api missing');
+        }
+        var api = window.__ratWelcomeApi;
+        var keys = (api && api._keys) ? api._keys : {};
+        var seen = null, never = null, skip = null;
+        try{ if(keys.seenKey) seen = localStorage.getItem(keys.seenKey); }catch(e){}
+        try{ if(keys.neverKey) never = localStorage.getItem(keys.neverKey); }catch(e){}
+        try{ if(keys.skipSessKey) skip = sessionStorage.getItem(keys.skipSessKey); }catch(e){}
+
+        // Force an open/close cycle without persisting suppression
+        try{ api.clear(); }catch(e){}
+        api.open(true);
+        if (!api.isOpen()) throw new Error('welcome did not open');
+        api.close(true);
+        if (api.isOpen()) throw new Error('welcome did not close');
+
+        // Restore keys
+        try{
+          if(keys.seenKey){
+            if(seen === null) localStorage.removeItem(keys.seenKey); else localStorage.setItem(keys.seenKey, seen);
+          }
+          if(keys.neverKey){
+            if(never === null) localStorage.removeItem(keys.neverKey); else localStorage.setItem(keys.neverKey, never);
+          }
+          if(keys.skipSessKey){
+            if(skip === null) sessionStorage.removeItem(keys.skipSessKey); else sessionStorage.setItem(keys.skipSessKey, skip);
+          }
+        }catch(e){}
+        return 'ok';
+      });
+
+doCheck('Tours: engine loads and can render overlay', function() {
         if (!window.Tour || typeof window.Tour.start !== 'function' || typeof window.Tour.end !== 'function') {
           throw new Error('Tour engine missing (window.Tour)');
         }
@@ -15090,6 +15222,7 @@ doCheck('ZMPE: enforces mean percent error ≈ 0 (constraint) with penalty metho
         return 'ok';
       });
 
+      
 ;
 
 
@@ -16560,6 +16693,199 @@ function initToursLauncher(){
 
     hide();
   }
+  // =========================
+  // Welcome / first-run modal (on-load)
+  // =========================
+  function ensureWelcomeApi(){
+    try{
+      var seenKey = 'rat_welcome_seen';
+      var neverKey = 'rat_welcome_never';
+      var skipSessKey = 'rat_welcome_skip_once';
+
+      // If already present, just ensure keys exist.
+      if (window.__ratWelcomeApi && typeof window.__ratWelcomeApi.open === 'function') {
+        try{
+          if(!window.__ratWelcomeApi._keys) window.__ratWelcomeApi._keys = { seenKey: seenKey, neverKey: neverKey, skipSessKey: skipSessKey };
+        }catch(e){}
+        return;
+      }
+
+      var bound = false;
+      var lastFocus = null;
+
+      function $id(id){ return document.getElementById(id); }
+      function getLS(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+      function setLS(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+      function delLS(k){ try{ localStorage.removeItem(k); }catch(e){} }
+      function getSS(k){ try{ return sessionStorage.getItem(k); }catch(e){ return null; } }
+      function setSS(k,v){ try{ sessionStorage.setItem(k,v); }catch(e){} }
+      function delSS(k){ try{ sessionStorage.removeItem(k); }catch(e){} }
+
+      function els(){
+        return { back: $id('welcomeBackdrop'), dlg: $id('welcomeDialog') };
+      }
+
+      function isOpen(){
+        var e = els();
+        return !!(e.back && e.back.classList.contains('open'));
+      }
+
+      function focusFirst(){
+        var first = $id('btnWelcomePreso') || $id('btnWelcomeQuickStart') || $id('btnWelcomeTours') || $id('btnWelcomeClose') || $id('btnWelcomeSkip');
+        if(first && typeof first.focus === 'function'){ try{ first.focus(); }catch(e){} }
+      }
+
+      // Placeholder api (filled below) so bind() handlers can reference it safely.
+      var api = {
+        open: function(){ return false; },
+        close: function(){},
+        isOpen: isOpen,
+        markSeen: function(){},
+        clear: function(){},
+        _keys: { seenKey: seenKey, neverKey: neverKey, skipSessKey: skipSessKey }
+      };
+
+      function bind(){
+        if(bound) return;
+        var e = els();
+        if(!e.back || !e.dlg) return; // try again later
+        bound = true;
+
+        var back = e.back, dlg = e.dlg;
+
+        // Backdrop click = "view later" (session suppress)
+        back.addEventListener('click', function(ev){
+          if(ev && ev.target === back) api.close(true);
+        });
+
+        var btnClose = $id('btnWelcomeClose');
+        var btnSkip  = $id('btnWelcomeSkip');
+        var btnNever = $id('btnWelcomeNever');
+        var btnTours = $id('btnWelcomeTours');
+        var btnQuick = $id('btnWelcomeQuickStart');
+        var btnPreso = $id('btnWelcomePreso');
+
+        if(btnClose) btnClose.addEventListener('click', function(){ api.close(true); });
+        if(btnSkip)  btnSkip.addEventListener('click', function(){ api.close(true); });
+
+        if(btnNever) btnNever.addEventListener('click', function(){
+          setLS(neverKey,'1');
+          setLS(seenKey,'1');
+          api.close(false);
+        });
+
+        if(btnTours) btnTours.addEventListener('click', function(){
+          api.markSeen();
+          api.close(false);
+          var tbtn = $id('btnTours') || document.querySelector('#btnTours');
+          if(tbtn && typeof tbtn.click === 'function') tbtn.click();
+        });
+
+        function startTour(tourId){
+          api.markSeen();
+          api.close(false);
+          try{
+            if(window.Tour && typeof window.Tour.start === 'function') window.Tour.start(tourId);
+          }catch(e){}
+        }
+        if(btnQuick) btnQuick.addEventListener('click', function(){ startTour('tour_quick_start'); });
+        if(btnPreso) btnPreso.addEventListener('click', function(){ startTour('tour_presentation_demo'); });
+
+        // ESC + focus trap
+        document.addEventListener('keydown', function(ev){
+          if(!api.isOpen()) return;
+          if(ev.key === 'Escape'){
+            ev.preventDefault();
+            api.close(true);
+            return;
+          }
+          if(ev.key !== 'Tab') return;
+
+          var focusables = dlg.querySelectorAll('button,[href],input,select,textarea,[tabindex]:not([tabindex="-1"])');
+          var arr = [];
+          for(var i=0;i<focusables.length;i++){
+            var el = focusables[i];
+            if(!el || el.disabled) continue;
+            if(el.offsetParent === null && el !== document.activeElement) continue;
+            arr.push(el);
+          }
+          if(!arr.length) return;
+
+          var first = arr[0], last = arr[arr.length-1];
+          if(ev.shiftKey){
+            if(document.activeElement === first || document.activeElement === dlg){
+              ev.preventDefault(); try{ last.focus(); }catch(e){}
+            }
+          }else{
+            if(document.activeElement === last){
+              ev.preventDefault(); try{ first.focus(); }catch(e){}
+            }
+          }
+        });
+      }
+
+      function openWelcome(force){
+        bind();
+        var e = els();
+        if(!e.back || !e.dlg) return false;
+        if(isOpen()) return true;
+
+        if(!force){
+          try{ if (window.__ratSelfTestRunning) return false; }catch(e){}
+          if(getLS(neverKey)==='1' || getLS(seenKey)==='1' || getSS(skipSessKey)==='1') return false;
+        }
+
+        lastFocus = document.activeElement;
+        e.back.classList.add('open');
+        e.back.setAttribute('aria-hidden','false');
+        document.body.classList.add('welcome-open');
+        setTimeout(focusFirst, 0);
+        return true;
+      }
+
+      function closeWelcome(skipOnce){
+        var e = els();
+        if(!e.back) return;
+        if(!isOpen()) return;
+
+        e.back.classList.remove('open');
+        e.back.setAttribute('aria-hidden','true');
+        document.body.classList.remove('welcome-open');
+        if(skipOnce) setSS(skipSessKey,'1');
+
+        try{
+          if(lastFocus && typeof lastFocus.focus === 'function') lastFocus.focus();
+        }catch(e){}
+      }
+
+      function markSeen(){ setLS(seenKey,'1'); }
+      function clear(){ delLS(seenKey); delLS(neverKey); delSS(skipSessKey); }
+
+      api.open = function(force){ return openWelcome(!!force); };
+      api.close = function(skipOnce){ return closeWelcome(!!skipOnce); };
+      api.markSeen = markSeen;
+      api.clear = clear;
+
+      // Expose for self-test (and power users)
+      window.__ratWelcomeApi = api;
+    }catch(e){}
+  }
+
+  function initWelcomeModal(){
+    try{
+      ensureWelcomeApi();
+      // Auto-open shortly after boot (first run only)
+      try{
+        if(window.__ratWelcomeApi && typeof window.__ratWelcomeApi.open === 'function'){
+          setTimeout(function(){ window.__ratWelcomeApi.open(false); }, 180);
+        }
+      }catch(e){}
+    }catch(e){}
+  }
+
+  // Ensure API exists even before UX init (for self-test / fast clicks)
+  try{ ensureWelcomeApi(); }catch(e){}
+
 
 
 
@@ -16570,6 +16896,7 @@ function initToursLauncher(){
     try{ initResizer(); }catch(e){}
     try{ initHelpDrawer(); }catch(e){}
     try{ initToursLauncher(); }catch(e){}
+    try{ initWelcomeModal(); }catch(e){}
     try{ initMobileTables(); }catch(e){}
     try{ initTapPopovers(); }catch(e){}
     try{ window.__ratUxPolishReady = true; }catch(e){}
