@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Regression Analysis Tool (RAT)</title>
+  <title>CARE - Cost Analysis Regression Engine</title>
   <style>
     :root {
       --bg: #0b1020;
@@ -1007,7 +1007,7 @@ body.tours-open{ overflow: hidden; }
     }
 
     /* =========================
-       Welcome / first-run modal (RAT)
+       Welcome / first-run modal (CARE)
        ========================= */
     body.welcome-open{ overflow: hidden; }
     .modalBackdrop{
@@ -1074,7 +1074,7 @@ body.tours-open{ overflow: hidden; }
       <div class="brand">
         <div class="logo" aria-hidden="true"></div>
         <div class="title-wrap">
-          <h1>Regression Analysis Tool (RAT)</h1>
+          <h1>CARE - Cost Analysis Regression Engine</h1>
           <div class="sub">v1.1.5-welcome1.0-hf1 • Build 2026-03-05 11:57 UTC</div>
         </div>
       </div>
@@ -1889,7 +1889,7 @@ body.tours-open{ overflow: hidden; }
         <section id="help-overview">
           <h3>Overview</h3>
           <p class="muted">
-            RAT fits many regression forms to paired data (x,y) and ranks them with defensible metrics.
+            CARE fits many regression forms to paired data (x,y) and ranks them with defensible metrics.
             Some models are fitted in a <b>fit space</b> (e.g., log(y)), then predictions are <b>back-transformed</b> to the original y-units for plotting and apples-to-apples comparison.
           </p>
           <ul class="help-ul">
@@ -1936,7 +1936,7 @@ body.tours-open{ overflow: hidden; }
           <h3>Multi-X & feature subset search</h3>
           <p class="muted">
             <b>Multi-X</b> lets you fit a Multiple Linear Regression (MLR) using several predictors at once.
-            In RAT, Multi-X is used in two places:
+            In CARE, Multi-X is used in two places:
           </p>
           <ul class="muted">
             <li><b>Current Fit</b>: enable “multi-X” to compute an MLR fit immediately for your selected predictors.</li>
@@ -2040,7 +2040,7 @@ body.tours-open{ overflow: hidden; }
     <div class="modal" id="welcomeDialog" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
       <div class="modalHeader">
         <div>
-          <div class="modalTitle" id="welcomeTitle">Welcome to RAT</div>
+          <div class="modalTitle" id="welcomeTitle">Welcome to CARE</div>
           <div class="muted tiny">Pick a guided demo, or jump straight into your own dataset.</div>
         </div>
         <button id="btnWelcomeClose" class="small ghost" type="button" aria-label="Close welcome dialog">Close</button>
@@ -2111,7 +2111,7 @@ body.tours-open{ overflow: hidden; }
     // Build metadata / defaults
     // =========================
     var APP = {
-      name: 'Regression Analysis Tool (RAT)',
+      name: 'CARE - Cost Analysis Regression Engine',
       version: '1.1.5-welcome1.0-hf1',
       buildUTC: '2026-03-05 11:57 UTC',
       defaults: { polyMaxDegree: 3, pStatRule: 'ALL_COEFS_SIGNIFICANT', zmpeMeanPercentErrorZero: true,
@@ -2814,7 +2814,7 @@ function __tourHasData(){
               gateText: 'Load a scenario so the callout appears.'
             },
 
-            { title: 'Confirm X and Y', body: 'Always sanity-check column mapping: X=cumulative quantity, Y=unit cost. RAT will try to guess, but you should verify.', target: 'x_select', placement: 'auto',
+            { title: 'Confirm X and Y', body: 'Always sanity-check column mapping: X=cumulative quantity, Y=unit cost. CARE will try to guess, but you should verify.', target: 'x_select', placement: 'auto',
               pre: function(){ try{ __tourOpenCard('inputsCard'); __tourOpenCard('varsCard'); }catch(e){} },
               gate: function(){ try{ return __tourHasData() && State && State.selection && State.selection.x && State.selection.y; }catch(e){ return false; } },
               gateText: 'Select X and Y to continue.'
@@ -2903,10 +2903,10 @@ function __tourHasData(){
           minutes: 5,
           steps: [
             { title: 'Import data (CSV upload)', body: 'Upload a CSV file here. (If your file uses a non-standard delimiter, paste the data below instead.)', target: 'import_file', placement: 'auto', pre: function(){ __tourOpenCard('inputsCard'); __tourOpenCard('dataCard'); } },
-            { title: 'Parsing options', body: 'RAT will try to parse numbers safely (including thousands separators like “1,234”). Use these options when needed — especially percent parsing (e.g., 12% → 0.12).', target: '#parsePercents', placement: 'auto', pre: function(){ __tourOpenCard('inputsCard'); __tourOpenCard('dataCard'); } },
+            { title: 'Parsing options', body: 'CARE will try to parse numbers safely (including thousands separators like “1,234”). Use these options when needed — especially percent parsing (e.g., 12% → 0.12).', target: '#parsePercents', placement: 'auto', pre: function(){ __tourOpenCard('inputsCard'); __tourOpenCard('dataCard'); } },
             { title: 'Paste + parse (alternative)', body: 'If you pasted data, click “Parse pasted data”. (For file uploads, parsing runs automatically once you pick a file.)', target: 'import_parse', placement: 'auto', pre: function(){ __tourOpenCard('inputsCard'); __tourOpenCard('dataCard'); }, gate: function(){ try{ return __tourHasData(); }catch(e){ return false; } }, gateText: 'Import or parse data to create a dataset before continuing.' },
-            { title: 'Review Data Quality Summary', body: 'After parsing, RAT summarizes dropped rows and why (empty lines, too few fields, comments). If drops are unexpected, fix the source and re-import.', target: 'data_quality', placement: 'auto', pre: function(){ __tourOpenCard('inputsCard'); __tourOpenCard('dataCard'); try{ var el = document.querySelector('[data-tour="data_quality"]'); if (el && el.scrollIntoView) el.scrollIntoView({ block: 'center' }); }catch(e){} }, gate: function(){ try{ return __tourHasData(); }catch(e){ return false; } }, gateText: 'Import or parse data first.' },
-            { title: 'Confirm X and Y', body: 'After import, confirm the correct X (independent) and Y (dependent) columns are selected. RAT will try to guess, but you should verify.', target: 'x_select', placement: 'auto', pre: function(){ __tourOpenCard('inputsCard'); __tourOpenCard('varsCard'); }, gate: function(){ try{ return __tourHasData(); }catch(e){ return false; } }, gateText: 'Import data first.' },
+            { title: 'Review Data Quality Summary', body: 'After parsing, CARE summarizes dropped rows and why (empty lines, too few fields, comments). If drops are unexpected, fix the source and re-import.', target: 'data_quality', placement: 'auto', pre: function(){ __tourOpenCard('inputsCard'); __tourOpenCard('dataCard'); try{ var el = document.querySelector('[data-tour="data_quality"]'); if (el && el.scrollIntoView) el.scrollIntoView({ block: 'center' }); }catch(e){} }, gate: function(){ try{ return __tourHasData(); }catch(e){ return false; } }, gateText: 'Import or parse data first.' },
+            { title: 'Confirm X and Y', body: 'After import, confirm the correct X (independent) and Y (dependent) columns are selected. CARE will try to guess, but you should verify.', target: 'x_select', placement: 'auto', pre: function(){ __tourOpenCard('inputsCard'); __tourOpenCard('varsCard'); }, gate: function(){ try{ return __tourHasData(); }catch(e){ return false; } }, gateText: 'Import data first.' },
             { title: 'Re-run all fits', body: 'Importing replaces the dataset, so you should re-run the leaderboard on the new data.', target: 'run_all_fits', placement: 'auto', pre: function(){ __tourOpenCard('inputsCard'); __tourOpenCard('runCard'); }, gate: function(){ try{ return __tourHasData() && State && State.selection && State.selection.x && State.selection.y; }catch(e){ return false; } }, gateText: 'Select X and Y before running all fits.' },
             { title: 'Export with context', body: 'Leaderboard exports include a metadata header (dataset, variables, settings) plus the ranked rows. Use TSV for Excel or CSV for sharing.', target: 'export_leaderboard', placement: 'auto', pre: function(){ __tourOpenCard('inputsCard'); __tourOpenCard('leaderCard'); }, gate: function(){ try{ return __tourHasLeaderboard(); }catch(e){ return false; } }, gateText: 'Run all fits to enable exports.' }
           ]
@@ -3001,7 +3001,7 @@ function __tourHasData(){
 
             { title: 'Apply a MUPE/ZMPE model as the Current Fit', body: 'In the leaderboard, click a row whose minimizer column is MUPE or ZMPE. This applies it as the Current Fit (and updates the plot + intervals).', target: 'leaderboard_table', placement: 'auto', pre: function(){ __tourOpenCard('resultsCard'); __tourOpenCard('leaderCard'); }, gate: function(){ try{ return (FitState && (FitState.minimizer === 'MUPE' || FitState.minimizer === 'ZMPE')); }catch(e){ return false; } }, gateText: 'Click a MUPE/ZMPE row in the leaderboard to continue.' },
 
-            { title: 'See the Current Fit caveat', body: 'When MUPE/ZMPE is active, RAT flags the Intervals panel as “Approx” (and ZMPE as “Experimental”). Treat CI/PI as guidance, not ground truth — especially for small samples.', target: '#intApproxTag', placement: 'auto', pre: function(){ __tourOpenCard('inputsCard'); __tourOpenCard('fitCard'); try{ var el = qs('#intApproxTag'); if (el && el.scrollIntoView) el.scrollIntoView({ block:'center' }); }catch(e){} }, gate: function(){ try{ var t = qs('#intApproxTag'); return !!(t && t.style && t.style.display !== 'none'); }catch(e){ return false; } }, gateText: 'Apply a MUPE/ZMPE model so the “Approx” tag appears.' },
+            { title: 'See the Current Fit caveat', body: 'When MUPE/ZMPE is active, CARE flags the Intervals panel as “Approx” (and ZMPE as “Experimental”). Treat CI/PI as guidance, not ground truth — especially for small samples.', target: '#intApproxTag', placement: 'auto', pre: function(){ __tourOpenCard('inputsCard'); __tourOpenCard('fitCard'); try{ var el = qs('#intApproxTag'); if (el && el.scrollIntoView) el.scrollIntoView({ block:'center' }); }catch(e){} }, gate: function(){ try{ var t = qs('#intApproxTag'); return !!(t && t.style && t.style.display !== 'none'); }catch(e){ return false; } }, gateText: 'Apply a MUPE/ZMPE model so the “Approx” tag appears.' },
 
             { title: 'Export includes minimizer + settings', body: 'Leaderboard exports include a minimizer column, and the export preamble records the leaderboard settings. For full reproducibility (optimizer settings, mapping, warnings), use Package JSON from the Compare tour.', target: 'export_leaderboard', placement: 'auto', pre: function(){ __tourOpenCard('resultsCard'); __tourOpenCard('leaderCard'); }, gate: function(){ return __tourHasLeaderboard(); }, gateText: 'Run a leaderboard to enable exports.' }
           ]
@@ -3063,7 +3063,7 @@ function __tourHasData(){
               gateText: 'Enable subset search and set Rank by = AIC.'
             },
 
-            { title: 'Run all fits to build the subset leaderboard', body: 'Click Run all fits. RAT will evaluate many predictor combinations (bounded) and rank them. With this scenario, the best subset should be x1 + x3.', target: 'run_all_fits', placement: 'auto',
+            { title: 'Run all fits to build the subset leaderboard', body: 'Click Run all fits. CARE will evaluate many predictor combinations (bounded) and rank them. With this scenario, the best subset should be x1 + x3.', target: 'run_all_fits', placement: 'auto',
               pre: function(){ __tourOpenCard('inputsCard'); __tourOpenCard('runCard'); },
               gate: function(){ return __tourHasLeaderboard(); },
               gateText: 'Run all fits to populate the leaderboard.'
@@ -4589,7 +4589,7 @@ function coverageAudit(opts){
   }
 
   var lines = [];
-  lines.push('RAT Tour Coverage Audit');
+  lines.push('CARE Tour Coverage Audit');
   lines.push('Generated: ' + rep.generatedAt);
   lines.push('Legend: OK=selector found, MISSING=not found, WARN=found but zero-size (usually hidden/collapsed)');
   lines.push('');
@@ -4758,7 +4758,7 @@ return {
       var box = qs('#smokeChecklist');
       if (!box) return '';
       var lines = [];
-      lines.push('RAT Release Smoke Test');
+      lines.push('CARE Release Smoke Test');
       lines.push('Version: v' + ((APP && APP.version) ? APP.version : ''));
       lines.push('Build: ' + ((APP && APP.buildUTC) ? APP.buildUTC : ''));
       lines.push('');
@@ -4841,7 +4841,7 @@ return {
       var ds = (State && State.dataset && State.dataset.name) ? State.dataset.name : 'dataset';
       var tag = modelTagFromRef(ref || pickDefaultExportRef());
       var ts = exportTimestampCompact(new Date());
-      return 'RAT_' + safeFileName(kind || 'export') + '_' + safeFileName(ds) + '_' + safeFileName(tag.familyId || 'model') + '_' + safeFileName(tag.minimizer || 'OLS') + '_' + ts + '.' + (ext || 'txt');
+      return 'CARE_' + safeFileName(kind || 'export') + '_' + safeFileName(ds) + '_' + safeFileName(tag.familyId || 'model') + '_' + safeFileName(tag.minimizer || 'OLS') + '_' + ts + '.' + (ext || 'txt');
     }
 
     function exportMetaPreamble(kind, ref, extraLines){
@@ -4851,8 +4851,8 @@ return {
       var y = (State && State.selection && State.selection.y) ? State.selection.y : '';
       var w = (State && State.selection && State.selection.w) ? State.selection.w : '';
       var lines = [];
-      lines.push('# RAT Export: ' + String(kind || 'export'));
-      lines.push('# Tool: ' + ((APP && APP.name) ? APP.name : 'RAT'));
+      lines.push('# CARE Export: ' + String(kind || 'export'));
+      lines.push('# Tool: ' + ((APP && APP.name) ? APP.name : 'CARE'));
       lines.push('# Version: v' + ((APP && APP.version) ? APP.version : ''));
       lines.push('# Build (UTC): ' + ((APP && APP.buildUTC) ? APP.buildUTC : ''));
       lines.push('# Exported: ' + (new Date()).toLocaleString());
@@ -10842,9 +10842,9 @@ function recomputeFitAndPlots() {
 
       var payload = {
         schema: { kind: 'compare_package', version: 1 },
-        tool: 'RAT',
+        tool: 'CARE',
         app: {
-          name: (APP && APP.name) ? APP.name : 'Regression Analysis Tool (RAT)',
+          name: (APP && APP.name) ? APP.name : 'CARE - Cost Analysis Regression Engine',
           version: (APP && APP.version) ? APP.version : '',
           buildUTC: (APP && APP.buildUTC) ? APP.buildUTC : '',
           title: (document && document.title) ? document.title : ''
@@ -14521,8 +14521,8 @@ doCheck('OLS origin: ex_origin recovers b=2 a=0 RMSE=0', function() {
         // Leaderboard strings now include an export metadata preamble
         var lcsv = leaderboardToCSV(LeaderState.rows);
         var ltsv = leaderboardToTSV(LeaderState.rows);
-        if (!lcsv || lcsv.indexOf('# RAT Export: leaderboard') !== 0) throw new Error('Leaderboard CSV missing export preamble');
-        if (!ltsv || ltsv.indexOf('# RAT Export: leaderboard') !== 0) throw new Error('Leaderboard TSV missing export preamble');
+        if (!lcsv || lcsv.indexOf('# CARE Export: leaderboard') !== 0) throw new Error('Leaderboard CSV missing export preamble');
+        if (!ltsv || ltsv.indexOf('# CARE Export: leaderboard') !== 0) throw new Error('Leaderboard TSV missing export preamble');
         if (lcsv.indexOf('\nrank,model,family') < 0) throw new Error('Leaderboard CSV header row missing');
         if (ltsv.indexOf('\nrank\tmodel\tfamily') < 0) throw new Error('Leaderboard TSV header row missing');
 
@@ -14532,7 +14532,7 @@ doCheck('OLS origin: ex_origin recovers b=2 a=0 RMSE=0', function() {
 
         // Filename includes family + minimizer + timestamp
         var fn = buildExportFilename('leaderboard','csv', LeaderState.rows[0]);
-        var reFn = /^RAT_leaderboard_[A-Za-z0-9_\-]+_[A-Za-z0-9_\-]+_[A-Za-z0-9_\-]+_\d{8}_\d{6}\.csv$/;
+        var reFn = /^CARE_leaderboard_[A-Za-z0-9_\-]+_[A-Za-z0-9_\-]+_[A-Za-z0-9_\-]+_\d{8}_\d{6}\.csv$/;
         if (!reFn.test(fn)) throw new Error('Unexpected leaderboard filename: ' + fn);
         var expFam = safeFileName(LeaderState.rows[0].familyId || 'model');
         var expMin = safeFileName(LeaderState.rows[0].minimizer || 'OLS');
@@ -14540,7 +14540,7 @@ doCheck('OLS origin: ex_origin recovers b=2 a=0 RMSE=0', function() {
         if (fn.indexOf('_' + expMin + '_') < 0) throw new Error('Filename missing minimizer tag: ' + expMin);
 
         var fn2 = buildExportFilename('coefficients','csv', FitState);
-        var reFn2 = /^RAT_coefficients_[A-Za-z0-9_\-]+_[A-Za-z0-9_\-]+_[A-Za-z0-9_\-]+_\d{8}_\d{6}\.csv$/;
+        var reFn2 = /^CARE_coefficients_[A-Za-z0-9_\-]+_[A-Za-z0-9_\-]+_[A-Za-z0-9_\-]+_\d{8}_\d{6}\.csv$/;
         if (!reFn2.test(fn2)) throw new Error('Unexpected coefficients filename: ' + fn2);
 
         return 'eqOK, coefRows=' + FitState.coefStats.rows.length + ', predRows=' + dataLines.length + ', lb=' + LeaderState.rows.length;
@@ -15233,7 +15233,7 @@ var passCount = checks.filter(function(c){ return c.level==='PASS'; }).length;
       var status = (failCount > 0) ? 'FAIL' : 'PASS';
       qs('#lastStatus').textContent = status;
 
-      var header = 'RAT v' + APP.version + ' Self-Test: ' + status + ' — pass=' + passCount + ', fail=' + failCount;
+      var header = 'CARE v' + APP.version + ' Self-Test: ' + status + ' — pass=' + passCount + ', fail=' + failCount;
       var payload = { header: header, app: APP, timeLocal: started.toISOString(), checks: checks };
 
       var lines = [];
@@ -15700,7 +15700,7 @@ qs('#polyMax').addEventListener('input', function(e) {
           var isLogFam = (fam === 'linear-log' || fam === 'log-linear' || fam === 'log-log');
           var famLabel = fam ? fam : '(not set)';
           var lines = [];
-          lines.push('RAT — Transform / Interval Interpretation');
+          lines.push('CARE — Transform / Interval Interpretation');
           lines.push('Model family: ' + famLabel);
           lines.push('');
           if (isLogFam){
@@ -15856,7 +15856,7 @@ qs('#polyMax').addEventListener('input', function(e) {
         })();
 
         setBoot('Ready', (window.__ratBootWarnCount ? 'warn' : 'good'));
-        diagAppend('[BOOT] OK — RAT ' + APP.version + (window.__ratBootWarnCount ? (' (warns=' + window.__ratBootWarnCount + ')') : ''));
+        diagAppend('[BOOT] OK — CARE ' + APP.version + (window.__ratBootWarnCount ? (' (warns=' + window.__ratBootWarnCount + ')') : ''));
       } catch (e) {
         try{ window.__ratBootWarnCount = (window.__ratBootWarnCount||0) + 1; }catch(_){}
         setBoot('Ready', 'warn');
