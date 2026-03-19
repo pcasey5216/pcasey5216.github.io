@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="description" content="Interactive, browser-based tools for cost analysis training, simulation, and visualization: AI Bias Sandbox, Galton Board Distribution Lab, K-Means Clustering Lab, CASE, and the Regression Analysis Tool (RAT)." />
+  <meta name="description" content="Interactive, browser-based tools for cost analysis training, simulation, and visualization: AI Bias Sandbox, Galton Board Distribution Lab, K-Means Clustering Lab, CASE, and CARE (Cost Analysis Regression Engine)." />
   <title>Cost Analysis Interactive Labs</title>
 
   <style>
@@ -372,7 +372,7 @@
           Five browser-based tools for training, intuition-building, and communicating assumptions:
           the <strong>AI Bias Sandbox</strong>, <strong>Galton Board Distribution Lab</strong>,
           <strong>K-Means Clustering Lab</strong>, <strong>CASE</strong> (Cost Analysis &amp; Simulation Engine),
-          and the <strong>Regression Analysis Tool (RAT)</strong>.
+          and <strong>CARE</strong> (Cost Analysis Regression Engine).
           No install required—just open and use.
         
         </p>
@@ -418,7 +418,7 @@
           </svg>
           Open CASE
         </a>
-<a class="pill" href="https://pcasey5216.github.io/Regression_Analysis_Tool_RAT.html" rel="noopener">
+<a class="pill" href="https://pcasey5216.github.io/CARE_Cost_Analysis_Regression_Engine.html" rel="noopener">
   <svg class="tinyicon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
     <path d="M4 19V5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
     <path d="M4 19H20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
@@ -427,7 +427,7 @@
     <circle cx="10.5" cy="11.5" r="1.2" stroke="currentColor" stroke-width="2"/>
     <circle cx="13.5" cy="13.5" r="1.2" stroke="currentColor" stroke-width="2"/>
   </svg>
-  Open RAT
+  Open CARE
 </a>
       </nav>
     </header>
@@ -595,7 +595,7 @@
         </div>
       </article>
 
-<!-- RAT -->
+<!-- CARE -->
 <article class="card">
   <div class="tagrow">
     <span class="tag"><span class="tiny" style="background:rgba(125,211,252,0.75)"></span> Regression</span>
@@ -604,7 +604,7 @@
     <span class="tag"><span class="tiny" style="background:rgba(255,255,255,0.35)"></span> v1.0.0</span>
   </div>
 
-  <h2>Regression Analysis Tool (RAT)</h2>
+  <h2>CARE - Cost Analysis Regression Engine</h2>
   <p class="desc">
     Upload or paste data, then run a full model search to get a ranked leaderboard of regression candidates
     (with metrics, coefficient stats, and interval bands where applicable).
@@ -617,22 +617,22 @@
   </ul>
 
   <div class="actions">
-    <a class="btn primary" href="https://pcasey5216.github.io/Regression_Analysis_Tool_RAT.html" rel="noopener">
-      Launch RAT
+    <a class="btn primary" href="https://pcasey5216.github.io/CARE_Cost_Analysis_Regression_Engine.html" rel="noopener">
+      Launch CARE
       <svg class="tinyicon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
         <path d="M14 3h7v7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
         <path d="M21 3l-9 9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
         <path d="M10 5H6a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
       </svg>
     </a>
-    <button class="btn" type="button" data-copy="rat">
+    <button class="btn" type="button" data-copy="care">
       Copy link
-      <span class="sr-only">Copy Regression Analysis Tool (RAT) link</span>
+      <span class="sr-only">Copy CARE link</span>
     </button>
   </div>
 
-  <div class="mono" id="ratLink" aria-label="Regression Analysis Tool (RAT) URL">
-    https://pcasey5216.github.io/Regression_Analysis_Tool_RAT.html
+  <div class="mono" id="careLink" aria-label="CARE - Cost Analysis Regression Engine URL">
+    https://pcasey5216.github.io/CARE_Cost_Analysis_Regression_Engine.html
   </div>
 </article>
 
@@ -734,7 +734,7 @@
       galton: 'https://pcasey5216.github.io/Galton_Board_Distribution_Lab.html',
       kmeans: 'https://pcasey5216.github.io/KMeans_Clustering_Lab.html',
       case: 'https://pcasey5216.github.io/Cost_Analysis_Simulation_Engine.html',
-      rat: 'https://pcasey5216.github.io/Regression_Analysis_Tool_RAT.html'
+      care: 'https://pcasey5216.github.io/CARE_Cost_Analysis_Regression_Engine.html'
     };
 
     document.querySelectorAll('button[data-copy]').forEach(btn => {
@@ -761,8 +761,8 @@
       const cards = document.querySelectorAll('.card');
       expect('At least 5 cards render', cards.length >= 5, {count: cards.length});
 
-      expect('RAT launch link exists', !!document.querySelector('a[href*="Regression_Analysis_Tool_RAT"]'));
-      expect('RAT copy button exists', !!document.querySelector('button[data-copy="rat"]'));
+      expect('CARE launch link exists', !!document.querySelector('a[href*="CARE_Cost_Analysis_Regression_Engine"]'));
+      expect('CARE copy button exists', !!document.querySelector('button[data-copy="care"]'));
 
       const mail = document.querySelector('a[href^="mailto:pcasey@quantechserv.com"]');
       expect('Idea mailto CTA exists', !!mail && (mail.getAttribute('href')||'').startsWith('mailto:'));
