@@ -13,6 +13,7 @@ A collection of browser-based, single-file HTML tools for training, intuition-bu
 | **AI Bias Sandbox** | Rules-based sandbox for thinking through bias exposure, traceability, and governance readiness in AI/analytics workflows. | https://pcasey5216.github.io/AI_Bias_Sandbox.html |
 | **Galton Board Distribution Lab** | Build distribution intuition (Galton board) and connect sampling to PDF/CDF (S-curve) results. | https://pcasey5216.github.io/Galton_Board_Distribution_Lab.html |
 | **K-Means Clustering Lab** | Interactive K-means explainer with diagnostics; great for “t-shirt bucket” intuition. | https://pcasey5216.github.io/KMeans_Clustering_Lab.html |
+| **CARE — Cost Analysis Regression Engine** | Interactive regression lab for comparing model forms, transforms, fit quality, and minimization choices. | https://pcasey5216.github.io/CARE_Cost_Analysis_Regression_Engine.html |
 | **CASE — Cost Analysis & Simulation Engine** | WBS-driven estimating workflow + uncertainty + correlation + phasing + simulation + exports. | https://pcasey5216.github.io/Cost_Analysis_Simulation_Engine.html |
 
 ---
@@ -52,6 +53,18 @@ An interactive K-means sandbox: add points, step through iterations, and use dia
 
 ---
 
+## CARE — Cost Analysis Regression Engine (`CARE_Cost_Analysis_Regression_Engine.html`)
+
+A browser-based regression lab for exploring candidate equations, transforms, fit metrics, and best-fit behavior across multiple model forms.
+
+**Highlights**
+- Guided tours + built-in diagnostics/self-check (if enabled)
+- Compare regression forms, transforms, and best-fit candidates in one place
+- Visualize data, trend lines, residual behavior, and fit-quality metrics
+- Support training, demos, and estimator intuition-building around CER development
+
+---
+
 ## CASE — Cost Analysis & Simulation Engine (`Cost_Analysis_Simulation_Engine.html`)
 
 A browser-based estimating workflow: build a WBS-driven estimate, apply uncertainty, run simulation, and interpret results (including percentiles and the S-curve).
@@ -73,3 +86,4 @@ You can open each HTML file directly in a browser. For the most consistent behav
 
 ```bash
 python -m http.server 8000
+```
